@@ -10,7 +10,7 @@ export default function RootLayout() {
       <ThemeProvider>
         <Stack>
           <Stack.Screen name="index" />
-          <Stack.Screen name="pages" />
+          <Stack.Screen name="app" />
         </Stack>
       </ThemeProvider>
     </StripeProvider>

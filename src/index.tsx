@@ -9,18 +9,18 @@ export default function Index() {
 
       <View style={styles.box}>
         <TouchableOpacity style={[styles.button, styles.primaryButton]}>
-          <Link href={"/pages/login"} asChild>
+          <Link href={"/login"} asChild>
             <Text style={styles.primaryButtonText}>Login</Text>
           </Link>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.button, styles.secondaryButton]}>
-          <Link href={"/pages/register"} asChild>
+          <Link href={"/register"} asChild>
             <Text style={styles.secondaryButtonText}>Create Account</Text>
           </Link>
         </TouchableOpacity>
 
-        <Link href={"/pages/profile-setup"} asChild>
+        <Link href={"/profile-setup"} asChild>
           <Text style={styles.guestText}>Continue as guest</Text>
         </Link>
       </View>

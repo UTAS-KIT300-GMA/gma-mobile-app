@@ -47,19 +47,19 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={styles.loginButton}
-          onPress={() => router.push("/pages/profile-setup")}
+          onPress={() => router.push("/profile-setup")}
         >
           <Text style={styles.loginButtonText}>Login</Text>
         </TouchableOpacity>
 
         <View style={styles.linkRow}>
-          <Link href="/pages/forgot-password">
+          <Link href="/forgot-password">
             <Text style={styles.linkText}>Forgot password</Text>
           </Link>
         </View>
 
         <View style={styles.linkRow}>
-          <Link href="/pages/register">
+          <Link href="/register">
             <Text style={styles.linkText}>Create new account</Text>
           </Link>
         </View>
