@@ -136,6 +136,7 @@ export default function AuthScreen() {
               <TextInput
                 style={styles.input}
                 placeholder="First Name"
+                placeholderTextColor="#999"
                 value={firstName}
                 onChangeText={setFirstName}
                 onSubmitEditing={() => lastNameRef.current?.focus()}
@@ -145,6 +146,7 @@ export default function AuthScreen() {
                 ref={lastNameRef}
                 style={styles.input}
                 placeholder="Last Name"
+                placeholderTextColor="#999"
                 value={lastName}
                 onChangeText={setLastName}
                 onSubmitEditing={() => emailRef.current?.focus()}
@@ -201,6 +203,7 @@ export default function AuthScreen() {
             ref={emailRef}
             style={styles.input}
             placeholder="Email"
+            placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -211,6 +214,7 @@ export default function AuthScreen() {
             ref={passwordRef}
             style={styles.input}
             placeholder="Password"
+            placeholderTextColor="#999"
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -302,6 +306,7 @@ const styles = StyleSheet.create({
   input: {
     width: "100%",
     backgroundColor: "#fff",
+    color: "#000",
     borderWidth: 1,
     borderColor: "#ddd",
     borderRadius: 8,
