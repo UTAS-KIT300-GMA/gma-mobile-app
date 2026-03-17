@@ -1,10 +1,13 @@
 import {
+  confirmPasswordReset,
   createUserWithEmailAndPassword,
   deleteUser,
   reload,
   sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
+  verifyPasswordResetCode,
 } from "@react-native-firebase/auth";
 
 import {
@@ -24,6 +27,9 @@ const ERROR_MESSAGES: Record<string, string> = {
   "auth/invalid-email": "Please enter a valid email address.",
   "auth/too-many-requests": "Too many attempts. Try again later.",
   "auth/network-request-failed": "Check your internet connection.",
+  "auth/invalid-action-code": "That reset link is invalid or expired.",
+  "auth/expired-action-code": "That reset link has expired.",
+  "auth/user-disabled": "This account has been disabled.",
 };
 
 export function getFriendlyError(e: any): string {
@@ -96,4 +102,19 @@ export async function resendVerificationEmail(): Promise<void> {
 
 export async function logoutUser(): Promise<void> {
   await signOut(auth);
+}
+
+export async function sendPasswordReset(email: string): Promise<void> {
+  await sendPasswordResetEmail(auth, email);
+}
+
+export async function getPasswordResetEmail(oobCode: string): Promise<string> {
+  return await verifyPasswordResetCode(auth, oobCode);
+}
+
+export async function resetPasswordWithCode(
+  oobCode: string,
+  newPassword: string,
+): Promise<void> {
+  await confirmPasswordReset(auth, oobCode, newPassword);
 }

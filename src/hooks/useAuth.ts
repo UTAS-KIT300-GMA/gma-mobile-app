@@ -7,6 +7,9 @@ export function useAuth() {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [initializing, setInitializing] = useState(true);
 
+  console.log("user", user);
+  console.log("initializing", initializing);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (authenticatedUser) => {
       setUser(authenticatedUser);

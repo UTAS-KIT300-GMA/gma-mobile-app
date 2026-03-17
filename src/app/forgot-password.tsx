@@ -1,6 +1,8 @@
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,10 +11,35 @@ import {
   View,
 } from "react-native";
 import { colors } from "../../theme/ThemeProvider";
+import { getFriendlyError, sendPasswordReset } from "../services/authService";
 
 export default function ForgotPasswordStepOneScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSendReset = async () => {
+    if (loading) return;
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      Alert.alert("Missing email", "Please enter your email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await sendPasswordReset(normalizedEmail);
+      Alert.alert(
+        "Check your email",
+        "We sent a password reset link. Open it to choose a new password.",
+        [{ text: "OK", onPress: () => router.replace("/") }],
+      );
+    } catch (e) {
+      Alert.alert("Couldn’t send reset email", getFriendlyError(e));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -29,34 +56,32 @@ export default function ForgotPasswordStepOneScreen() {
             placeholderTextColor="#888"
             keyboardType="email-address"
             autoCapitalize="none"
+            editable={!loading}
           />
         </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Reset password code</Text>
-          <TextInput
-            style={styles.input}
-            value={code}
-            onChangeText={setCode}
-            placeholder="Enter code"
-            placeholderTextColor="#888"
-          />
-        </View>
-
-        <TouchableOpacity style={styles.sendButton}>
-          <Text style={styles.sendButtonText}>Send/Ok</Text>
+        <TouchableOpacity
+          style={[styles.sendButton, loading && styles.sendButtonDisabled]}
+          onPress={handleSendReset}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.sendButtonText}>Send reset link</Text>
+          )}
         </TouchableOpacity>
 
         <View style={styles.footerRow}>
           <Text style={styles.footerText}>Already have an account? </Text>
-          <Link href="/login">
+          <Link href="/">
             <Text style={styles.footerLink}>Login</Text>
           </Link>
         </View>
 
         <View style={styles.footerRow}>
           <Text style={styles.footerText}>New here? </Text>
-          <Link href="/register">
+          <Link href="/">
             <Text style={styles.footerLink}>Create new account</Text>
           </Link>
         </View>
@@ -110,6 +135,9 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 16,
   },
+  sendButtonDisabled: {
+    opacity: 0.7,
+  },
   sendButtonText: {
     color: "#ffffff",
     fontSize: 16,
@@ -129,4 +157,3 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
-

@@ -1,5 +1,5 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { Link, Redirect } from "expo-router";
+import { Link, Redirect, useRouter } from "expo-router";
 import { useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -40,6 +40,7 @@ function PasswordStrengthHint({ password }: { password: string }) {
 }
 
 export default function AuthScreen() {
+  const router = useRouter();
   const { user, initializing } = useAuth();
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState("");
@@ -56,7 +57,7 @@ export default function AuthScreen() {
   const passwordRef = useRef<TextInput>(null);
 
   if (!initializing && user?.emailVerified) {
-    return <Redirect href="/login" />;
+    return <Redirect href="/profile-setup" />;
   }
 
   const handleAuth = async () => {
@@ -228,6 +229,12 @@ export default function AuthScreen() {
             </TouchableOpacity>
           )}
 
+          <View style={styles.linkRow}>
+            <TouchableOpacity onPress={() => router.push("/forgot-password")}>
+              <Text style={styles.linkText}>Forgot password</Text>
+            </TouchableOpacity>
+          </View>
+
           <TouchableOpacity onPress={() => setIsRegistering(!isRegistering)}>
             <Text style={styles.toggleText}>
               {isRegistering
@@ -364,4 +371,12 @@ const styles = StyleSheet.create({
   },
   hintValid: { color: "#16a34a" },
   hintInvalid: { color: "#dc2626" },
+  linkRow: {
+    alignItems: "center",
+    marginTop: 8,
+  },
+  linkText: {
+    color: "#007dff",
+    fontSize: 14,
+  },
 });
