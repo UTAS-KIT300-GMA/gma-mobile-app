@@ -1,3 +1,5 @@
+import { colors } from "@/theme/ThemeProvider";
+import { doc, setDoc } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
@@ -8,8 +10,6 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { doc, setDoc } from "@react-native-firebase/firestore";
-import { colors } from "@/theme/ThemeProvider";
 import { auth, db } from "../services/firebase";
 
 type InterestKey =
@@ -100,6 +100,7 @@ export default function ProfileSetupScreen() {
             }
             setSaving(true);
             try {
+              console.log("selectedTags", selectedTags);
               await setDoc(
                 doc(db, "users", uid),
                 { interestTags: selectedTags },

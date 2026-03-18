@@ -1,3 +1,4 @@
+import { collection, getDocs, query } from "@react-native-firebase/firestore";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -7,18 +8,11 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { collection, getDocs, query } from "@react-native-firebase/firestore";
 import { AppHeader } from "../../components/AppHeader";
 import { EventCard } from "../../components/EventCard";
 import { db } from "../../services/firebase";
-
-type EventDoc = {
-  id: string;
-  title?: string;
-  address?: string;
-  dateTime?: any;
-  category?: string;
-};
+import {router} from "expo-router";
+import {EventDoc} from "@/src/app/(tabs)/type";
 
 export default function HomeScreen() {
   const [events, setEvents] = useState<EventDoc[]>([]);
@@ -30,13 +24,18 @@ export default function HomeScreen() {
       setLoading(true);
       try {
         const snap = await getDocs(query(collection(db, "events")));
-        const rows: EventDoc[] = snap.docs.map((d: { id: any; data: () => any; }) => ({
-          id: d.id,
-          ...(d.data() as any),
-        }));
+        const rows: EventDoc[] = snap.docs.map(
+          (d: { id: any; data: () => any }) => ({
+            id: d.id,
+            ...(d.data() as any),
+          }),
+        );
         if (mounted) setEvents(rows);
       } catch (e: any) {
-        Alert.alert("Failed to load events", e?.message ?? "Something went wrong");
+        Alert.alert(
+          "Failed to load events",
+          e?.message ?? "Something went wrong",
+        );
       } finally {
         if (mounted) setLoading(false);
       }
@@ -63,6 +62,23 @@ export default function HomeScreen() {
               <EventCard
                 event={item}
                 onPressRsvp={() => Alert.alert("RSVP", "To be implemented")}
+                onPressCard={() => {
+                  router.push({
+                    pathname: "/event-details",
+                    params: {
+                      id: item.id,
+                      title: item.title,
+                      description: item.description,
+                      image: item.image,
+                      dateTime: item.dateTime.toDate(),
+                      type: item.type,
+                      totalTickets: item.totalTickets,
+                      address: item.address,
+                      memberPrice: item.ticketPrices?.member,
+                      nonMemberPrice: item.ticketPrices?.nonMember
+                    }
+                  });
+                }}
               />
             )}
           />
@@ -76,5 +92,5 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#ffffff" },
   container: { flex: 1, backgroundColor: "#ffffff" },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  listContent: { padding: 16, paddingBottom: 24 },
+  listContent: { padding: 10, paddingBottom: 24 },
 });

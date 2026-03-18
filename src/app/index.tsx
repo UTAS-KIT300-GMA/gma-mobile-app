@@ -57,7 +57,7 @@ export default function AuthScreen() {
   const passwordRef = useRef<TextInput>(null);
 
   if (!initializing && user?.emailVerified) {
-    return <Redirect href="/profile-setup" />;
+    return <Redirect href="/home" />;
   }
 
   const handleAuth = async () => {
