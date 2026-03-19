@@ -2,12 +2,12 @@ import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import {
-    Alert,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { logoutUser } from "../services/authService";
@@ -40,7 +40,7 @@ export default function ProfileScreen() {
     {
       id: "edit-profile",
       label: "Edit profile",
-      onPress: () => Alert.alert("Edit profile", "To be implemented"),
+      onPress: () => router.push({ pathname: "/edit-profile" }),
     },
     {
       id: "payment-method",
