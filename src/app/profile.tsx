@@ -40,7 +40,7 @@ export default function ProfileScreen() {
     {
       id: "edit-profile",
       label: "Edit profile",
-      onPress: () => router.push({ pathname: "/edit-profile" }),
+      onPress: () => router.push("/edit-profile" ),
     },
     {
       id: "payment-method",
@@ -60,7 +60,7 @@ export default function ProfileScreen() {
     {
       id: "notification-settings",
       label: "Notifications setting",
-      onPress: () => Alert.alert("Notifications setting", "To be implemented"),
+      onPress: () => router.push("/notification-settings"),
     },
     {
       id: "membership",
