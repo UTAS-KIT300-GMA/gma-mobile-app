@@ -5,6 +5,8 @@ export type AppTheme = {
   secondary: string;
   textOnPrimary: string;
   textOnSecondary: string;
+  saveBtnColor: string;
+  saveBtnTextColor: string;
 };
 
 const defaultTheme: AppTheme = {
@@ -12,6 +14,8 @@ const defaultTheme: AppTheme = {
   secondary: "#FAF0E4",
   textOnPrimary: "#ffffff",
   textOnSecondary: "#25292e",
+  saveBtnColor: "#F1CB5F",
+  saveBtnTextColor: "#410F33",
 };
 
 const ThemeContext = createContext<AppTheme>(defaultTheme);

@@ -1,6 +1,16 @@
-import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { colors } from "../../theme/ThemeProvider";
+import { colors } from "@/theme/ThemeProvider";
+import { doc, setDoc } from "@react-native-firebase/firestore";
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { auth, db } from "../services/firebase";
 
 type InterestKey =
   | "communityEvents"
@@ -11,6 +21,7 @@ type InterestKey =
   | "volunteering";
 
 export default function ProfileSetupScreen() {
+  const router = useRouter();
   const [selected, setSelected] = useState<Record<InterestKey, boolean>>({
     communityEvents: false,
     networking: false,
@@ -19,6 +30,11 @@ export default function ProfileSetupScreen() {
     hobbies: false,
     volunteering: false,
   });
+  const [saving, setSaving] = useState(false);
+
+  const selectedTags = useMemo(() => {
+    return (Object.keys(selected) as InterestKey[]).filter((k) => selected[k]);
+  }, [selected]);
 
   const toggle = (key: InterestKey) => {
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -71,8 +87,38 @@ export default function ProfileSetupScreen() {
           {renderPill("Volunteering", "volunteering")}
         </View>
 
-        <TouchableOpacity style={styles.saveButton}>
-          <Text style={styles.saveButtonText}>Save Preferences</Text>
+        <TouchableOpacity
+          style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+          disabled={saving}
+          onPress={async () => {
+            if (saving) return;
+            const uid = auth.currentUser?.uid;
+            if (!uid) {
+              Alert.alert("Not signed in", "Please log in again.");
+              router.replace("/");
+              return;
+            }
+            setSaving(true);
+            try {
+              console.log("selectedTags", selectedTags);
+              await setDoc(
+                doc(db, "users", uid),
+                { interestTags: selectedTags },
+                { merge: true },
+              );
+              router.replace("/home");
+            } catch (e: any) {
+              Alert.alert("Save failed", e?.message ?? "Something went wrong.");
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          {saving ? (
+            <ActivityIndicator color="#ffffff" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Preferences</Text>
+          )}
         </TouchableOpacity>
       </View>
     </View>
@@ -161,6 +207,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 8,
     alignItems: "center",
+  },
+  saveButtonDisabled: {
+    opacity: 0.7,
   },
   saveButtonText: {
     color: "#ffffff",
