@@ -1,4 +1,6 @@
+import { EventDoc } from "@/src/app/(tabs)/type";
 import { collection, getDocs, query } from "@react-native-firebase/firestore";
+import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -11,8 +13,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AppHeader } from "../../components/AppHeader";
 import { EventCard } from "../../components/EventCard";
 import { db } from "../../services/firebase";
-import {router} from "expo-router";
-import {EventDoc} from "@/src/app/(tabs)/type";
 
 export default function HomeScreen() {
   const [events, setEvents] = useState<EventDoc[]>([]);
@@ -70,13 +70,16 @@ export default function HomeScreen() {
                       title: item.title,
                       description: item.description,
                       image: item.image,
-                      dateTime: item.dateTime.toDate(),
+                      dateTime:
+                        typeof item.dateTime?.toDate === "function"
+                          ? item.dateTime.toDate().toString()
+                          : (item.dateTime?.toString?.() ?? ""),
                       type: item.type,
                       totalTickets: item.totalTickets,
                       address: item.address,
                       memberPrice: item.ticketPrices?.member,
-                      nonMemberPrice: item.ticketPrices?.nonMember
-                    }
+                      nonMemberPrice: item.ticketPrices?.nonMember,
+                    },
                   });
                 }}
               />
