@@ -2,25 +2,24 @@
   "expo": {
     "name": "gma-mobile",
     "slug": "gma-mobile",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "gmamobile",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
     "ios": {
-      "bundleIdentifier": "com.utas.gma",
+      "bundleIdentifier": "com.gma.connect",
       "supportsTablet": true,
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "package": "com.anonymous.myapp",
+      "package": "com.gma.connect",
+      "versionCode": 2,
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "backgroundImage": "./assets/images/background-image.png"
-      },
-      "edgeToEdgeEnabled": true
+      }
     },
     "web": {
       "output": "static",
