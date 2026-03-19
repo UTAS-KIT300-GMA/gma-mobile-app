@@ -14,7 +14,7 @@
       "googleServicesFile": "./GoogleService-Info.plist"
     },
     "android": {
-      "package": "com.anonymous.myapp",
+      "package": "com.gma.connect",
       "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
@@ -35,7 +35,9 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
-          "dark": { "backgroundColor": "#000000" }
+          "dark": {
+            "backgroundColor": "#000000"
+          }
         }
       ],
       "@react-native-firebase/app",
@@ -50,7 +52,8 @@
             }
           }
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -13,8 +13,8 @@
     "clean": "rm -rf android/app/build && cd android && ./gradlew clean && cd .."
   },
   "dependencies": {
-    "@expo/vector-icons": "^15.0.3",
-    "@react-native-community/datetimepicker": "^8.6.0",
+    "@expo/vector-icons": "^15.1.1",
+    "@react-native-community/datetimepicker": "8.4.4",
     "@react-native-firebase/app": "^23.8.8",
     "@react-native-firebase/auth": "^23.8.8",
     "@react-native-firebase/firestore": "^23.8.8",
