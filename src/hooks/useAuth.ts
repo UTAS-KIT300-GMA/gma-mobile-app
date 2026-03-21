@@ -1,7 +1,7 @@
 import type { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { onAuthStateChanged } from "@react-native-firebase/auth";
 import { useEffect, useState } from "react";
-import { auth } from "../services/firebase";
+import { auth } from "@/services/firebase";
 
 export function useAuth() {
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);

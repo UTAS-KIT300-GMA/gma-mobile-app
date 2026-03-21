@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/theme/ThemeProvider";
-import {AppHeader} from "@/src/components/AppHeader";
+import {AppHeader} from "@/components/AppHeader";
 
 type NotificationType = "recommendation" | "reminder" | "booking";
 

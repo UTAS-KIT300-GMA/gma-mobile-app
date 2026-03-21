@@ -9,8 +9,8 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { formatDateTime } from "@/src/components/utils"
-import {AppHeader} from "@/src/components/AppHeader";
+import { formatDateTime } from "@/components/utils"
+import {AppHeader} from "@/components/AppHeader";
 
 export default function EventDetailScreen() {
     const router = useRouter();

@@ -1,6 +1,6 @@
 import { Slot } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function RootLayout() {
   const { initializing } = useAuth();

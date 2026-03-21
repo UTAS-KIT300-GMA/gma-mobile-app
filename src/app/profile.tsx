@@ -10,8 +10,8 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { logoutUser } from "../services/authService";
-import {AppHeader} from "@/src/components/AppHeader";
+import { logoutUser } from "@/services/authService";
+import {AppHeader} from "@/components/AppHeader";
 
 type ProfileMenuItem = {
   id: string;

@@ -1,4 +1,4 @@
-import { AppHeader } from "@/src/components/AppHeader";
+import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/ThemeProvider";
 import { useRouter } from "expo-router";
 import { useState } from "react";

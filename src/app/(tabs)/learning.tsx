@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "../../components/AppHeader";
+import { AppHeader } from "@/components/AppHeader";
 
 export default function LearningScreen() {
   return (
