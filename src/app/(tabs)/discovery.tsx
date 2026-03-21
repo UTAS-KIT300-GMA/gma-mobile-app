@@ -18,10 +18,10 @@ import {
   setDoc,
   deleteDoc,
 } from "@react-native-firebase/firestore";
-import { AppHeader } from "../../components/AppHeader";
-import { EventCard } from "../../components/EventCard";
-import { auth, db } from "../../services/firebase";
-import { EventDoc, Category } from "@/src/app/(tabs)/type";
+import { AppHeader } from "@/components/AppHeader";
+import { EventCard } from "@/components/EventCard";
+import { auth, db } from "@/services/firebase";
+import { EventDoc, Category } from "@/app/(tabs)/type";
 import {router} from "expo-router";
 
 const CATEGORY_OPTIONS: { key: Category; label: string }[] = [

@@ -1,4 +1,4 @@
-import { EventDoc } from "@/src/app/(tabs)/type";
+import { EventDoc } from "@/app/(tabs)/type";
 import { collection, getDocs, query } from "@react-native-firebase/firestore";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
@@ -10,9 +10,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "../../components/AppHeader";
-import { EventCard } from "../../components/EventCard";
-import { db } from "../../services/firebase";
+import { AppHeader } from "@/components/AppHeader";
+import { EventCard } from "@/components/EventCard";
+import { db } from "@/services/firebase";
 
 export default function HomeScreen() {
   const [events, setEvents] = useState<EventDoc[]>([]);

@@ -13,13 +13,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import {
   getFriendlyError,
   loginUser,
   registerUser,
   resendVerificationEmail,
-} from "../services/authService";
+} from "@/services/authService";
 
 // --- Password Hint Component ---
 function PasswordStrengthHint({ password }: { password: string }) {

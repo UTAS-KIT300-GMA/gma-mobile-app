@@ -10,8 +10,8 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { colors } from "../../theme/ThemeProvider";
-import { getFriendlyError, sendPasswordReset } from "../services/authService";
+import { colors } from "@/theme/ThemeProvider";
+import { getFriendlyError, sendPasswordReset } from "@/services/authService";
 
 export default function ForgotPasswordStepOneScreen() {
   const router = useRouter();
