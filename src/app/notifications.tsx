@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/theme/ThemeProvider";
+import {AppHeader} from "@/src/components/AppHeader";
 
 type NotificationType = "recommendation" | "reminder" | "booking";
 
@@ -144,34 +145,7 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.headerIconButton}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={28} color={colors.primary} />
-        </Pressable>
-
-        <Text style={styles.headerTitle}>Notifications</Text>
-
-        <View style={styles.headerActions}>
-          <Pressable style={styles.headerIconButton} hitSlop={10}>
-            <Ionicons
-              name="square-outline"
-              size={22}
-              color={colors.textOnSecondary}
-            />
-          </Pressable>
-          <Pressable style={styles.headerIconButton} hitSlop={10}>
-            <Ionicons
-              name="checkmark-done-outline"
-              size={24}
-              color={colors.textOnSecondary}
-            />
-          </Pressable>
-        </View>
-      </View>
+      <AppHeader title="Notifications" showBack showCheck/>
 
       <FlatList
         data={notifications}
@@ -204,19 +178,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
-  headerIconButton: {
-    padding: 4,
-    borderRadius: 999,
-  },
   headerTitle: {
     fontSize: 18,
     fontWeight: "800",
     color: colors.primary,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
   },
   listContent: {
     paddingHorizontal: 14,

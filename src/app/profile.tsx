@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { logoutUser } from "../services/authService";
+import {AppHeader} from "@/src/components/AppHeader";
 
 type ProfileMenuItem = {
   id: string;
@@ -80,19 +81,20 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.headerIconButton}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={28} color={colors.primary} />
-        </Pressable>
+      <AppHeader title="Profile" showBack/>
+      {/*<View style={styles.header}>*/}
+      {/*  <Pressable*/}
+      {/*    onPress={() => router.back()}*/}
+      {/*    style={styles.headerIconButton}*/}
+      {/*    hitSlop={10}*/}
+      {/*  >*/}
+      {/*    <Ionicons name="chevron-back" size={28} color={colors.primary} />*/}
+      {/*  </Pressable>*/}
 
-        <Text style={styles.headerTitle}>Profile</Text>
+      {/*  <Text style={styles.headerTitle}>Profile</Text>*/}
 
-        <View style={styles.headerSpacer} />
-      </View>
+      {/*  <View style={styles.headerSpacer} />*/}
+      {/*</View>*/}
 
       <ScrollView
         contentContainerStyle={styles.content}

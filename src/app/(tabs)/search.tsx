@@ -49,7 +49,7 @@ export default function SearchScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" />
+      <AppHeader title="GMA Connect" showNotiAndProfile/>
       <ScrollView contentContainerStyle={styles.container}>
         <TextInput
           value={query}

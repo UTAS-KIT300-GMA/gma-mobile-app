@@ -5,7 +5,7 @@ import { AppHeader } from "../../components/AppHeader";
 export default function LearningScreen() {
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" />
+      <AppHeader title="GMA Connect" showNotiAndProfile/>
       <View style={styles.container}>
         <Text style={styles.text}>To be updated</Text>
       </View>

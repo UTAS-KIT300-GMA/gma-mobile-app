@@ -47,7 +47,7 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" />
+      <AppHeader title="GMA Connect" showNotiAndProfile/>
       <View style={styles.container}>
         {loading ? (
           <View style={styles.center}>

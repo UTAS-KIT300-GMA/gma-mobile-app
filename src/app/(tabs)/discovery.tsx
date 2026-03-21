@@ -101,7 +101,7 @@ export default function DiscoveryScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" />
+      <AppHeader title="GMA Connect" showNotiAndProfile/>
 
       <View style={styles.container}>
         <View style={styles.categoryRow}>
