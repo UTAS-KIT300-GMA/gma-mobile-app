@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { formatDateTime } from "@/src/components/utils"
+import {AppHeader} from "@/src/components/AppHeader";
 
 export default function EventDetailScreen() {
     const router = useRouter();
@@ -19,13 +20,8 @@ export default function EventDetailScreen() {
 
     return (
         <SafeAreaView style={styles.safe}>
-            <View style={styles.header}>
-                <Pressable onPress={() => router.back()} style={styles.backBtn}>
-                    <Ionicons name="chevron-back" size={28} color="#374151" />
-                </Pressable>
-                <Text style={styles.headerTitle}>Event Details</Text>
-                <View style={{ width: 40 }} />
-            </View>
+            <AppHeader title="Event Details" showBack/>
+            {/*<View style={styles.header}>*/}
 
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <ImageBackground source={{ uri: event.image }} style={styles.image}>
