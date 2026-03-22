@@ -1,209 +1,77 @@
-import DateTimePicker from "@react-native-community/datetimepicker";
-import { useMemo, useState } from "react";
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "../../components/AppHeader";
+import { useState } from "react";
+import { useRouter } from "expo-router"; 
+import { InterestKey, INTEREST_TAGS } from "@/types/type"; 
+import { SearchScreenUI } from "@/screens/search/search-screen";
 
-type InterestKey =
-  | "communityEvents"
-  | "networking"
-  | "careerDevelopment"
-  | "workshops"
-  | "hobbies"
-  | "volunteering";
+export default function SearchScreenLogic() {
+  // Stores the navigation tool in the router var.
+  const router = useRouter();
 
-const INTEREST_TAGS: { key: InterestKey; label: string }[] = [
-  { key: "communityEvents", label: "Community Events" },
-  { key: "networking", label: "Networking" },
-  { key: "careerDevelopment", label: "Career Development" },
-  { key: "workshops", label: "Workshops" },
-  { key: "hobbies", label: "Hobbies" },
-  { key: "volunteering", label: "Volunteering" },
-];
-
-export default function SearchScreen() {
+  // Stores the user's typed inputs and date selections in vars.
   const [query, setQuery] = useState("");
-  const [selected, setSelected] = useState<Record<InterestKey, boolean>>({
-    communityEvents: false,
-    networking: false,
-    careerDevelopment: false,
-    workshops: false,
-    hobbies: false,
-    volunteering: false,
-  });
   const [location, setLocation] = useState("");
   const [date, setDate] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
 
-  const selectedTags = useMemo(
-    () => (Object.keys(selected) as InterestKey[]).filter((k) => selected[k]),
-    [selected],
-  );
+  //  Automatically creates a starting dictionary where every single tag is set to 'false'.
+  const initialTags = INTEREST_TAGS.reduce((acc, tag) => {
+    acc[tag.key] = false;
+    return acc;
+  }, {} as Record<InterestKey, boolean>);
+
+  // Stores the active/inactive status of every tag in the selected var using the generated dictionary.
+  const [selected, setSelected] = useState<Record<InterestKey, boolean>>(initialTags);
+
+  // Stores the function instruction in itoggleTag var.
+  const toggleTag = (key: InterestKey) => {
+    // Logic: Copies the previous dictionary but flips the boolean of the clicked tag.
+    setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  // Stores the function instructions in the handleApply var.
+  const handleApply = () => {
+    // Logic: Filters the selected store to create a clean array of only the active tags.
+    const selectedTags = (Object.keys(selected) as InterestKey[]).filter(
+      (k) => selected[k]
+    );
+    
+    // Uses the router tool to navigate to the results screen, 
+    // passing the current stores as URL parameters.
+    router.push({
+      pathname: "/search-results",
+      params: {
+        query,
+        location,
+        date: date ? date.toISOString() : "",
+        tags: selectedTags.join(","), 
+      }
+    } as any);
+  };
+
+  // Stores the instruction for clearing all inputs in the handleReset var.
+  const handleReset = () => {
+    setQuery("");
+    setLocation("");
+    setDate(null);
+    // Logic: Instantly resets all 25 tags back to false using our generated dictionary.
+    setSelected(initialTags); 
+  };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" />
-      <ScrollView contentContainerStyle={styles.container}>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search events / courses"
-          style={styles.searchBar}
-          placeholderTextColor="#9ca3af"
-        />
-
-        <Text style={styles.h1}>Interest Tags</Text>
-        <View style={styles.tagsWrap}>
-          {INTEREST_TAGS.map((t) => {
-            const active = selected[t.key];
-            return (
-              <Pressable
-                key={t.key}
-                onPress={() =>
-                  setSelected((prev) => ({ ...prev, [t.key]: !prev[t.key] }))
-                }
-                style={[styles.tag, active && styles.tagActive]}
-              >
-                <Text style={[styles.tagText, active && styles.tagTextActive]}>
-                  {t.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <Text style={styles.h1}>Location</Text>
-        <TextInput
-          value={location}
-          onChangeText={setLocation}
-          placeholder="Enter location"
-          style={styles.input}
-          placeholderTextColor="#9ca3af"
-        />
-        <Text style={styles.helper}>
-          (Google location autocomplete can be added next; this is a free-text
-          placeholder for now.)
-        </Text>
-
-        <Text style={styles.h1}>Date</Text>
-        <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-          <Text style={styles.dateText}>
-            {date ? date.toLocaleDateString("en-CA") : "Select date"}
-          </Text>
-        </Pressable>
-        {showPicker && (
-          <DateTimePicker
-            value={date ?? new Date()}
-            mode="date"
-            display="default"
-            onChange={(_, selectedDate) => {
-              setShowPicker(false);
-              if (selectedDate) setDate(selectedDate);
-            }}
-          />
-        )}
-
-        <View style={styles.buttonRow}>
-          <Pressable
-            style={[styles.button, styles.applyButton]}
-            onPress={() => {
-              // UI-only for now; hook into Firestore query next.
-              console.log("apply", { query, selectedTags, location, date });
-            }}
-          >
-            <Text style={styles.buttonText}>Apply</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.button, styles.resetButton]}
-            onPress={() => {
-              setQuery("");
-              setSelected({
-                communityEvents: false,
-                networking: false,
-                careerDevelopment: false,
-                workshops: false,
-                hobbies: false,
-                volunteering: false,
-              });
-              setLocation("");
-              setDate(null);
-            }}
-          >
-            <Text style={styles.buttonText}>Reset</Text>
-          </Pressable>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    // Passes all the valuess of var's and function instructions donw to search-screen.
+    <SearchScreenUI
+      query={query}
+      setQuery={setQuery}
+      selected={selected}
+      toggleTag={toggleTag}
+      location={location}
+      setLocation={setLocation}
+      date={date}
+      setDate={setDate}
+      showPicker={showPicker}
+      setShowPicker={setShowPicker}
+      handleApply={handleApply}
+      handleReset={handleReset}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#ffffff" },
-  container: { padding: 16, paddingBottom: 24 },
-  searchBar: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 15,
-    backgroundColor: "#ffffff",
-  },
-  h1: {
-    marginTop: 18,
-    marginBottom: 10,
-    fontSize: 14,
-    fontWeight: "800",
-    color: "#111827",
-  },
-  tagsWrap: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  tag: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
-  },
-  tagActive: {
-    backgroundColor: "#a64d79",
-    borderColor: "#a64d79",
-  },
-  tagText: { fontSize: 12, fontWeight: "700", color: "#374151" },
-  tagTextActive: { color: "#ffffff" },
-  input: {
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    backgroundColor: "#ffffff",
-  },
-  dateText: { color: "#111827", fontSize: 15, fontWeight: "600" },
-  helper: { marginTop: 8, color: "#6b7280", fontSize: 12 },
-  buttonRow: {
-    marginTop: 18,
-    flexDirection: "row",
-    gap: 12,
-  },
-  button: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: "center",
-  },
-  applyButton: { backgroundColor: "#25292e" },
-  resetButton: { backgroundColor: "#a64d79" },
-  buttonText: { color: "#ffffff", fontWeight: "800" },
-});

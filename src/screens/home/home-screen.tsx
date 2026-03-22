@@ -1,7 +1,4 @@
-import { EventDoc } from "@/src/app/(tabs)/type";
-import { collection, getDocs, query } from "@react-native-firebase/firestore";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -10,48 +7,38 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "../../components/AppHeader";
-import { EventCard } from "../../components/EventCard";
-import { db } from "../../services/firebase";
+import { EventDoc } from "@/types/type";
+import { AppHeader } from "@/components/AppHeader";
+import { EventCard } from "@/components/EventCard";
 
-export default function HomeScreen() {
-  const [events, setEvents] = useState<EventDoc[]>([]);
-  const [loading, setLoading] = useState(true);
+type HomeUIProps = {
+  events: EventDoc[];
+  loading: boolean;
+};
 
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
-      setLoading(true);
-      try {
-        const snap = await getDocs(query(collection(db, "events")));
-        const rows: EventDoc[] = snap.docs.map(
-          (d: { id: any; data: () => any }) => ({
-            id: d.id,
-            ...(d.data() as any),
-          }),
-        );
-        if (mounted) setEvents(rows);
-      } catch (e: any) {
-        Alert.alert(
-          "Failed to load events",
-          e?.message ?? "Something went wrong",
-        );
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+export default function HomeUI({ events, loading }: HomeUIProps) {
+  // Navigation Handlers
+  const handleProfilePress = () => {
+    console.log("Navigating to Profile..."); 
+    router.push("/(profile)" as any);
+  };
+
+  const handleNotificationPress = () => {
+    router.push("/notifications" as any);
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" />
+      <AppHeader 
+        title="GMA Connect" 
+        onPressProfile={handleProfilePress}
+        onPressNotifications={handleNotificationPress}
+      />
+      
       <View style={styles.container}>
         {loading ? (
           <View style={styles.center}>
-            <ActivityIndicator />
+            <ActivityIndicator color="#a64d79" size="large" />
           </View>
         ) : (
           <FlatList
@@ -80,7 +67,7 @@ export default function HomeScreen() {
                       memberPrice: item.ticketPrices?.member,
                       nonMemberPrice: item.ticketPrices?.nonMember,
                     },
-                  });
+                  } as any);
                 }}
               />
             )}

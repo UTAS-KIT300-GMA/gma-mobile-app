@@ -1,9 +1,9 @@
-import { AppHeader } from "@/src/components/AppHeader";
 import { colors } from "@/theme/ThemeProvider";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppHeader } from "@/components/AppHeader";
 
 type ToggleRowProps = {
   label: string;

@@ -7,8 +7,8 @@ import {
   View,
 } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
-import { EventDoc} from "@/src/app/(tabs)/type";
-import { formatDateTime } from "@/src/components/utils"
+import { EventDoc} from "@/types/type";
+import { formatDateTime } from "@/components/utils"
 
 const RSVP_BOOK = "RSVP/Book";
 
