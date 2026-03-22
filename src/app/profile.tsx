@@ -1,3 +1,5 @@
+import { AppHeader } from "@/components/AppHeader";
+import { logoutUser } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -10,8 +12,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { logoutUser } from "@/services/authService";
-import {AppHeader} from "@/components/AppHeader";
 
 type ProfileMenuItem = {
   id: string;
@@ -41,12 +41,12 @@ export default function ProfileScreen() {
     {
       id: "edit-profile",
       label: "Edit profile",
-      onPress: () => router.push("/edit-profile" ),
+      onPress: () => router.push("/edit-profile"),
     },
     {
       id: "payment-method",
       label: "Manage payment method",
-      onPress: () => Alert.alert("Manage payment method", "To be implemented"),
+      onPress: () => router.push("/manage-payment-method"),
     },
     {
       id: "update-interest",
@@ -81,7 +81,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader title="Profile" showBack/>
+      <AppHeader title="Profile" showBack />
       {/*<View style={styles.header}>*/}
       {/*  <Pressable*/}
       {/*    onPress={() => router.back()}*/}
