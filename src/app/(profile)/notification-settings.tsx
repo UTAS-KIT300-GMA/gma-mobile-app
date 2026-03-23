@@ -42,8 +42,6 @@ export default function NotificationSettingsScreen() {
       <AppHeader
         title="Notifications Setting"
         showBack
-        showActions={false}
-        onPressBack={() => router.back()}
       />
 
       <ScrollView

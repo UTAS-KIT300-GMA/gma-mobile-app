@@ -5,18 +5,14 @@ import { useRouter } from "expo-router";
 
 export function AppHeader({
   title = "GMA Connect",
-  onPressNotifications,
-  onPressProfile,
-  onPressBack,
   showBack = false,
-  showActions = true,
+  showNotiAndProfile = false,
+  showCheck = false,
 }: {
   title?: string;
-  onPressNotifications?: () => void;
-  onPressProfile?: () => void;
-  onPressBack?: () => void;
   showBack?: boolean;
-  showActions?: boolean;
+  showNotiAndProfile?: boolean;
+  showCheck?: boolean;
 }) {
   // Stores the navigation tool in the router var for internal redirects.
   const router = useRouter(); 
