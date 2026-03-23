@@ -247,11 +247,6 @@ export default function AuthScreen() {
             </Text>
           </TouchableOpacity>
 
-          {!isRegistering && (
-            <Link href={"/profile-setup"} asChild>
-              <Text style={styles.guestText}>Continue as guest</Text>
-            </Link>
-          )}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

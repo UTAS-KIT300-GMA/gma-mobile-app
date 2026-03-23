@@ -1,11 +1,28 @@
+/*
+Default `tsconfig.json` provided by Expo, with some customizations:
+
+- Added `strict` mode for better type safety.
+- Configured `jsx` to use the new React JSX transform.
+- Set `module` to `ESNext` for better tree-shaking and modern module support.
+- Added path alias `@/*` to simplify imports from the `src` directory.
+*/
+
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
     "jsx": "react-jsx",
     "strict": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
 }
