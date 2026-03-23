@@ -1,3 +1,12 @@
+/*
+Default `tsconfig.json` provided by Expo, with some customizations:
+
+- Added `strict` mode for better type safety.
+- Configured `jsx` to use the new React JSX transform.
+- Set `module` to `ESNext` for better tree-shaking and modern module support.
+- Added path alias `@/*` to simplify imports from the `src` directory.
+*/
+
 {
   // TypeScript config file.
   "extends": "expo/tsconfig.base",
