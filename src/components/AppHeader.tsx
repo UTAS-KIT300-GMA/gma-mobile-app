@@ -1,19 +1,22 @@
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useRouter } from "expo-router"; 
 
 export function AppHeader({
   title = "GMA Connect",
+  onPressNotifications,
+  onPressProfile,
+  onPressBack,
   showBack = false,
-  showNotiAndProfile = false,
-  showCheck = false,
+  showActions = true,
 }: {
   title?: string;
+  onPressNotifications?: () => void;
+  onPressProfile?: () => void;
+  onPressBack?: () => void;
   showBack?: boolean;
-  showNotiAndProfile?: boolean;
-  showCheck?: boolean;
+  showActions?: boolean;
 }) {
   // Stores the navigation tool in the router var for internal redirects.
   const router = useRouter(); 
@@ -90,81 +93,30 @@ export function AppHeader({
 }
 
 const styles = StyleSheet.create({
-  // Main Header styles
-  mainContainer: {
-    height: 84,
+  container: {
+    height: 56,
     paddingHorizontal: 16,
-    paddingTop: 5,
-    backgroundColor: colors.textOnPrimary,
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGrey,
-  },
-
-  mainTitle: {
-    color: colors.primary,
-    fontSize: 32,
-    fontWeight: "900",
-    letterSpacing: 0.2,
-  },
-
-  backContainer: {
-    height: 72,
-    paddingHorizontal: 16,
-    backgroundColor: colors.textOnPrimary,
+    backgroundColor: colors.primary,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGrey,
   },
-
-  backLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
+  title: {
+    color: "#ffffff",
+    fontSize: 18,
+    fontWeight: "800",
+    letterSpacing: 0.2,
   },
-
   actions: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginLeft: "auto",
+    gap: 10,
   },
-
   iconButton: {
-    width: 34,
-    height: 34,
-    alignItems: "center",
-    justifyContent: "center",
+    padding: 6,
     borderRadius: 999,
   },
-
-  // Back Header styles
-  backButton: {
-    position: "absolute",
-    left: 16,
-    top: 0,
-    bottom: 0,
-    width: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 999,
-    zIndex: 2,
-  },
-
-  backTitle: {
-    position: "absolute", 
-    left: 0,
-    right: 0,
-
-    color: colors.primary,
-    fontSize: 32,
-    fontWeight: "900",
-    letterSpacing: 0.2,
-    textAlign: "center",
-
-    pointerEvents: "none", // Ensure title doesn't block button presses
+  placeholder: {
+    width: 36,
   },
 });

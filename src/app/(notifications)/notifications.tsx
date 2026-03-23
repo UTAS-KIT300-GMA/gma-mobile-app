@@ -144,7 +144,34 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader title="Notifications" showBack showCheck/>
+      <View style={styles.header}>
+        <Pressable
+          onPress={() => router.back()}
+          style={styles.headerIconButton}
+          hitSlop={10}
+        >
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
+        </Pressable>
+
+        <Text style={styles.headerTitle}>Notifications</Text>
+
+        <View style={styles.headerActions}>
+          <Pressable style={styles.headerIconButton} hitSlop={10}>
+            <Ionicons
+              name="square-outline"
+              size={22}
+              color={colors.textOnSecondary}
+            />
+          </Pressable>
+          <Pressable style={styles.headerIconButton} hitSlop={10}>
+            <Ionicons
+              name="checkmark-done-outline"
+              size={24}
+              color={colors.textOnSecondary}
+            />
+          </Pressable>
+        </View>
+      </View>
 
       <FlatList
         data={notifications}
@@ -177,10 +204,19 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
+  headerIconButton: {
+    padding: 4,
+    borderRadius: 999,
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: "800",
     color: colors.primary,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
   },
   listContent: {
     paddingHorizontal: 14,
