@@ -5,6 +5,11 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 
+/* The `RootLayout` component serves as the main layout for the app. 
+It checks if the authentication state is still initialising and displays a loading indicator if it is. 
+Once the initialisation is complete, it renders the child components using the `Slot` component 
+from `expo-router`, which allows for nested routing and layout management. This structure ensures that 
+the app can handle authentication states gracefully while providing a consistent layout for all screens. */
 export default function RootLayout() {
   // Stores the Firebase user object in the user var.
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
