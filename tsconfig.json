@@ -8,20 +8,31 @@ Default `tsconfig.json` provided by Expo, with some customizations:
 */
 
 {
+  // TypeScript config file.
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "jsx": "react-jsx",
-    "strict": true,
+    "target": "ESNext",
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "lib": ["ESNext"],
+    "jsx": "react-native",
+    "moduleResolution": "bundler", 
+    "allowImportingTsExtensions": true, 
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    // Shortcuts to other folders in src.
     "paths": {
       "@/*": ["./src/*"]
     }
   },
+  // The only files TypeScript will check for errors.
   "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
   ]

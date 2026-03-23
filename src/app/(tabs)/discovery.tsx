@@ -1,30 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  serverTimestamp,
-  setDoc,
-  deleteDoc,
-} from "@react-native-firebase/firestore";
-import { AppHeader } from "@/components/AppHeader";
-import { EventCard } from "@/components/EventCard";
-import { auth, db } from "@/services/firebase";
-import { EventDoc, Category } from "@/app/(tabs)/type";
-import {router} from "expo-router";
 
-const CATEGORY_OPTIONS: { key: Category; label: string }[] = [
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert } from "react-native";
+import { 
+  collection, doc, getDocs, setDoc, deleteDoc, serverTimestamp, query, FirebaseFirestoreTypes 
+} from "@react-native-firebase/firestore";
+import { useRouter } from "expo-router";
+
+import { auth, db } from "@/services/authService"; 
+import { EventDoc } from "@/types/type";
+import { DiscoveryScreen as DiscoveryScreenUI } from "@/screens/discovery/discovery-screen";
+
+const CATEGORY_OPTIONS = [
   { key: "all", label: "All" },
   { key: "connect", label: "Connect" },
   { key: "growth", label: "Growth" },
@@ -32,174 +18,93 @@ const CATEGORY_OPTIONS: { key: Category; label: string }[] = [
 ];
 
 export default function DiscoveryScreen() {
-  const [category, setCategory] = useState<Category>("all");
+  const router = useRouter();
+  const [category, setCategory] = useState<string>("all");
   const [events, setEvents] = useState<EventDoc[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>(
-    {},
-  );
+  const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let mounted = true;
-    (async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const snap = await getDocs(query(collection(db, "events")));
-        const rows: EventDoc[] = snap.docs.map((d: { id: any; data: () => any; }) => ({
-          id: d.id,
-          ...(d.data() as any),
-        }));
+        const eventsSnap = await getDocs(query(collection(db, "events")));
+        const rows: EventDoc[] = eventsSnap.docs.map(
+          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({ ...(d.data() as Omit<EventDoc, 'id'>), id: d.id })
+        );
         if (mounted) setEvents(rows);
+
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          const bookmarksSnap = await getDocs(collection(db, "users", uid, "bookmarks"));
+          const bookmarkMap: Record<string, boolean> = {};
+          bookmarksSnap.forEach((docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => { bookmarkMap[docSnap.id] = true; });
+          if (mounted) setBookmarkedIds(bookmarkMap);
+        }
       } catch (e: any) {
-        Alert.alert("Failed to load events", e?.message ?? "Something went wrong");
+        Alert.alert("Error", e?.message ?? "Failed to load events.");
       } finally {
         if (mounted) setLoading(false);
       }
-    })();
-    return () => {
-      mounted = false;
     };
+
+    fetchData();
+    return () => { mounted = false; };
   }, []);
 
-  const filtered = useMemo(() => {
+  const filteredEvents = useMemo(() => {
     if (category === "all") return events;
-    return events.filter((e) => (e.category ?? "").toLowerCase() === category);
+    return events.filter(e => (e.category ?? "").toLowerCase() === category.toLowerCase());
   }, [category, events]);
 
   const handleBookmark = async (event: EventDoc) => {
     const uid = auth.currentUser?.uid;
-    if (!uid) {
-      Alert.alert("Not signed in", "Please log in again.");
-      return;
-    }
+    if (!uid) return Alert.alert("Sign In", "Please log in to save events.");
 
     const isBookmarked = !!bookmarkedIds[event.id];
     const bookmarkRef = doc(db, "users", uid, "bookmarks", event.id);
 
+    setBookmarkedIds(prev => {
+      const next = { ...prev };
+      isBookmarked ? delete next[event.id] : (next[event.id] = true);
+      return next;
+    });
+
     try {
-      if (isBookmarked) {
-        await deleteDoc(bookmarkRef);
-
-        setBookmarkedIds((prev) => {
-          const next = { ...prev };
-          delete next[event.id];
-          return next;
-        });
-      } else {
-        await setDoc(bookmarkRef, {
-          eventId: event.id,
-          title: event.title ?? "",
-          savedAt: serverTimestamp(),
-        });
-
-        setBookmarkedIds((prev) => ({ ...prev, [event.id]: true }));
-      }
-    } catch (e: any) {
-      Alert.alert("Action failed", e?.message ?? "Something went wrong");
+      if (isBookmarked) await deleteDoc(bookmarkRef);
+      else await setDoc(bookmarkRef, { eventId: event.id, title: event.title ?? "Unknown", savedAt: serverTimestamp() });
+    } catch (e) {
+      setBookmarkedIds(prev => {
+        const next = { ...prev };
+        isBookmarked ? (next[event.id] = true) : delete next[event.id];
+        return next;
+      });
+      Alert.alert("Error", "Could not update bookmark.");
     }
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" showNotiAndProfile/>
-
-      <View style={styles.container}>
-        <View style={styles.categoryRow}>
-          {CATEGORY_OPTIONS.map((opt) => {
-            const active = opt.key === category;
-            return (
-              <Pressable
-                key={opt.key}
-                onPress={() => setCategory(opt.key)}
-                style={[styles.categoryPill, active && styles.categoryPillActive]}
-              >
-                <Text
-                  style={[
-                    styles.categoryText,
-                    active && styles.categoryTextActive,
-                  ]}
-                >
-                  {opt.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        {loading ? (
-          <View style={styles.center}>
-            <ActivityIndicator />
-          </View>
-        ) : (
-          <FlatList
-            data={filtered}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.listContent}
-            renderItem={({ item }) => (
-              <EventCard
-                event={item}
-                showBookmark
-                bookmarked={!!bookmarkedIds[item.id]}
-                onPressBookmark={() => handleBookmark(item)}
-                onPressRsvp={() => Alert.alert("RSVP", "To be implemented")}
-                onPressCard={() => {
-                  router.push({
-                    pathname: "/event-details",
-                    params: {
-                      id: item.id,
-                      title: item.title,
-                      description: item.description,
-                      image: item.image,
-                      dateTime: item.dateTime?.toString(),
-                      type: item.type,
-                      totalTickets: item.totalTickets,
-                      address: item.address,
-                      memberPrice: item.ticketPrices?.member,
-                      nonMemberPrice: item.ticketPrices?.nonMember
-                    }
-                  });
-                }}
-              />
-            )}
-          />
-        )}
-      </View>
-    </SafeAreaView>
+    
+    
+    <DiscoveryScreenUI
+      filteredEvents={filteredEvents}
+      loading={loading}
+      bookmarkedIds={bookmarkedIds}
+      onBookmark={handleBookmark}
+      
+      
+      onCardPress={(item: EventDoc) => {
+        router.push({ pathname: "/event/event-details", params: { id: item.id } } as any);
+      }}
+      onRsvp={(item: EventDoc) => {
+        router.push({ pathname: "/event/event-details", params: { id: item.id } } as any);
+      }}
+      
+      category={category}
+      setCategory={setCategory}
+      options={CATEGORY_OPTIONS}
+    />
+  
   );
 }
-
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#ffffff" },
-  container: { flex: 1, backgroundColor: "#ffffff" },
-  center: { flex: 1, alignItems: "center", justifyContent: "center" },
-  listContent: { padding: 10, paddingBottom: 24 },
-  categoryRow: {
-    flexDirection: "row",
-    padding: 10,
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  categoryPill: {
-    flex: 1,
-    marginHorizontal: 4,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  categoryPillActive: {
-    backgroundColor: "#a64d79",
-    borderColor: "#a64d79",
-  },
-  categoryText: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#374151",
-  },
-  categoryTextActive: {
-    color: "#ffffff",
-  },
-});
