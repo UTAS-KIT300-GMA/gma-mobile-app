@@ -1,80 +1,93 @@
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import {router} from "expo-router";
+import { useRouter } from "expo-router"; 
 
 export function AppHeader({
   title = "GMA Connect",
+  onPressNotifications,
+  onPressProfile,
+  onPressBack,
   showBack = false,
-  showNotiAndProfile = false,
-  showCheck = false,
+  showActions = true,
 }: {
   title?: string;
+  onPressNotifications?: () => void;
+  onPressProfile?: () => void;
+  onPressBack?: () => void;
   showBack?: boolean;
-  showNotiAndProfile?: boolean;
-  showCheck?: boolean;
+  showActions?: boolean;
 }) {
+  // Stores the navigation tool in the router var for internal redirects.
+  const router = useRouter(); 
+
+  // Stores function instructions in  handleProfilePress var.
+  const handleProfilePress = () => {
+    if (onPressProfile) {
+      onPressProfile(); 
+    } else {
+      router.push("/(profile)" as any); 
+    }
+  };
+  
+  // Stores function instructions in handleNotificationPress var.
+  const handleNotificationPress = () => {
+    if (onPressNotifications) {
+      onPressNotifications();
+    } else {
+      router.push("/notifications" as any); // Default to Notifications screen
+    }
+  };
+  
+  // Stores function instructions in the handleBackPress var.
+  const handleBackPress = () => {
+    if (onPressBack) {
+      onPressBack();
+    } else {
+      router.back(); 
+    }
+  };
+
   return (
     <View style={styles.container}>
-      {/* LEFT SIDE */}
+      {/* LEFT SIDE: Back Button */}
       {showBack ? (
-        <Pressable onPress={() => router.back()} style={styles.iconButton} hitSlop={10}>
+        <Pressable onPress={handleBackPress} style={styles.iconButton} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color="#ffffff" />
         </Pressable>
       ) : (
         <View style={styles.placeholder} />
       )}
 
-      {/* TITLE */}
+      {/* CENTER: Title */}
       <Text style={styles.title}>{title}</Text>
 
-      {/* RIGHT SIDE */}
-      {showNotiAndProfile && (
-      <View style={styles.actions}>
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Notifications"
-          onPress={() => router.push({
-            pathname: "/notifications",
-          })}
-          style={styles.iconButton}
-          hitSlop={10}
-        >
-          <Ionicons name="notifications-outline" size={22} color="#ffffff" />
-        </Pressable>
+      {/* RIGHT SIDE: Notification & Profile */}
+      {showActions ? (
+        <View style={styles.actions}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Notifications"
+            onPress={handleNotificationPress}
+            style={styles.iconButton}
+            hitSlop={10}
+          >
+            <Ionicons name="notifications-outline" size={22} color="#ffffff" />
+          </Pressable>
 
-        <Pressable
-          accessibilityRole="button"
-          accessibilityLabel="Profile"
-          onPress={() => router.push({
-            pathname: "/profile"
-          })}
-          style={styles.iconButton}
-          hitSlop={10}
-        >
-          <Ionicons name="person-circle-outline" size={24} color="#ffffff" />
-        </Pressable>
-      </View>)}
-
-      {showCheck && (
-          <View style={styles.headerActions}>
-            <Pressable style={styles.headerIconButton} hitSlop={10}>
-              <Ionicons
-                  name="square-outline"
-                  size={22}
-                  color={colors.textOnPrimary}
-              />
-            </Pressable>
-            <Pressable style={styles.headerIconButton} hitSlop={10}>
-              <Ionicons
-                  name="checkmark-done-outline"
-                  size={24}
-                  color={colors.textOnPrimary}
-              />
-            </Pressable>
-          </View>)}
-
-      {!showNotiAndProfile && !showCheck && <View style={styles.placeholder} />}
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Profile"
+            onPress={handleProfilePress}
+            style={styles.iconButton}
+            hitSlop={10}
+          >
+            <Ionicons name="person-circle-outline" size={24} color="#ffffff" />
+          </Pressable>
+        </View>
+      ) : (
+        <View style={styles.placeholder} />
+      )}
     </View>
   );
 }
@@ -105,14 +118,5 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     width: 36,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  headerIconButton: {
-    padding: 4,
-    borderRadius: 999,
   },
 });

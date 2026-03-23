@@ -1,20 +1,51 @@
-import { StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "@/components/AppHeader";
+import { 
+  collection, 
+  getDocs, 
+  limit, 
+  query, 
+  FirebaseFirestoreTypes 
+} from "@react-native-firebase/firestore";
+import { useEffect, useState } from 'react';
+import { db } from '@/services/authService';
+import { LearningScreenUI } from '@/screens/learning/learning-screen';
 
-export default function LearningScreen() {
-  return (
-    <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" showNotiAndProfile/>
-      <View style={styles.container}>
-        <Text style={styles.text}>To be updated</Text>
-      </View>
-    </SafeAreaView>
-  );
+
+export interface LearningEvent {
+  id: string;
+  title: string;
+  duration: string;
+  thumbnailUrl: string;
+  isBookmarked: boolean;
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#ffffff" },
-  container: { flex: 1, alignItems: "center", justifyContent: "center" },
-  text: { fontSize: 16, fontWeight: "700", color: "#374151" },
-});
+export default function LearningRoute() {
+  const [events, setEvents] = useState<LearningEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const eventsRef = collection(db, 'events');
+        const q = query(eventsRef, limit(5));
+        
+        
+        const snap: FirebaseFirestoreTypes.QuerySnapshot = await getDocs(q);
+        
+        const data = snap.docs.map((doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
+          id: doc.id,
+          ...(doc.data() as Omit<LearningEvent, 'id'>),
+        }));
+
+        setEvents(data);
+      } catch (e) {
+        console.error("Firestore Fetch Error:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvents();
+  }, []);
+
+  return <LearningScreenUI events={events} loading={loading} />;
+}
