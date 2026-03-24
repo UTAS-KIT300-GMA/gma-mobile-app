@@ -11,7 +11,6 @@ import {
 
 import { InterestKey } from "@/types/type";
 
-
 interface Props {
   onSave: (selectedTags: InterestKey[]) => void;
   saving: boolean;
@@ -37,6 +36,7 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
         key={key}
         style={[styles.pill, isActive && styles.pillActive]}
         onPress={() => toggle(key)}
+        activeOpacity={0.7}
       >
         <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
           {key}
@@ -50,7 +50,8 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
       <View style={styles.box}>
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitials}>{userName.charAt(0)}</Text>
+            {/* The toUpperCase() ensures the initial is always capitalized */}
+            <Text style={styles.avatarInitials}>{userName.charAt(0).toUpperCase()}</Text>
           </View>
           <Text style={styles.username}>{userName}</Text>
         </View>
@@ -119,6 +120,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 20,
     width: '100%',
+    elevation: 3, 
   },
   avatarSection: {
     alignItems: "center",
@@ -178,6 +180,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     marginBottom: 4,
+    backgroundColor: "#fff",
   },
   pillActive: {
     backgroundColor: "#a64d79",

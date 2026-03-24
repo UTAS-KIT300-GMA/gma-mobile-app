@@ -3,8 +3,7 @@ import { onAuthStateChanged } from "@react-native-firebase/auth";
 import { useEffect, useState } from "react";
 import { auth } from "@/services/authService";
 
-
-//While app is running, monitor the user's login status.
+// While app is running, monitor the user's login status.
 export function useAuth() {
   // Stores the Firebase Auth user or null in the user var.
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
@@ -15,7 +14,6 @@ export function useAuth() {
 
   // Listens for changes in the authentication state (Login/Logout).
   useEffect(() => {
-    
     // Stores function instructions in unsubscribe var.
     const unsubscribe = onAuthStateChanged(auth, (authenticatedUser) => {
       setUser(authenticatedUser);
@@ -24,6 +22,6 @@ export function useAuth() {
     return unsubscribe;
   }, []);
   
-  // Passes the user and initializing values to app layout.
-  return { user, initializing };
+  // Passes the user, initializing values, and verification state to app layout.
+  return { user, initializing, isVerified: user?.emailVerified ?? false };
 }

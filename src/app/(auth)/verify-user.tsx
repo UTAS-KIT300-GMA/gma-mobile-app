@@ -1,114 +1,69 @@
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'expo-router';
-import { Alert } from 'react-native';
-import { auth, getFriendlyError } from '@/services/authService';
-import { VerifyUI } from '@/screens/auth/verify-user-screen';
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Alert } from "react-native";
+import { auth, resendVerificationEmail, logoutUser, getFriendlyError } from "@/services/authService";
+import { VerifyUI } from "@/screens/auth/verify-user-screen"; // Adjust this import to match your folder structure
 
-export default function VerifyRoute() {
-/**
-* Logic for verify-user-screen.
- * 
- * Outcome:
- * Monitors the user's email verification status and handles
- * manual checks, resending links, and logging out.
-*/
-  
-  // Stores the navigation object from Expo Router in router var to allow moving between the (auth) screens.
+export default function VerifyUserRoute() {
+  /**
+   * Logic for the verify-user screen
+   * * Outcome:
+   * - Displays the user's registered email
+   * - Handles manually resending the default Firebase verification email
+   * - Handles logging out (canceling verification)
+   * - Automatically unmounts when RootLayout detects emailVerified === true
+   */
+
   const router = useRouter();
-
-  // Stores a boolean (true/false) in the checking var to track if the app is currently reloading user status.
-  const [checking, setChecking] = useState(false);
   
-  // Stores the string typed by the user in the code var for visual feedback on the keypad.
-  const [code, setCode] = useState('');
-  
-  // Retrieves the user's account from Firebase Auth and stores it in user var.
-  const user = auth.currentUser;
+  // Stores a boolean in the loading var to track network requests.
+  const [loading, setLoading] = useState(false);
 
-  // Automatically checks user's verification status every 4 seconds.
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      if (user) {
-        try {
-          await user.reload();
-          
-          //If user is verified the timer stops and user is sent to home screen.
-          if (user.emailVerified) {
-            clearInterval(interval);
-            router.replace('/(tabs)/' as any);
-          }
-        } catch (e) {
-          console.error("Auto-reload failed", e);
-        }
-      }
-    }, 4000);
+  // Safely extracts the user's email to pass to the UI.
+  const userEmail = auth.currentUser?.email ?? "your email address";
 
-    return () => clearInterval(interval);
-  }, [user]);
-  
-  // Stores the function instructions in the handleKeyPress var.
-  const handleKeyPress = async (val: string) => {
-    if (val === '<') {
-      // Deletes the last character stored in the code var.
-      setCode(prev => prev.slice(0, -1));
-    } else if (code.length < 5) {
-      const newCode = code + val;
-      setCode(newCode);
-
-      if (newCode.length === 5) {
-        setChecking(true);
-        try {
-          if (user) {
-            await user.reload();
-            if (user.emailVerified) {
-              router.replace('/' as any);
-            } else {
-              Alert.alert("Not Verified", "We haven't seen the link click yet. Please check your inbox!");
-              setCode(''); 
-            }
-          }
-        } catch (e) {
-          Alert.alert("Error", "Could not check status. Please try again.");
-        } finally {
-          setChecking(false);
-        }
-      }
-    }
-  };
-  
-  // Stores the function instructions in the handleResend var.
+  /** * Handles resending the verification email.
+   * * Outcome:
+   * Triggers the Firebase function to send a new email and shows a success alert.
+   */
   const handleResend = async () => {
-    if (user) {
-      try {
-        await user.sendEmailVerification();
-        Alert.alert("Sent!", "A fresh verification link is on its way.");
-      } catch (e: any) {
-        Alert.alert("Wait a moment", getFriendlyError(e));
-      }
+    setLoading(true);
+    try {
+      // Sends the default web link (Intercepted by our Android Manifest)
+      await resendVerificationEmail();
+      Alert.alert("Email Sent", "A new verification link has been sent to your email.");
+    } catch (e: any) {
+      console.error("Resend error:", e);
+      Alert.alert("Error", getFriendlyError(e));
+    } finally {
+      setLoading(false);
     }
   };
-  
-  // Stores the function instructions in the handleLogout var.
+
+  /** * Handles logging the user out.
+   * * Outcome:
+   * Ends the Firebase session. The RootLayout's Navigation Guard will 
+   * detect the state change and automatically boot the user back to the landing screen.
+   */
   const handleLogout = async () => {
+    setLoading(true);
     try {
-      // Ends the active session
-      await auth.signOut();
-      
-    } catch (e) {
-      router.replace('/landing' as any);
+      await logoutUser();
+      // No router.replace() needed here! 
+      // RootLayout is watching, and will automatically redirect when user === null.
+    } catch (e: any) {
+      console.error("Logout error:", e);
+      Alert.alert("Error", getFriendlyError(e));
+      setLoading(false);
     }
   };
 
   return (
-    // Passes the values of code, email, checking, handleKeyPress
-    // handleResend and handleLogout to verify-user-screen.
     <VerifyUI 
-      code={code}
-      email={user?.email || "your email"}
-      onKeyPress={handleKeyPress}
+      email={userEmail}
       onResend={handleResend}
       onLogout={handleLogout}
-      loading={checking} 
+      loading={loading}
     />
   );
-} 
+}

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
 import { useRouter } from "expo-router";
-import { auth, db, doc, getDoc, logoutUser } from "@/services/authService"; 
+import { auth, db, doc, logoutUser } from "@/services/authService"; 
+import { getDoc } from "@react-native-firebase/firestore"; // Firestore function imported directly
 import ProfileUI from "@/screens/profile/profile-screen"; 
+
 // Stores the structure of the user doc (profile) in a interface.
 interface UserProfile {
   firstName: string;
@@ -15,7 +17,7 @@ export default function ProfileRoute() {
    * Logic for the profile-screen
    * 
    * Outcome:
-   *Fetches the user's name from Firestore to display it on profile screen.
+   * Fetches the user's name from Firestore to display it on profile screen.
    */
 
   // Stores the navigation object from Expo Router in router var to allow moving between the (profile) screens.
@@ -31,10 +33,8 @@ export default function ProfileRoute() {
     let mounted = true;
 
     async function fetchProfile() {
-        
       // Retrieves the user's account from Firebase Auth and stores it in user var.
       const user = auth.currentUser;
-      
       
       if (!user) {
         if (mounted) setLoading(false);
@@ -42,7 +42,6 @@ export default function ProfileRoute() {
       }
 
       try {
-        
         // Stores the doc ID of 'users' collection with Auth UID from FirebaseAuth in userRef var.
         const userRef = doc(db, "users", user.uid);
         
@@ -87,7 +86,6 @@ export default function ProfileRoute() {
         onPress: async () => {
           try {
             await logoutUser();
-            
           } catch (e: any) {
             Alert.alert("Error", e.message);
           }

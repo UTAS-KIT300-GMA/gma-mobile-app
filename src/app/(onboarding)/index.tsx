@@ -1,42 +1,29 @@
-import { ProfileSetupScreen } from "@/screens/onboarding/profile-setup-screen";
-import { InterestKey } from "@/types/type"
-import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert } from "react-native";
-import { auth, db } from "@/services/authService";
+import { useRouter } from "expo-router";
+
+// Project imports
+import { ProfileSetupScreen } from "@/screens/onboarding/profile-setup-screen";
+import { InterestKey } from "@/types/type";
+import { auth, db, doc, updateDoc } from "@/services/authService";
 
 export default function ProfileSetupRoute() {
   /**
    * Logic for the profile setup (onboarding) screen.
-   * 
-   * Outcome:
+   * * Outcome:
    * Saves the user's selected interests to Firestore and marks
-   * their onboarding as complete before sending them to home screen.
+   * their onboarding as complete. The RootLayout will automatically
+   * detect this update and route the user to the main tabs.
    */
 
-  // Stores the navigation object from Expo Router in the router var.
   const router = useRouter();
-
-  // Stores a boolean (true/false) in the saving var to track if the database update is in progress.
   const [saving, setSaving] = useState(false);
 
-  // Stores the function instructions in the handleSave var.
   const handleSave = async (selectedTags: InterestKey[]) => {
-    /**
-     * Handles the process of saving tags and updating the user's document.
-     * 
-     * Parameters:
-     * selectedTags - An array var storing the interests tags selected by the user.
-     * 
-     * Outcome: 
-     * Saves the users selected tags to their profile via firestore,
-     * otherwise error is displayed if user is not logged in etc.  
-     */
-
-    // If the saving var is true, stop function to prevent multiple database writes.
+    // Prevent multiple database writes if a save is already in progress
     if (saving) return;
 
-    // Retrieves the user's account from Firebase Auth and stores it in user var.
+    // Verify the user is still actively authenticated
     const user = auth.currentUser;
     if (!user) {
       Alert.alert("Not signed in", "Please log in again.");
@@ -48,25 +35,33 @@ export default function ProfileSetupRoute() {
     try {
       console.log(`Saving tags for user ${user.email} (UID: ${user.uid}):`, selectedTags);
       
-      // Adds users selected tags to their profile on Firestore and also changes their onboarding status to true.
-      await db.collection("users").doc(user.uid).set(
-        { 
-          selectedTags: selectedTags,
-          onboardingComplete: true 
-        },
-        { merge: true } 
-      );
-
-      // After user's profile as been updated they are Directed to home screen
-      router.replace("/(tabs)/" as any);
+      // 1. Target the specific user's document using modular Firebase syntax
+      const userRef = doc(db, "users", user.uid);
       
+      // 2. Update the document with their tags and onboarding status
+      await updateDoc(userRef, {
+        selectedTags: selectedTags,
+        onboardingComplete: true 
+      });
+
+      // Notice: No router.replace() is needed here.
+      // Your RootLayout is watching this document and will transition the app instantly.
+
     } catch (e: any) {
       console.error("Save Error:", e);
       Alert.alert("Save failed", e?.message ?? "Something went wrong.");
-    } finally {
-      setSaving(false);
-    }
+      setSaving(false); // Only turn off loading if there is an error
+    } 
   };
-  // Passess the values of handleSave and saving to profile-setup-screen
-  return <ProfileSetupScreen onSave={handleSave} saving={saving} />;
+
+  // Grab the user's display name from Firebase to pass to the UI avatar
+  const userName = auth.currentUser?.displayName || "User";
+
+  return (
+    <ProfileSetupScreen 
+      onSave={handleSave} 
+      saving={saving} 
+      userName={userName} 
+    />
+  );
 }

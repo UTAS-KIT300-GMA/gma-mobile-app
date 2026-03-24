@@ -1,5 +1,6 @@
 {
   "name": "gma-mobile",
+  "scheme": "gmamobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "node": ">= 20.19.4",

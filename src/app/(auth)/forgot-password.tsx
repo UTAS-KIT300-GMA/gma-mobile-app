@@ -5,14 +5,14 @@ import { ForgotPasswordScreen } from '@/screens/auth/forgot-password-screen';
 import { sendPasswordReset, getFriendlyError } from "@/services/authService"
 
 export default function ForgotPassword() {
-/**
-* Is the logic for the forgot-password-screen.
-* 
-* Outcome: 
-* Sends password reset email and navigates the user back to the login screen if sucessfull,
-* otherwise error message is displayed.
-*/
-  
+  /**
+  * Logic for the forgot-password-screen.
+  * 
+  * Outcome: 
+  * Sends password reset email and navigates the user back to the login screen if successful,
+  * otherwise an error message is displayed.
+  */
+
   // Stores a boolean value (true/false) in loading var to track if the Firebase reset request is currently loading.
   const [loading, setLoading] = useState(false);
   
@@ -21,19 +21,18 @@ export default function ForgotPassword() {
 
   // Stores the function instructions in handleSendReset var.
   const handleSendReset = async (email: string) => {
-  /**
-  * Checks if email is correct and then passes on email to Firebase Auth for them to send password reset email.
-  * 
-  * Parameters:
-  * email - User's inputted email
-  * 
-  * Outcome:
-  * User gets password reset email, otherwise errors are displayed due to fail validation of email. 
-  */
+    /**
+    * Checks if email is correct and then passes it to Firebase Auth to send a password reset email.
+    * 
+    * Parameters:
+    * email - User's inputted email
+    * 
+    * Outcome:
+    * User receives a password reset email, otherwise errors are displayed.
+    */
 
     // Checks if email var exists or if it does not include a "@".
     if (!email || !email.includes('@')) {
-    
       Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
@@ -41,8 +40,9 @@ export default function ForgotPassword() {
     setLoading(true);
     
     try {
-    // Sends email var of user's email to Firebase Auth, which sends the reset email.
+      // Sends the user's email to Firebase Auth, which sends the reset email.
       await sendPasswordReset(email);
+
       Alert.alert(
         "Link Sent",
         "Check your inbox for instructions to reset your password.",
@@ -50,7 +50,7 @@ export default function ForgotPassword() {
       );
 
     } catch (error: any) {
-      // stores any error messages in the message var with getFriendlyError format 
+      // Converts any Firebase errors into user-friendly messages
       const message = getFriendlyError(error);
       Alert.alert("Reset Error", message);
     } finally {
@@ -59,6 +59,7 @@ export default function ForgotPassword() {
   };
 
   return (
+    // Passes the values of handleSendReset and loading to the forgot-password screen
     <ForgotPasswordScreen 
       onSendReset={handleSendReset} 
       loading={loading} 
