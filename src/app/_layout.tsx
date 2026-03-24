@@ -3,6 +3,7 @@ import { FirebaseAuthTypes, onAuthStateChanged } from "@react-native-firebase/au
 import { Slot, useRouter, useSegments } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { colors } from "@/theme/ThemeProvider";
 
 
 /* The `RootLayout` component serves as the main layout for the app. 
@@ -101,10 +102,10 @@ export default function RootLayout() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#fff",
+          backgroundColor: colors.background,
         }}
       >
-        <ActivityIndicator size="large" color="#a64d79" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
