@@ -1,7 +1,7 @@
 import { collection, getDocs, query } from "@react-native-firebase/firestore";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
-import { db } from "../../services/authService"
+import { db } from "@/services/authService"
 import { EventDoc } from "@/types/type";
 import HomeScreen from "@/screens/home/home-screen"; 
 
