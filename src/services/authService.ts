@@ -1,9 +1,10 @@
-/** * This file manages the Firebase logic for authentication and Firestore user profiles for GMA's app.
- * It handles login, logout, registration, email verification, and password management.
+/**
+ * CORE AUTH SERVICE
+ * The centralized file for Firebase operations.
+ * Handles raw API calls for Authentication (Login, Register, Password Resets) 
+ * and Firestore user profile management.
  */
-
 import { useEffect } from "react";
-import { getApp } from "@react-native-firebase/app";
 import {
   getAuth,
   onAuthStateChanged,
@@ -28,13 +29,12 @@ import {
   updateDoc
 } from "@react-native-firebase/firestore";
 
-// Initialization 
-const app = getApp();
+
 // handles user authentication (login, register etc).
-export const auth = getAuth(app); 
+export const auth = getAuth(); 
 
 // handles database operations (read/write data).
-export const db = getFirestore(app); 
+export const db = getFirestore(); 
 
 export const ERROR_MESSAGES: Record<string, string> = {
   "auth/email-already-in-use": "This email is already registered.",

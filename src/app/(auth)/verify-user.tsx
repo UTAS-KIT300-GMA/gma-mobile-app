@@ -1,11 +1,17 @@
+/**
+ * VERIFICATION MANAGER
+ * Manages the logic for the "Waiting Room" screen.
+ * Handles user interactions for resending verification emails and logging out, 
+ * holding the user in place until their email status is confirmed.
+ */
+
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert } from "react-native";
 import { auth, resendVerificationEmail, logoutUser, getFriendlyError } from "@/services/authService";
 import { VerifyUI } from "@/screens/auth/verify-user-screen"; // Adjust this import to match your folder structure
 
-export default function VerifyUserRoute() {
-  /**
+/**
    * Logic for the verify-user screen
    * * Outcome:
    * - Displays the user's registered email
@@ -13,7 +19,9 @@ export default function VerifyUserRoute() {
    * - Handles logging out (canceling verification)
    * - Automatically unmounts when RootLayout detects emailVerified === true
    */
-
+export default function VerifyUserRoute() {
+  
+  // Stores the navigation tool in the router var to allow moving between the (auth) screens.
   const router = useRouter();
   
   // Stores a boolean in the loading var to track network requests.
@@ -49,8 +57,7 @@ export default function VerifyUserRoute() {
     setLoading(true);
     try {
       await logoutUser();
-      // No router.replace() needed here! 
-      // RootLayout is watching, and will automatically redirect when user === null.
+
     } catch (e: any) {
       console.error("Logout error:", e);
       Alert.alert("Error", getFriendlyError(e));
@@ -58,6 +65,7 @@ export default function VerifyUserRoute() {
     }
   };
 
+  // Passes the email, the loading status, and the button functions to the verify-user-screen UI.
   return (
     <VerifyUI 
       email={userEmail}

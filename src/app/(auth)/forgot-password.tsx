@@ -1,17 +1,22 @@
+/**
+ * PASSWORD RECOVERY MANAGER
+ * This file handles the "Forgot Password" process. 
+ * It checks the email address and tells Firebase to send the user 
+ * a link to change their password.
+ */
 import React, { useState } from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ForgotPasswordScreen } from '@/screens/auth/forgot-password-screen';
 import { sendPasswordReset, getFriendlyError } from "@/services/authService"
-
+  
+/**
+ * Sets up the logic for the forgot password screen.
+ * * Outcome: 
+ * Prepares the loading status and the navigation tools, then shows 
+ * the forgot-password screen to the user.
+ */
 export default function ForgotPassword() {
-  /**
-  * Logic for the forgot-password-screen.
-  * 
-  * Outcome: 
-  * Sends password reset email and navigates the user back to the login screen if successful,
-  * otherwise an error message is displayed.
-  */
 
   // Stores a boolean value (true/false) in loading var to track if the Firebase reset request is currently loading.
   const [loading, setLoading] = useState(false);
@@ -19,18 +24,17 @@ export default function ForgotPassword() {
   // Stores the navigation object from Expo Router in router var to allow moving between the (auth) screens.
   const router = useRouter();
 
+    /**
+ * Checks the user's email and sends the password reset link.
+ * * Parameters:
+ * email - The email address the user typed in.
+ * * Outcome:
+ * Sends the reset email and shows a success message. Once the user clicks 
+ * "OK," it takes them back to the login screen.
+ */
   // Stores the function instructions in handleSendReset var.
   const handleSendReset = async (email: string) => {
-    /**
-    * Checks if email is correct and then passes it to Firebase Auth to send a password reset email.
-    * 
-    * Parameters:
-    * email - User's inputted email
-    * 
-    * Outcome:
-    * User receives a password reset email, otherwise errors are displayed.
-    */
-
+  
     // Checks if email var exists or if it does not include a "@".
     if (!email || !email.includes('@')) {
       Alert.alert("Invalid Email", "Please enter a valid email address.");

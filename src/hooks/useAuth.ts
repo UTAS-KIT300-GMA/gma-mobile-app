@@ -1,3 +1,9 @@
+/**
+ * AUTHENTICATION HOOK
+ * A reusable Identity Sensor that subscribes to the Firebase Auth state.
+ * Provides real-time updates on the current user's login status and 
+ * verification state to any component in the app.
+ */
 import type { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { onAuthStateChanged } from "@react-native-firebase/auth";
 import { useEffect, useState } from "react";

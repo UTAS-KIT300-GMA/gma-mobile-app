@@ -1,39 +1,45 @@
+/**
+ * LOGIN MANAGER
+ * This file handles the login screen. It checks the user's email 
+ * and password and makes sure their account is verified before 
+ * letting them into the main app.
+ */
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert } from "react-native";
 import { getFriendlyError, loginUser, resendVerificationEmail } from "@/services/authService";
 import { LoginScreen } from "@/screens/auth/login-screen";
 
+/**
+ * Sets up the logic for the login screen.
+ * * Outcome: 
+ * Prepares the login process and navigation, then shows the 
+ * login screen UI to the user.
+ */
 export default function LoginRoute() {
-  /**
-   * Logic for the login route
-   * 
-   * Outcome: 
-   * Authenticates the user and navigates them to the home page if successful, 
-   * or prompts for email verification if the account is not yet verified.
-   */
+  
 
-  // Stores the navigation object from Expo Router in router var to allow moving between screens.
+  // Stores the navigation tool in the router var to allow moving between the (auth) screens.
   const router = useRouter();
 
-  // Tracks if a Firebase login request is currently processing.
+  // Stores a true/false value in the loading var to track if the app is currently trying to sign the user in.
   const [loading, setLoading] = useState(false);
 
-  /** 
-   * Handles user login.
-   * 
-   * Parameters:
-   * email - user's email
-   * password - user's password
-   * 
-   * Outcome:
-   * Logs in user, shows verification prompt if not verified, or shows errors.
-   */
+  /**
+ * Handles the login button and checks if the user is verified.
+ * * Parameters:
+ * email - The email the user typed in.
+ * password - The password the user typed in.
+ * * Outcome:
+ * Signs the user in. If they haven't verified their email, it 
+ * shows a popup with options to resend the link or check their status.
+ */
   const handleLogin = async (email: string, password: string) => {
+    
     // Prevent multiple simultaneous login attempts
     if (loading) return;
 
-    // Sanitize email
+    // Stores the email address in the cleanEmail var after removing extra spaces and making it lowercase.
     const cleanEmail = email.trim().toLowerCase();
 
     // Validate inputs
@@ -41,7 +47,8 @@ export default function LoginRoute() {
       Alert.alert("Error", "Please enter email and password.");
       return;
     }
-
+    
+    // Changes the loading var to true to tell the app a background task has started.
     setLoading(true);
     try {
       // Attempt login
