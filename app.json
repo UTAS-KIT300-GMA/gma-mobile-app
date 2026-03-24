@@ -2,9 +2,9 @@
   "expo": {
     "name": "GMAConnect",
     "slug": "gma-mobile",
+    "owner": "gma-app",
     "version": "1.0.1",
     "scheme": "gmamobile",
-
     "splash": {
       "image": "./assets/images/gma-flash-logo.png",
       "resizeMode": "cover",
@@ -25,7 +25,6 @@
           "root": "./src/app"
         }
       ],
-      "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "expo-splash-screen"
     ],
@@ -34,6 +33,14 @@
     },
     "ios": {
       "bundleIdentifier": "com.gma.connect"
+    },
+    "extra": {
+      "router": {
+        "root": "./src/app"
+      },
+      "eas": {
+        "projectId": "c2d2ee93-087d-4c06-8b37-d4e70f5f5153"
+      }
     }
   }
 }
