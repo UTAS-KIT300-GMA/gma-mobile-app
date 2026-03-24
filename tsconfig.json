@@ -13,10 +13,10 @@ Default `tsconfig.json` provided by Expo, with some customizations:
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
-    "lib": ["ESNext"],
+    // "lib": ["ESNext"],
     "jsx": "react-native",
-    "moduleResolution": "bundler", 
-    "allowImportingTsExtensions": true, 
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "allowJs": true,
     "strict": true,
@@ -34,6 +34,7 @@ Default `tsconfig.json` provided by Expo, with some customizations:
     "src/**/*.ts",
     "src/**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "**/*.d.ts"
   ]
 }

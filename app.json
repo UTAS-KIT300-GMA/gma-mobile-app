@@ -1,39 +1,23 @@
 {
   "expo": {
-    "name": "gma-mobile",
+    "name": "GMAConnect",
     "slug": "gma-mobile",
     "version": "1.0.1",
     "scheme": "gmamobile",
-    "icon": "./assets/images/gma-app-logo.png", // App icon for both iOS and Android
-    
+
     "splash": {
-      "image": "./assets/images/gma-in-app-logo.png", // Splash screen image
+      "image": "./assets/images/gma-flash-logo.png",
       "resizeMode": "cover",
       "backgroundColor": "#FBF0E4"
     },
-
     "android": {
       "package": "com.gma.connect",
-      "googleServicesFile": "google-services.json",
-      "intentFilters": [
-        {
-          "action": "VIEW",
-          "autoVerify": true,
-          "data": [
-            {
-              "scheme": "https",
-              "host": "kit300-p4-gma.firebaseapp.com",
-              "pathPrefix": "/__/auth/action"
-            }
-          ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
-        }
-      ]
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/gma-app-logo.png",
+        "backgroundColor": "#FBF0E4"
+      },
+      "googleServicesFile": "./google-services.json"
     },
-
     "plugins": [
       [
         "expo-router",
@@ -41,11 +25,15 @@
           "root": "./src/app"
         }
       ],
+      "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "expo-splash-screen"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "ios": {
+      "bundleIdentifier": "com.gma.connect"
     }
   }
 }
