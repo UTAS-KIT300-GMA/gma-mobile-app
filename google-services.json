@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "1056021584152",
+    "project_id": "kit300-p4-gma",
+    "storage_bucket": "kit300-p4-gma.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1056021584152:android:83a2b20278d8eacb00266d",
+        "android_client_info": {
+          "package_name": "com.gma.connect"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1056021584152-0ks0i3jlit8dl8b85di729bbkqirilsr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBobCPbUsNM-OGqMm-72Md-e9z-qPwZGdw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1056021584152-0ks0i3jlit8dl8b85di729bbkqirilsr.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1056021584152-lp1tbfa510s9igma4c6a4ssblbjd251u.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.utas.gma"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
