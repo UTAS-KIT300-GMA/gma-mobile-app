@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { Alert } from "react-native";
-import { useRouter } from "expo-router";
-import { auth, db, doc, logoutUser } from "@/services/authService"; 
-import { getDoc } from "@react-native-firebase/firestore"; // Firestore function imported directly
-import ProfileUI from "@/screens/profile/profile-screen"; 
+import { useRouter, useFocusEffect } from "expo-router";
+
+
+import { auth, db, doc, logoutUser, getDoc } from "@/services/authService"; 
+
+import ProfileUI from "@/screens/profile/profile-UI"; 
 
 // Stores the structure of the user doc (profile) in a interface.
 interface UserProfile {
@@ -15,9 +17,9 @@ interface UserProfile {
 export default function ProfileRoute() {
   /**
    * Logic for the profile-screen
-   * 
-   * Outcome:
+   * * Outcome:
    * Fetches the user's name from Firestore to display it on profile screen.
+   * Using useFocusEffect ensures the data refreshes whenever the user returns to this screen.
    */
 
   // Stores the navigation object from Expo Router in router var to allow moving between the (profile) screens.
@@ -29,53 +31,64 @@ export default function ProfileRoute() {
   // Stores a boolean in the loading var to track the fetching status.
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    let mounted = true;
+  // useFocusEffect runs every time this screen becomes the active screen.
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
 
-    async function fetchProfile() {
-      // Retrieves the user's account from Firebase Auth and stores it in user var.
-      const user = auth.currentUser;
-      
-      if (!user) {
-        if (mounted) setLoading(false);
-        return;
-      }
-
-      try {
-        // Stores the doc ID of 'users' collection with Auth UID from FirebaseAuth in userRef var.
-        const userRef = doc(db, "users", user.uid);
+      async function fetchProfile() {
+        // Retrieves the user's account from Firebase Auth and stores it in user var.
+        const user = auth.currentUser;
         
-        // Stores the snapshot of the doc (profile) from Firestore in userSnap var.
-        const userSnap = await getDoc(userRef);
-        
-        // Stores the raw data from the snapshot in the data var.
-        const data = userSnap.data();
-
-        if (userSnap.exists() && data) {
-          // Maps the data var to the UserProfile interface structure.
-          const profile = data as UserProfile;
-          if (mounted) {
-            // Combines names and updates the userName var using
-            // the setUserName function.
-            setUserName(`${profile.firstName} ${profile.lastName}`);
-          }
+        if (!user) {
+          if (mounted) setLoading(false);
+          return;
         }
-      } catch (e) {
-        console.error("Error fetching profile:", e);
-      } finally {
-        // setLoading function changes value of loading var to false,
-        // as data is not being fetching anymore.
-        if (mounted) setLoading(false);
-      }
-    }
-    
-    fetchProfile();
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
- 
+        try {
+          // Stores the doc ID of 'users' collection with Auth UID from FirebaseAuth in userRef var.
+          const userRef = doc(db, "users", user.uid);
+          
+          // Stores the snapshot of the doc (profile) from Firestore in userSnap var.
+          const userSnap = await getDoc(userRef);
+          
+          
+          if (userSnap.exists()) {
+            // Stores the raw data from the snapshot in the data var.
+            const data = userSnap.data();
+
+            if (mounted && data) {
+              // Safely pull out the names to avoid "undefined" errors
+              const first = data.firstName || "";
+              const last = data.lastName || "";
+              
+              if (first || last) {
+                // Combines names and updates the userName var using the setUserName function.
+                setUserName(`${first} ${last}`.trim());
+              } else {
+                setUserName("User"); 
+              }
+            }
+          } else {
+            // If the document somehow doesn't exist, provide a safe fallback
+            if (mounted) setUserName("Guest User");
+          }
+        } catch (e) {
+          console.error("Error fetching profile:", e);
+        } finally {
+          // setLoading function changes value of loading var to false as data is no longer being fetched.
+          if (mounted) setLoading(false);
+        }
+      }
+      
+      fetchProfile();
+
+      return () => {
+        mounted = false;
+      };
+    }, [])
+  );
+
   // Stores the function instructions in the handleLogout var.
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to log out?", [
@@ -86,6 +99,8 @@ export default function ProfileRoute() {
         onPress: async () => {
           try {
             await logoutUser();
+            // Optional: Kicks user back to the login screen so they don't get stuck
+            router.replace("/(auth)/landing" as any);
           } catch (e: any) {
             Alert.alert("Error", e.message);
           }
@@ -102,6 +117,7 @@ export default function ProfileRoute() {
       loading={loading} 
       onLogout={handleLogout}
       onBack={() => router.back()}
+      // Uses router.push to allow sub-screens like 'payment' to stack on top.
       onNavigate={(path: string) => router.push(path as any)}
     />
   );

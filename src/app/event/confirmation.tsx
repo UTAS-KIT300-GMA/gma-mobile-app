@@ -1,6 +1,6 @@
 import { useRouter, useLocalSearchParams } from "expo-router";
 // Path: @/ alias points to src/
-import { BookingConfirmedUI } from "@/screens/event/confirmation-screens"
+import { BookingConfirmedUI } from "@/screens/event/confirmation-UI"
 
 export default function BookingConfirmedRoute() {
   const router = useRouter();

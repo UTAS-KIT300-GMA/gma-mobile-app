@@ -12,13 +12,8 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AppHeader } from "@/components/AppHeader";
+import { ProfileFormData } from "@/types/type";
 
-export interface ProfileFormData {
-  firstName: string;
-  lastName: string;
-  dateOfBirth: string;
-  email?: string;
-}
 
 interface Props {
   onSave: (data: ProfileFormData) => void;
@@ -27,35 +22,44 @@ interface Props {
 }
 
 export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
+  // --- STATE ---
+  // Stores the user's input values for each field in the form.
   const [firstName, setFirstName] = useState(initialData?.firstName || "");
   const [lastName, setLastName] = useState(initialData?.lastName || "");
-  const [dateOfBirth, setDateOfBirth] = useState(initialData?.dateOfBirth || "");
+  const [email, setEmail] = useState(initialData?.email || "");
 
+  // --- LOGIC ---
   const handleSavePress = () => {
-    
-    if (!firstName || !lastName || !dateOfBirth) {
+    // 1. Check if any fields are empty
+    if (!firstName || !lastName || !email) {
       Alert.alert("Error", "All fields are required.");
       return;
     }
     
-    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
-    if (!dateRegex.test(dateOfBirth)) {
-      Alert.alert("Invalid Date", "Please use DD/MM/YYYY format.");
+    
+
+    // 3. Basic Email Validation
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
 
-    onSave({ firstName, lastName, dateOfBirth });
+    // 4. Pass the cleaned data back to the Route manager
+    onSave({ firstName, lastName, email });
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <AppHeader title="Edit Profile" showBack onPressBack={onBack} />
+      
       <KeyboardAvoidingView 
         behavior={Platform.OS === "ios" ? "padding" : undefined} 
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.container}>
           <View style={styles.card}>
+            
             <Text style={styles.label}>First Name</Text>
             <TextInput 
               style={styles.input} 
@@ -72,23 +76,26 @@ export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
               placeholder="Enter last name"
             />
 
-            <Text style={styles.label}>Date of Birth</Text>
+            <Text style={styles.label}>Email Address</Text>
             <TextInput 
               style={styles.input} 
-              value={dateOfBirth} 
-              onChangeText={setDateOfBirth} 
-              placeholder="DD/MM/YYYY"
-              keyboardType="numeric"
+              value={email} 
+              onChangeText={setEmail} 
+              placeholder="email@example.com"
+              keyboardType="email-address"
+              autoCapitalize="none"
             />
 
             <View style={styles.row}>
               <Pressable style={styles.btnSave} onPress={handleSavePress}>
                 <Text style={styles.btnText}>Save</Text>
               </Pressable>
+              
               <Pressable style={styles.btnCancel} onPress={onBack}>
                 <Text style={[styles.btnText, { color: '#666' }]}>Cancel</Text>
               </Pressable>
             </View>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
