@@ -16,23 +16,34 @@
         "foregroundImage": "./assets/images/gma-app-logo.png",
         "backgroundColor": "#FBF0E4"
       },
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "gma-app.web.app",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "root": "./src/app"
-        }
-      ],
-      "@react-native-firebase/auth",
-      "expo-splash-screen"
-    ],
+  "expo-router",
+  "@react-native-firebase/auth",
+  "expo-splash-screen"
+],
+    
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
-      "bundleIdentifier": "com.gma.connect"
+      "bundleIdentifier": "com.gma.connect",
+      "associatedDomains": ["applinks:gma-app.web.app"]
     },
     "extra": {
       "router": {
