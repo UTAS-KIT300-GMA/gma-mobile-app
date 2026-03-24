@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppHeader } from '@/components/AppHeader';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDateTime } from '@/components/utils'; 
+import { colors } from '@/theme/ThemeProvider';
 
 interface Props {
   event: any;
@@ -19,7 +20,7 @@ export default function EventDetailUI({ event, loading, isBookmarked, onBookmark
   if (loading || !event) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#9D246E" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

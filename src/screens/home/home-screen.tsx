@@ -51,7 +51,7 @@ export default function HomeUI({ events, loading }: HomeUIProps) {
                 onPressRsvp={() => Alert.alert("RSVP", "To be implemented")}
                 onPressCard={() => {
                   router.push({
-                    pathname: "/event-details",
+                    pathname: "/event/event-details",
                     params: {
                       id: item.id,
                       title: item.title,

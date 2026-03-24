@@ -108,19 +108,16 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.background,
   },
   contentContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 40,
     paddingBottom: 40,
   },
   box: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.background,
     borderRadius: 16,
     padding: 20,
-    width: '100%',
-    elevation: 3, 
   },
   avatarSection: {
     alignItems: "center",

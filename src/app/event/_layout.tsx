@@ -9,28 +9,33 @@ export default function EventLayout() {
     <Stack
       screenOptions={{
         // Maps the secondary color store to the header's background.
-        headerStyle: { backgroundColor: theme.secondary }, 
+        headerStyle: { backgroundColor: theme.secondary },
         
         // Maps the primary color store to the text and back icons.
-        headerTintColor: theme.primary, 
+        headerTintColor: theme.primary,
 
         // Sets the title font weight to bold for better visibility.
         headerTitleStyle: { fontWeight: 'bold' },
 
         // Hides the header shadow to keep the UI clean and flat.
-        headerShadowVisible: false, 
+        headerShadowVisible: false,
+
       }}
     >
       <Stack.Screen 
       //Defines the 'Event Details' screen and stores its title.
         name="event-details" 
-        options={{ title: 'Event Details' }} 
+        options={{ title: 'Event Details', headerShown: false }}
       />
       <Stack.Screen 
       // efines the 'Booking Confirmed' screen and hides the back button.
         name="confirmation" 
-        options={{ title: 'Booking Confirmed', headerLeft: () => null }} 
+        options={{ title: 'Booking Confirmed', headerLeft: () => null, headerShown: false }}
       />
+    <Stack.Screen
+        name="booking"
+        options={{ title: 'Booking', headerLeft: () => null, headerShown: false }}
+    />
     </Stack>
   );
 }

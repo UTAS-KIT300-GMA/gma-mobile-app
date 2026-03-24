@@ -1,12 +1,13 @@
+import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { 
-  Pressable, 
-  ScrollView, 
-  StyleSheet, 
-  Text, 
-  View, 
-  ActivityIndicator 
+import {
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,39 +19,49 @@ type ProfileUIProps = {
   onNavigate: (path: string) => void;
 };
 
-export default function ProfileUI({ 
-  userName, 
-  loading, 
-  onLogout, 
-  onBack, 
-  onNavigate 
+export default function ProfileUI({
+  userName,
+  loading,
+  onLogout,
+  onBack,
+  onNavigate,
 }: ProfileUIProps) {
-  
-  
   const menuItems = [
     { id: "edit", label: "Edit profile", path: "/edit-profile" },
-    { id: "interests", label: "Update interest", path: "/(profile)/edit-interests" },
-    { id: "notifs", label: "Notifications setting", path: "/notification-settings" },
-    { id: "saved", label: "Saved events", path: "/saved-events" }, 
+    {
+      id: "interests",
+      label: "Update interest",
+      path: "/(profile)/edit-interests",
+    },
+    {
+      id: "notifs",
+      label: "Notifications setting",
+      path: "/notification-settings",
+    },
+    { id: "saved", label: "Saved events", path: "/saved-events" },
   ];
 
   return (
     <SafeAreaView style={styles.safe}>
       {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={onBack} style={styles.headerIconButton} hitSlop={10}>
-          <Ionicons name="chevron-back" size={28} color={colors.primary} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Profile</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <AppHeader title="Profile" showBack={true} onPressBack={onBack} />
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Top Section */}
         <View style={styles.profileTop}>
-          <Ionicons name="person-circle-outline" size={130} color={colors.primary} />
+          <Ionicons
+            name="person-circle-outline"
+            size={130}
+            color={colors.primary}
+          />
           {loading ? (
-            <ActivityIndicator color={colors.primary} style={{ marginTop: 8 }} />
+            <ActivityIndicator
+              color={colors.primary}
+              style={{ marginTop: 8 }}
+            />
           ) : (
             <Text style={styles.userName}>{userName}</Text>
           )}
@@ -59,13 +70,17 @@ export default function ProfileUI({
         {/* Menu Items */}
         <View style={styles.menuList}>
           {menuItems.map((item) => (
-            <Pressable 
-              key={item.id} 
-              style={styles.menuRow} 
+            <Pressable
+              key={item.id}
+              style={styles.menuRow}
               onPress={() => onNavigate(item.path)}
             >
               <Text style={styles.menuText}>{item.label}</Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.primary} />
+              <Ionicons
+                name="chevron-forward"
+                size={20}
+                color={colors.primary}
+              />
             </Pressable>
           ))}
         </View>
@@ -80,50 +95,29 @@ export default function ProfileUI({
 }
 
 const styles = StyleSheet.create({
-  safe: { 
-    flex: 1, 
-    backgroundColor: "#ffffff" 
-  },
-  header: {
-    height: 64,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
+  safe: {
+    flex: 1,
     backgroundColor: "#ffffff",
   },
-  headerIconButton: {
-    padding: 4,
-    borderRadius: 999,
+
+  content: {
+    paddingHorizontal: 18,
+    paddingTop: 26,
+    paddingBottom: 36,
   },
-  headerTitle: { 
-    fontSize: 18, 
-    fontWeight: "800", 
-    color: colors.primary 
+  profileTop: {
+    alignItems: "center",
+    marginBottom: 24,
   },
-  headerSpacer: { 
-    width: 36 
+  userName: {
+    marginTop: 8,
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.primary,
   },
-  content: { 
-    paddingHorizontal: 18, 
-    paddingTop: 26, 
-    paddingBottom: 36 
-  },
-  profileTop: { 
-    alignItems: "center", 
-    marginBottom: 24 
-  },
-  userName: { 
-    marginTop: 8, 
-    fontSize: 24, 
-    fontWeight: "700", 
-    color: colors.primary 
-  },
-  menuList: { 
-    gap: 10, 
-    marginBottom: 34 
+  menuList: {
+    gap: 10,
+    marginBottom: 34,
   },
   menuRow: {
     minHeight: 54,
@@ -139,10 +133,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3,
   },
-  menuText: { 
-    fontSize: 16, 
-    fontWeight: "500", 
-    color: colors.primary 
+  menuText: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: colors.primary,
   },
   logoutButton: {
     alignSelf: "center",
@@ -154,9 +148,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 8,
   },
-  logoutButtonText: { 
-    color: "#ffffff", 
-    fontSize: 16, 
-    fontWeight: "700" 
+  logoutButtonText: {
+    color: "#ffffff",
+    fontSize: 16,
+    fontWeight: "700",
   },
 });

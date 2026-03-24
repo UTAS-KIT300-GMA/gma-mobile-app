@@ -11,7 +11,9 @@ import { FirebaseAuthTypes, onAuthStateChanged } from "@react-native-firebase/au
 import { Slot, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View, Alert } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import { colors } from "@/theme/ThemeProvider";
+
 
 export default function RootLayout() {
   // Stores the Firebase user object in the user var.
@@ -176,10 +178,10 @@ export default function RootLayout() {
           flex: 1,
           justifyContent: "center",
           alignItems: "center",
-          backgroundColor: "#fff",
+          backgroundColor: colors.background,
         }}
       >
-        <ActivityIndicator size="large" color="#a64d79" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }

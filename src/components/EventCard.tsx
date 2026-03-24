@@ -10,6 +10,8 @@ import { colors } from "@/theme/ThemeProvider";
 import { EventDoc} from "@/types/type";
 import { formatDateTime } from "@/components/utils"
 
+/* EventCard component for displaying event information */
+
 const RSVP_BOOK = "RSVP/Book";
 
 export function EventCard({
@@ -76,6 +78,12 @@ export function EventCard({
   );
 }
 
+/* The `EventCard` component is a reusable UI component that displays information about an event. 
+
+- It includes an image background, event title, date/time, address, and buttons for RSVP and bookmarking. 
+- The component accepts props for the event data, as well as callback functions for when the card, 
+RSVP button, or bookmark button are pressed. 
+- It also has options to show the bookmark button and indicate whether the event is bookmarked. */
 const styles = StyleSheet.create({
   card: {
     borderRadius: 14,
