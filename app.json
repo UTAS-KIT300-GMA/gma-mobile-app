@@ -18,6 +18,7 @@
       },
       "googleServicesFile": "./google-services.json"
     },
+
     "plugins": [
       [
         "expo-router",
