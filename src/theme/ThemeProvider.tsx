@@ -14,7 +14,7 @@ export type AppTheme = {
   saveBtnTextColor: string;
   lightGrey: string;
   darkGrey: string;
-  blacl: string;
+  black: string;
 };
 
 const defaultTheme: AppTheme = {
@@ -27,7 +27,7 @@ const defaultTheme: AppTheme = {
   saveBtnTextColor: "#400F32",
   lightGrey: "#E5E5E5",
   darkGrey: "#B3B3B3",
-  blacl: "#000000",
+  black: "#000000",
 };
 
 const ThemeContext = createContext<AppTheme>(defaultTheme);
