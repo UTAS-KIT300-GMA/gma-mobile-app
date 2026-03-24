@@ -1,14 +1,9 @@
+import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import {
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type NotificationType = "recommendation" | "reminder" | "booking";
@@ -65,11 +60,7 @@ const MOCK_NOTIFICATIONS: NotificationItem[] = [
   },
 ];
 
-function NotificationCard({
-  item,
-}: {
-  item: NotificationItem;
-}) {
+function NotificationCard({ item }: { item: NotificationItem }) {
   const isRecommendation = item.type === "recommendation";
 
   const iconName = useMemo(() => {
@@ -104,9 +95,7 @@ function NotificationCard({
         <Text
           style={[
             styles.cardTitle,
-            isRecommendation
-              ? styles.recommendationTitle
-              : styles.defaultTitle,
+            isRecommendation ? styles.recommendationTitle : styles.defaultTitle,
           ]}
         >
           {item.title}
@@ -115,9 +104,7 @@ function NotificationCard({
         <Text
           style={[
             styles.cardMessage,
-            isRecommendation
-              ? styles.recommendationText
-              : styles.defaultText,
+            isRecommendation ? styles.recommendationText : styles.defaultText,
           ]}
         >
           {item.message}
@@ -126,9 +113,7 @@ function NotificationCard({
         <Text
           style={[
             styles.cardTime,
-            isRecommendation
-              ? styles.recommendationText
-              : styles.defaultText,
+            isRecommendation ? styles.recommendationText : styles.defaultText,
           ]}
         >
           {item.time}
@@ -143,36 +128,16 @@ export default function NotificationsScreen() {
   const [notifications] = useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.headerIconButton}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={28} color={colors.primary} />
-        </Pressable>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
+      <AppHeader
+        title="Notifications"
+        showBack={true}
+        showCheck={true}
+        onPressCheckPrimary={() => console.log("select")}
+        onPressCheckSecondary={() => console.log("confirm")}
+      />
 
-        <Text style={styles.headerTitle}>Notifications</Text>
-
-        <View style={styles.headerActions}>
-          <Pressable style={styles.headerIconButton} hitSlop={10}>
-            <Ionicons
-              name="square-outline"
-              size={22}
-              color={colors.textOnSecondary}
-            />
-          </Pressable>
-          <Pressable style={styles.headerIconButton} hitSlop={10}>
-            <Ionicons
-              name="checkmark-done-outline"
-              size={24}
-              color={colors.textOnSecondary}
-            />
-          </Pressable>
-        </View>
-      </View>
-
+      {/* FlatList to render notifications with custom NotificationCard component */}
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
@@ -187,37 +152,9 @@ export default function NotificationsScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.textOnPrimary,
   },
-  header: {
-    height: 64,
-    paddingHorizontal: 16,
-    backgroundColor: "#ffffff",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    shadowColor: "#400F32",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  headerIconButton: {
-    padding: 4,
-    borderRadius: 999,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: colors.primary,
-  },
-  headerActions: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
+
   listContent: {
     paddingHorizontal: 14,
     paddingTop: 18,
