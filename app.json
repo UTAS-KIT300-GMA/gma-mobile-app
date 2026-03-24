@@ -4,19 +4,27 @@
     "slug": "gma-mobile",
     "version": "1.0.1",
     "scheme": "gmamobile",
-   
+    "icon": "./assets/images/gma-app-logo.png", // App icon for both iOS and Android
+    
+    "splash": {
+      "image": "./assets/images/gma-in-app-logo.png", // Splash screen image
+      "resizeMode": "cover",
+      "backgroundColor": "#FBF0E4"
+    },
+
     "android": {
       "package": "com.gma.connect",
       "googleServicesFile": "google-services.json"
     },
+
     "plugins": [
       [
         "expo-router",
         {
-          "root": "./src/app" 
+          "root": "./src/app"
         }
       ],
-      
+
       "@react-native-firebase/auth",
       "expo-splash-screen"
       // ... keep your other plugins here
