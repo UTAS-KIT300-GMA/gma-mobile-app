@@ -2,25 +2,29 @@ import { colors } from "@/theme/ThemeProvider";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  ScrollView,
 } from "react-native";
 
 import { InterestKey } from "@/types/type";
 
-
 interface Props {
   onSave: (selectedTags: InterestKey[]) => void;
   saving: boolean;
-  userName?: string; 
+  userName?: string;
 }
 
-export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props) {
-  
-  const [selected, setSelected] = useState<Partial<Record<InterestKey, boolean>>>({});
+export function ProfileSetupScreen({
+  onSave,
+  saving,
+  userName = "User",
+}: Props) {
+  const [selected, setSelected] = useState<
+    Partial<Record<InterestKey, boolean>>
+  >({});
 
   const selectedTags = useMemo(() => {
     return (Object.keys(selected) as InterestKey[]).filter((k) => selected[k]);
@@ -46,25 +50,25 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
       <View style={styles.box}>
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitials}>{userName.charAt(0)}</Text>
-          </View>
-          <Text style={styles.username}>{userName}</Text>
-        </View>
-
-        <Text style={styles.heading1}>Tailor Your Hobart Experience</Text>
-        <Text style={styles.subHeading}>Select interests to personalize your feed.</Text>
+        <Text style={styles.heading1}>Select Your Interests</Text>
 
         {/* --- PILLAR: CONNECT --- */}
         <Text style={styles.pillarHeader}>Connect (Social & Community)</Text>
         <View style={styles.tagWrapper}>
           {[
-            "Social Networking", "Cultural & Community Events", "Creative Arts & Crafts",
-            "Games, Trivia & Bingo", "Food & Cooking", "Music & Karaoke",
-            "Book Club", "Theatre & Movies"
+            "Social Networking",
+            "Creative Arts & Crafts",
+            "Cultural & Community Events",
+            "Book Club",
+            "Games, Trivia & Bingo",
+            "Food & Cooking",
+            "Music & Karaoke",
+            "Theatre & Movies",
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
@@ -72,9 +76,14 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
         <Text style={styles.pillarHeader}>Grow (Professional & Skills)</Text>
         <View style={styles.tagWrapper}>
           {[
-            "Professional Networking", "Career Development & Info", "Workshops & Skill Share",
-            "Mentoring & Coaching", "Financial Literacy & Investing", "Real Estate & Home Ownership",
-            "Public Speaking & Communication", "Entrepreneurship"
+            "Professional Networking",
+            "Entrepreneurship",
+            "Career Development & Info",
+            "Workshops & Skill Share",
+            "Mentoring & Coaching",
+            "Financial Literacy & Investing",
+            "Real Estate & Home Ownership",
+            "Public Speaking & Communication",
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
@@ -82,9 +91,15 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
         <Text style={styles.pillarHeader}>Thrive (Health & Wellness)</Text>
         <View style={styles.tagWrapper}>
           {[
-            "Running & Walking", "Hiking & Outdoor Adventure", "Yoga & Pilates",
-            "Gym & Fitness", "Team Sports", "Wellness & Retreats",
-            "Climbing & Extreme Sports", "Cycling & Riding", "Healthy Eating"
+            "Running & Walking",
+            "Team Sports",
+            "Hiking & Outdoor Adventure",
+            "Yoga & Pilates",
+            "Gym & Fitness",
+            "Climbing & Extreme Sports",
+            "Wellness & Retreats",
+            "Cycling & Riding",
+            "Healthy Eating",
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
@@ -96,7 +111,9 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
           {saving ? (
             <ActivityIndicator color="#ffffff" />
           ) : (
-            <Text style={styles.saveButtonText}>Finish Setup ({selectedTags.length})</Text>
+            <Text style={styles.saveButtonText}>
+              Finish Setup ({selectedTags.length})
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -109,99 +126,86 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+
   contentContainer: {
     paddingTop: 40,
     paddingBottom: 40,
+    paddingHorizontal: 15,
+    justifyContent: "center",
   },
+
   box: {
     backgroundColor: colors.background,
     borderRadius: 16,
     padding: 20,
   },
-  avatarSection: {
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  avatarCircle: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: colors.primary,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 8,
-  },
-  avatarInitials: {
-    color: "#ffffff",
-    fontSize: 28,
-    fontWeight: "700",
-  },
-  username: {
-    color: colors.textOnSecondary,
-    fontSize: 18,
-    fontWeight: "600",
-  },
+
   heading1: {
-    color: colors.textOnSecondary,
-    fontSize: 20,
+    color: colors.saveBtnTextColor,
+    fontSize: 29,
+    marginTop: 60,
     fontWeight: "700",
-    textAlign: 'center',
+    textAlign: "center",
+    alignSelf: "flex-start",
   },
-  subHeading: {
-    color: colors.textOnSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    marginBottom: 20,
-    opacity: 0.8,
-  },
+
   pillarHeader: {
-    color: colors.textOnSecondary,
+    color: colors.saveBtnTextColor,
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
     marginTop: 20,
     marginBottom: 10,
     borderLeftWidth: 4,
-    borderLeftColor: "#a64d79",
+    borderLeftColor: colors.saveBtnTextColor,
     paddingLeft: 10,
   },
+
   tagWrapper: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
   },
+
+  // --- Inactive State of Tags ---
   pill: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: colors.textOnPrimary,
+    backgroundColor: colors.textOnPrimary,
     marginBottom: 4,
   },
-  pillActive: {
-    backgroundColor: "#a64d79",
-    borderColor: "#a64d79",
-  },
   pillText: {
-    color: "#666",
-    fontSize: 12,
+    color: colors.primary,
+    fontSize: 14,
   },
+
+  // --- Active State of Tags---
+  pillActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+
   pillTextActive: {
-    color: "#ffffff",
+    color: colors.textOnPrimary,
     fontWeight: "600",
   },
   saveButton: {
     marginTop: 30,
-    backgroundColor: "#a64d79",
+    backgroundColor: colors.saveBtnColor,
     paddingVertical: 16,
     borderRadius: 10,
-    alignItems: "center",
+    alignSelf: "center",
+    width: "80%",
   },
   saveButtonDisabled: {
     opacity: 0.6,
   },
   saveButtonText: {
-    color: "#ffffff",
+    color: colors.saveBtnTextColor,
     fontSize: 16,
     fontWeight: "700",
+    alignSelf: "center",
   },
 });
