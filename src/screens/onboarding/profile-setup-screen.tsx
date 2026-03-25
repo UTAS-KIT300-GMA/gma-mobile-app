@@ -109,10 +109,10 @@ export function ProfileSetupScreen({
           onPress={() => onSave(selectedTags)}
         >
           {saving ? (
-            <ActivityIndicator color="#ffffff" />
+            <ActivityIndicator color={colors.textOnPrimary} />
           ) : (
             <Text style={styles.saveButtonText}>
-              Finish Setup ({selectedTags.length})
+              Save Preferences ({selectedTags.length})
             </Text>
           )}
         </TouchableOpacity>
