@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "expo-router"; 
 import { InterestKey, INTEREST_TAGS } from "@/types/type"; 
 import { SearchScreenUI } from "@/screens/search/search-screen";
@@ -14,13 +14,19 @@ export default function SearchScreenLogic() {
   const [showPicker, setShowPicker] = useState(false);
 
   //  Automatically creates a starting dictionary where every single tag is set to 'false'.
-  const initialTags = INTEREST_TAGS.reduce((acc, tag) => {
-    acc[tag.key] = false;
-    return acc;
-  }, {} as Record<InterestKey, boolean>);
+  const initialTags = useMemo(() => {
+    return INTEREST_TAGS.reduce(
+      (acc, tag) => {
+        acc[tag.key] = false;
+        return acc;
+      },
+      {} as Record<InterestKey, boolean>,
+    );
+  }, []);
 
   // Stores the active/inactive status of every tag in the selected var using the generated dictionary.
-  const [selected, setSelected] = useState<Record<InterestKey, boolean>>(initialTags);
+  const [selected, setSelected] =
+    useState<Record<InterestKey, boolean>>(initialTags);
 
   // Stores the function instruction in itoggleTag var.
   const toggleTag = (key: InterestKey) => {
@@ -32,10 +38,10 @@ export default function SearchScreenLogic() {
   const handleApply = () => {
     // Logic: Filters the selected store to create a clean array of only the active tags.
     const selectedTags = (Object.keys(selected) as InterestKey[]).filter(
-      (k) => selected[k]
+      (k) => selected[k],
     );
-    
-    // Uses the router tool to navigate to the results screen, 
+
+    // Uses the router tool to navigate to the results screen,
     // passing the current stores as URL parameters.
     router.push({
       pathname: "/search-results",
@@ -43,8 +49,8 @@ export default function SearchScreenLogic() {
         query,
         location,
         date: date ? date.toISOString() : "",
-        tags: selectedTags.join(","), 
-      }
+        tags: selectedTags.join(","),
+      },
     } as any);
   };
 
@@ -54,7 +60,7 @@ export default function SearchScreenLogic() {
     setLocation("");
     setDate(null);
     // Logic: Instantly resets all 25 tags back to false using our generated dictionary.
-    setSelected(initialTags); 
+    setSelected(initialTags);
   };
 
   return (
