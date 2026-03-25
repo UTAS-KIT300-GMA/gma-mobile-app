@@ -80,13 +80,13 @@ export default function EventDetailUI({
             {event.description || "No description provided."}
           </Text>
 
-          <View style={styles.infoRow}>
+          <View style={styles.accessRow}>
             <Ionicons
               name="pricetag-outline"
               size={20}
               color={colors.saveBtnTextColor}
             />
-            <Text style={styles.infoText}>{getAccessText()}</Text>
+            <Text style={styles.accessText}>{getAccessText()}</Text>
           </View>
         </View>
       </ScrollView>
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 15,
   },
 
   title: {
@@ -137,16 +137,18 @@ const styles = StyleSheet.create({
   description: {
     fontSize: 16,
     lineHeight: 24,
+    marginTop: 10,
+    marginBottom: 20,
     color: colors.saveBtnTextColor,
   },
 
-  infoRow: {
+  accessRow: {
     flexDirection: "row",
     alignItems: "center",
     marginTop: 20,
   },
 
-  infoText: {
+  accessText: {
     marginLeft: 8,
     fontSize: 16,
     color: colors.saveBtnTextColor,
