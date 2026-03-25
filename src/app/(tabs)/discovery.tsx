@@ -1,14 +1,20 @@
-
-import React, { useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
-import { 
-  collection, doc, getDocs, setDoc, deleteDoc, serverTimestamp, query, FirebaseFirestoreTypes 
+import {
+  collection,
+  deleteDoc,
+  doc,
+  FirebaseFirestoreTypes,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
 } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert } from "react-native";
 
-import { auth, db } from "@/services/authService"; 
-import { EventDoc } from "@/types/type";
 import { DiscoveryScreen as DiscoveryScreenUI } from "@/screens/discovery/discovery-screen";
+import { auth, db } from "@/services/authService";
+import { EventDoc } from "@/types/type";
 
 const CATEGORY_OPTIONS = [
   { key: "all", label: "All" },
@@ -21,8 +27,11 @@ export default function DiscoveryScreen() {
   const router = useRouter();
   const [category, setCategory] = useState<string>("all");
   const [events, setEvents] = useState<EventDoc[]>([]);
-  const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>({});
+  const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>(
+    {},
+  );
   const [loading, setLoading] = useState<boolean>(true);
+  const [sortOption, setSortOption] = useState("time_asc");
 
   useEffect(() => {
     let mounted = true;
@@ -31,15 +40,24 @@ export default function DiscoveryScreen() {
       try {
         const eventsSnap = await getDocs(query(collection(db, "events")));
         const rows: EventDoc[] = eventsSnap.docs.map(
-          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({ ...(d.data() as Omit<EventDoc, 'id'>), id: d.id })
+          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
+            ...(d.data() as Omit<EventDoc, "id">),
+            id: d.id,
+          }),
         );
         if (mounted) setEvents(rows);
 
         const uid = auth.currentUser?.uid;
         if (uid) {
-          const bookmarksSnap = await getDocs(collection(db, "users", uid, "bookmarks"));
+          const bookmarksSnap = await getDocs(
+            collection(db, "users", uid, "bookmarks"),
+          );
           const bookmarkMap: Record<string, boolean> = {};
-          bookmarksSnap.forEach((docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => { bookmarkMap[docSnap.id] = true; });
+          bookmarksSnap.forEach(
+            (docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
+              bookmarkMap[docSnap.id] = true;
+            },
+          );
           if (mounted) setBookmarkedIds(bookmarkMap);
         }
       } catch (e: any) {
@@ -50,13 +68,34 @@ export default function DiscoveryScreen() {
     };
 
     fetchData();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
+  // Filtering logic based on the selected category.
+  // If "all" is selected, it returns the full list of events;
+  // otherwise, it filters events by matching the category (case-insensitive).
   const filteredEvents = useMemo(() => {
     if (category === "all") return events;
-    return events.filter(e => (e.category ?? "").toLowerCase() === category.toLowerCase());
+    return events.filter(
+      (e) => (e.category ?? "").toLowerCase() === category.toLowerCase(),
+    );
   }, [category, events]);
+
+  // Sorting logic based on the selected sort option.
+  // Currently supports sorting by time (ascending and descending).
+  const sortedEvents = [...filteredEvents].sort((a, b) => {
+    if (sortOption === "time_asc") {
+      return a.dateTime.toDate().getTime() - b.dateTime.toDate().getTime();
+    }
+
+    if (sortOption === "time_desc") {
+      return b.dateTime.toDate().getTime() - a.dateTime.toDate().getTime();
+    }
+
+    return 0;
+  });
 
   const handleBookmark = async (event: EventDoc) => {
     const uid = auth.currentUser?.uid;
@@ -65,7 +104,7 @@ export default function DiscoveryScreen() {
     const isBookmarked = !!bookmarkedIds[event.id];
     const bookmarkRef = doc(db, "users", uid, "bookmarks", event.id);
 
-    setBookmarkedIds(prev => {
+    setBookmarkedIds((prev) => {
       const next = { ...prev };
       isBookmarked ? delete next[event.id] : (next[event.id] = true);
       return next;
@@ -73,9 +112,14 @@ export default function DiscoveryScreen() {
 
     try {
       if (isBookmarked) await deleteDoc(bookmarkRef);
-      else await setDoc(bookmarkRef, { eventId: event.id, title: event.title ?? "Unknown", savedAt: serverTimestamp() });
+      else
+        await setDoc(bookmarkRef, {
+          eventId: event.id,
+          title: event.title ?? "Unknown",
+          savedAt: serverTimestamp(),
+        });
     } catch (e) {
-      setBookmarkedIds(prev => {
+      setBookmarkedIds((prev) => {
         const next = { ...prev };
         isBookmarked ? (next[event.id] = true) : delete next[event.id];
         return next;
@@ -85,26 +129,29 @@ export default function DiscoveryScreen() {
   };
 
   return (
-    
-    
     <DiscoveryScreenUI
-      filteredEvents={filteredEvents}
+      filteredEvents={sortedEvents}
       loading={loading}
       bookmarkedIds={bookmarkedIds}
       onBookmark={handleBookmark}
-      
-      
       onCardPress={(item: EventDoc) => {
-        router.push({ pathname: "/event/event-details", params: { id: item.id } } as any);
+        router.push({
+          pathname: "/event/event-details",
+          params: { id: item.id },
+        } as any);
       }}
       onRsvp={(item: EventDoc) => {
-        router.push({ pathname: "/event/event-details", params: { id: item.id } } as any);
+        router.push({
+          pathname: "/event/event-details",
+          params: { id: item.id },
+        } as any);
       }}
-      
       category={category}
       setCategory={setCategory}
       options={CATEGORY_OPTIONS}
+      // Future props for sorting
+      sortOption={sortOption}
+      onSelectSort={(sort: string) => setSortOption(sort)}
     />
-  
   );
 }

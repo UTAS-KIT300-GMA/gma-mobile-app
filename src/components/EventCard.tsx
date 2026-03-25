@@ -1,4 +1,8 @@
+import { formatDateTime } from "@/components/utils";
+import { colors } from "@/theme/ThemeProvider";
+import { EventDoc } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import {
   ImageBackground,
   Pressable,
@@ -6,16 +10,14 @@ import {
   Text,
   View,
 } from "react-native";
-import { colors } from "@/theme/ThemeProvider";
-import { EventDoc} from "@/types/type";
-import { formatDateTime } from "@/components/utils"
 
 /* EventCard component for displaying event information */
 
 const RSVP_BOOK = "RSVP/Book";
 
 export function EventCard({
-  event, onPressCard,
+  event,
+  onPressCard,
   onPressRsvp,
   onPressBookmark,
   showBookmark = false,
@@ -31,24 +33,35 @@ export function EventCard({
   console.log("EventCard", event.dateTime);
   return (
     <View style={styles.card}>
-      <Pressable onPress={onPressCard} style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}>
+      <Pressable
+        onPress={onPressCard}
+        style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+      >
         <ImageBackground source={{ uri: event.image }} style={styles.image}>
-          <View style={styles.textOverlay} />
+          {/* Image overlay */}
+          <LinearGradient
+            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.65)"]}
+            locations={[0, 0.65, 0.85, 1]}
+            start={{ x: 0.3, y: 0 }}
+            end={{ x: 0.3, y: 1 }}
+            style={styles.imageOverlay}
+          />
 
+          {/* Bookmark button is conditionally rendered based on the `showBookmark` prop. */}
           {showBookmark && (
-              <Pressable
-                  accessibilityRole="button"
-                  accessibilityLabel="Bookmark"
-                  onPress={onPressBookmark}
-                  style={styles.bookmarkButton}
-                  hitSlop={10}
-              >
-                <Ionicons
-                    name={bookmarked ? "bookmark" : "bookmark-outline"}
-                    size={20}
-                    color={colors.saveBtnColor}
-                />
-              </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Bookmark"
+              onPress={onPressBookmark}
+              style={styles.bookmarkButton}
+              hitSlop={10}
+            >
+              <Ionicons
+                name={bookmarked ? "bookmark" : "bookmark-outline"}
+                size={23}
+                color={colors.secondary}
+              />
+            </Pressable>
           )}
 
           <View style={styles.bottomLeft}>
@@ -86,19 +99,30 @@ RSVP button, or bookmark button are pressed.
 - It also has options to show the bookmark button and indicate whether the event is bookmarked. */
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
-    overflow: "hidden",
-    backgroundColor: "#ffffff",
+    borderRadius: 15,
+    width: 380,
+    alignSelf: "center",
+    overflow: "hidden", // Ensures the image and content are clipped to the card's rounded corners
+    backgroundColor: colors.textOnPrimary,
     borderWidth: 1,
-    borderColor: "#eee",
-    marginBottom: 14,
+    borderColor: colors.textOnPrimary,
+    marginBottom: 12,
   },
+
   image: {
-    height: 200,
-    backgroundColor: "#d9d9d9",
+    height: 209,
+    width: "100%",
+    backgroundColor: colors.lightGrey,
     position: "relative",
     justifyContent: "flex-end",
   },
+
+  // Image overlay and is positioned absolutely
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  // The bottom left container holds the event title, date/time, and address, and is positioned absolutely over the image. It has a semi-transparent background to ensure text readability.
   bottomLeft: {
     position: "absolute",
     left: 8,
@@ -110,19 +134,16 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     gap: 2,
   },
-  textOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-  },
+
   title: {
-    color: "#ffffff",
-    fontSize: 14,
+    color: colors.textOnPrimary,
+    fontSize: 16,
     fontWeight: "800",
   },
   meta: {
-    color: "#ffffff",
-    fontSize: 12,
-    opacity: 0.95,
+    color: colors.textOnPrimary,
+    fontSize: 14,
+    fontWeight: "500",
   },
   rsvpButton: {
     position: "absolute",
@@ -130,8 +151,8 @@ const styles = StyleSheet.create({
     bottom: 12,
     backgroundColor: colors.saveBtnColor,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 999,
+    paddingVertical: 8,
+    borderRadius: 8,
   },
   rsvpText: {
     color: colors.saveBtnTextColor,
@@ -143,11 +164,11 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 10,
     top: 10,
-    width: 36,
-    height: 36,
-    borderRadius: 999,
+    width: 43,
+    height: 39,
+    borderRadius: 11,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255,255,255,0.6)",
+    backgroundColor: colors.textOnPrimary,
   },
 });
