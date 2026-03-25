@@ -11,7 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { auth, db } from "@/services/authService"
 import { EventDoc } from "@/types/type";
-import { SavedEventsUI } from "@/screens/profile/saved-events-screen";
+import { SavedEventsUI } from "@/screens/profile/saved-events-UI";
 
 export default function SavedEventsRoute() {
   /**

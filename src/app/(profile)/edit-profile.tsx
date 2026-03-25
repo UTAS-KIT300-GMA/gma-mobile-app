@@ -13,15 +13,20 @@ import {
 } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Alert, ActivityIndicator, View, StyleSheet } from "react-native";
+import { updateEmail } from "@react-native-firebase/auth";
+import { doc, getDoc, updateDoc, Timestamp } from "@react-native-firebase/firestore";
+import { auth, db } from "@/services/authService";
+import { EditProfileScreen } from "@/screens/profile/edit-profile-UI";
+import { ProfileFormData } from "@/types/type";
 
 export default function EditProfileRoute() {
   /**
-   * Logic for the edit-profile-screen.
-   *
-   * Outcome:
-   * Fetches the user's current data from Firestore, fills the edit form,
-   * and saves the updated profile data back to Firestore.
+   * logic for the edit-profile-screen
+   * * Outcome:
+   * Fetches the user's current data from Firestore and 
+   * saves the edits to Firestore.
    */
 
   const router = useRouter();
@@ -42,28 +47,17 @@ export default function EditProfileRoute() {
       }
 
       try {
-        // Fetches the user's profile document from Firestore.
+        // Fetches user's profile from user's collection in Firestore.
         const userDoc = await getDoc(doc(db, "users", user.uid));
 
         if (userDoc.exists()) {
           const rawData = userDoc.data();
-
-          // Sets the initial form values for the UI.
+          
+          // Updates the initial Data stored with cleaned values for the form.
           setInitialData({
             firstName: rawData?.firstName || "",
             lastName: rawData?.lastName || "",
-            gender: rawData?.gender || "",
-            password: "",
-            email: rawData?.email || user.email || "",
-          });
-        } else {
-          // Fallback if profile doc does not exist yet.
-          setInitialData({
-            firstName: "",
-            lastName: "",
-            gender: "",
-            password: "",
-            email: user.email || "",
+            email: user.email || rawData?.email || "", // Uses Auth email as the primary source.
           });
         }
       } catch (error) {
@@ -79,47 +73,46 @@ export default function EditProfileRoute() {
 
   const handleSave = async (data: ProfileFormData) => {
     /**
-     * Handles validating and updating the user's profile.
-     *
-     * Parameters:
-     * data - The user's edited form values.
-     *
-     * Outcome:
-     * Updates Firestore profile fields and optionally updates Auth email/password.
+     * Handles the validating and updating of the user's profile.
+     * * Parameters:
+     * data - The users edits from the form inputs.
+     * * Outcome:
+     * Updates the user's profile on Firestore and Auth account.
      */
 
     const user = auth.currentUser;
     if (!user) return;
 
     try {
+     
+      // If the email in the form is different from the current Auth email, update Auth first.
+      if (data.email.toLowerCase() !== user.email?.toLowerCase()) {
+        await updateEmail(user, data.email.toLowerCase());
+      }
+
+      // Stores the doc ID of 'users' collection with Auth UID from FirebaseAuth in userRef var.
       const userRef = doc(db, "users", user.uid);
 
-      // Updates the Firebase Auth email if it changed.
-      if (data.email && data.email !== user.email) {
-        await updateEmail(user, data.email);
-      }
-
-      // Updates the Firebase Auth password only if the user entered one.
-      if (data.password && data.password.trim().length >= 6) {
-        await updatePassword(user, data.password);
-      }
-
-      // Updates the Firestore profile document.
+      // Stores the updated fields in the updatePayload object var.
       const updatePayload = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        gender: data.gender,
-        email: data.email || "",
-        updatedAt: Timestamp.now(),
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email.toLowerCase(),
+        updatedAt: Timestamp.now(), 
       };
 
       await updateDoc(userRef, updatePayload);
-
+      
       Alert.alert("Success", "Profile updated!");
       router.back();
     } catch (error: any) {
-      console.error("Save Error:", error);
-      Alert.alert("Save Failed", error?.message || "Could not update profile.");
+      // Handles the specific Firebase error where a user must re-log to change an email.
+      if (error.code === 'auth/requires-recent-login') {
+        Alert.alert("Security Check", "Please log out and back in to change your email.");
+      } else {
+        console.error("Save Error:", error);
+        Alert.alert("Save Failed", "Please ensure the email is valid.");
+      }
     }
   };
 

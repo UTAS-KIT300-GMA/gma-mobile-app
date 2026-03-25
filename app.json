@@ -2,9 +2,9 @@
   "expo": {
     "name": "GMAConnect",
     "slug": "gma-mobile",
+    "owner": "gma-app",
     "version": "1.0.1",
     "scheme": "gmamobile",
-
     "splash": {
       "image": "./assets/images/gma-flash-logo.png",
       "resizeMode": "cover",
@@ -16,16 +16,29 @@
         "foregroundImage": "./assets/images/gma-app-logo.png",
         "backgroundColor": "#FBF0E4"
       },
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "kit300-p4-gma.firebaseapp.com",
+              "pathPrefix": "/"
+            },
+            {
+              "scheme": "https",
+              "host": "kit300-p4-gma.web.app",
+              "pathPrefix": "/"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
-      [
-        "expo-router",
-        {
-          "root": "./src/app"
-        }
-      ],
-      "@react-native-firebase/app",
+      "expo-router",
       "@react-native-firebase/auth",
       "expo-splash-screen"
     ],
@@ -33,7 +46,16 @@
       "typedRoutes": true
     },
     "ios": {
-      "bundleIdentifier": "com.gma.connect"
+      "bundleIdentifier": "com.gma.connect",
+      "associatedDomains": [
+        "applinks:kit300-p4-gma.firebaseapp.com",
+        "applinks:kit300-p4-gma.web.app"
+      ]
+    },
+    "extra": {
+      "eas": {
+        "projectId": "c2d2ee93-087d-4c06-8b37-d4e70f5f5153"
+      }
     }
   }
 }

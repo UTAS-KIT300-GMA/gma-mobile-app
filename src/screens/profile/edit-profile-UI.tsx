@@ -14,14 +14,9 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AppHeader } from "@/components/AppHeader";
+import { ProfileFormData } from "@/types/type";
 
-export interface ProfileFormData {
-  firstName: string;
-  lastName: string;
-  gender: string;
-  password: string;
-  email?: string;
-}
 
 interface Props {
   onSave: (data: ProfileFormData) => void;
@@ -30,52 +25,44 @@ interface Props {
 }
 
 export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
+  // --- STATE ---
+  // Stores the user's input values for each field in the form.
   const [firstName, setFirstName] = useState(initialData?.firstName || "");
   const [lastName, setLastName] = useState(initialData?.lastName || "");
-  const [gender, setGender] = useState(initialData?.gender || "");
-  const [password, setPassword] = useState(initialData?.password || "");
   const [email, setEmail] = useState(initialData?.email || "");
-  const [confirmPassword, setConfirmPassword] = useState("");
 
+  // --- LOGIC ---
   const handleSavePress = () => {
-    if (
-      !firstName.trim() ||
-      !lastName.trim() ||
-      !gender.trim() ||
-      !email?.trim()
-    ) {
-      Alert.alert("Error", "Please fill in all required fields.");
+    // 1. Check if any fields are empty
+    if (!firstName || !lastName || !email) {
+      Alert.alert("Error", "All fields are required.");
+      return;
+    }
+    
+    
+
+    // 3. Basic Email Validation
+    const emailRegex = /\S+@\S+\.\S+/;
+    if (!emailRegex.test(email)) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
       return;
     }
 
-    if (password.length > 0 && password.length < 6) {
-      Alert.alert("Error", "Password must be at least 6 characters.");
-      return;
-    }
-
-    if (password && password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
-      return;
-    }
-
-    onSave({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      gender: gender.trim(),
-      password,
-      email: email.trim(),
-    });
+    // 4. Pass the cleaned data back to the Route manager
+    onSave({ firstName, lastName, email });
   };
 
   return (
     <SafeAreaView style={styles.safe}>
       <AppHeader title="Edit Profile" showBack onPressBack={onBack} />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : undefined} 
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.container}>
           <View style={styles.card}>
+            
             <Text style={styles.label}>First Name</Text>
             <TextInput
               style={styles.input}
@@ -94,67 +81,26 @@ export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
               placeholderTextColor={colors.darkGrey}
             />
 
-            <Text style={styles.label}>Gender</Text>
-            <View style={styles.genderRow}>
-              {["Male", "Female", "Other"].map((g) => (
-                <TouchableOpacity
-                  key={g}
-                  style={[
-                    styles.genderButton,
-                    gender === g && styles.genderButtonSelected,
-                  ]}
-                  onPress={() => setGender(g)}
-                >
-                  <Text
-                    style={[
-                      styles.genderText,
-                      gender === g && styles.genderTextSelected,
-                    ]}
-                  >
-                    {g}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <Text style={styles.label}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              placeholder="Enter email"
+            <Text style={styles.label}>Email Address</Text>
+            <TextInput 
+              style={styles.input} 
+              value={email} 
+              onChangeText={setEmail} 
+              placeholder="email@example.com"
               keyboardType="email-address"
               autoCapitalize="none"
-              placeholderTextColor={colors.darkGrey}
-            />
-
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter new password"
-              secureTextEntry
-              placeholderTextColor={colors.darkGrey}
-            />
-
-            <Text style={styles.label}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              placeholder="Confirm new password"
-              secureTextEntry
             />
 
             <View style={styles.row}>
               <Pressable style={styles.btnSave} onPress={handleSavePress}>
                 <Text style={styles.btnText}>Save</Text>
               </Pressable>
+              
               <Pressable style={styles.btnCancel} onPress={onBack}>
                 <Text style={styles.btnText}>Cancel</Text>
               </Pressable>
             </View>
+
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

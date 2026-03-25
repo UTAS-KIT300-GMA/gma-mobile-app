@@ -1,9 +1,10 @@
-import { ProfileSetupScreen } from "@/screens/onboarding/profile-setup-screen";
-import { InterestKey } from "@/types/type"
-import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Alert } from "react-native";
-import { auth, db } from "@/services/authService";
+import EditInterestsUI from "@/screens/profile/edit-interests-UI"; 
+// Imported the modular Firebase tools (doc, getDoc, updateDoc) from your authService
+import { auth, db, doc, getDoc, updateDoc } from "@/services/authService";
+import { InterestKey } from "@/types/type";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useState, useCallback } from "react";
+import { Alert, ActivityIndicator, View } from "react-native";
 
 export default function EditInterestsRoute() {
   /**
@@ -18,6 +19,68 @@ export default function EditInterestsRoute() {
 
   // Stores a boolean (true/false) in the saving var to track if the database update is in progress.
   const [saving, setSaving] = useState(false);
+  
+  // Stores a boolean in the loading var to track the fetching status.
+  const [loading, setLoading] = useState(true);
+
+  // Stores the user's full name string in the userName var.
+  const [userName, setUserName] = useState("User");
+
+  // Stores the existing tags array to pre-fill the UI pills.
+  const [initialTags, setInitialTags] = useState<InterestKey[]>([]);
+
+  // useFocusEffect runs every time this screen becomes the active screen.
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+
+      async function fetchExistingData() {
+        // Retrieves the user's account from Firebase Auth and stores it in user var.
+        const user = auth.currentUser;
+        if (!user) {
+          if (mounted) setLoading(false);
+          return;
+        }
+
+        try {
+          // Stores the doc ID of 'users' collection with Auth UID from FirebaseAuth in userRef var.
+          const userRef = doc(db, "users", user.uid);
+          
+          // Stores the snapshot of the doc (profile) from Firestore in userSnap var.
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            // Stores the raw data from the snapshot in the data var.
+            const data = userSnap.data();
+            if (mounted && data) {
+              // Grabs both first and last names from Firestore.
+              const first = data.firstName || "";
+              const last = data.lastName || "";
+              
+              // Combines names and updates the userName var.
+              setUserName(`${first} ${last}`.trim() || "User");
+
+              // Stores the existing selected tags to highlight the correct pills in the UI.
+              if (data.selectedTags) {
+                setInitialTags(data.selectedTags);
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Error fetching user data:", e);
+        } finally {
+          // setLoading function changes value of loading var to false as data is no longer being fetched.
+          if (mounted) setLoading(false);
+        }
+      }
+      
+      fetchExistingData();
+
+      return () => { 
+        mounted = false; 
+      };
+    }, [])
+  );
 
   // Stores the function instructions in the handleUpdate var.
   const handleUpdate = async (selectedTags: InterestKey[]) => {
@@ -44,14 +107,14 @@ export default function EditInterestsRoute() {
     try {
       console.log(`Updating tags for user ${user.email}:`, selectedTags);
       
-      // Updates users selected tags on Firestore. 
+      // Stores the doc ID for the current user.
+      const userRef = doc(db, "users", user.uid);
+
+      // Updates users selected tags on Firestore using updateDoc for the modular SDK. 
       // Note: onboardingComplete is NOT changed here as the user is already onboarded.
-      await db.collection("users").doc(user.uid).set(
-        { 
-          selectedTags: selectedTags 
-        },
-        { merge: true } 
-      );
+      await updateDoc(userRef, {
+        selectedTags: selectedTags 
+      });
 
       // After user's profile has been updated, they are directed back to the profile screen.
       Alert.alert("Success", "Your interests have been updated.");
@@ -61,10 +124,27 @@ export default function EditInterestsRoute() {
       console.error("Update Error:", e);
       Alert.alert("Update failed", e?.message ?? "Something went wrong.");
     } finally {
+      // setSaving function changes value of saving var to false as the update is complete.
       setSaving(false);
     }
   };
 
-  // Passes the values of handleUpdate and saving to the reused profile-setup-screen UI.
-  return <ProfileSetupScreen onSave={handleUpdate} saving={saving} />;
+  // Displays the Busy spinner while data is being fetched.
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#ffffff" }}>
+        <ActivityIndicator size="large" color="#a64d79" />
+      </View>
+    );
+  }
+
+  // Passes the values of handleUpdate, saving, userName, and initialInterests to the EditInterestsUI.
+  return (
+    <EditInterestsUI 
+      onSave={handleUpdate} 
+      saving={saving} 
+      userName={userName} 
+      initialInterests={initialTags} 
+    />
+  );
 }

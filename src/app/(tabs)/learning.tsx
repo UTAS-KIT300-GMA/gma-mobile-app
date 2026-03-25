@@ -7,7 +7,7 @@ import {
 } from "@react-native-firebase/firestore";
 import { useEffect, useState } from 'react';
 import { db } from '@/services/authService';
-import { LearningScreenUI } from '@/screens/learning/learning-screen';
+import { LearningScreenUI } from '@/screens/learning/learning-UI';
 
 
 export interface LearningEvent {

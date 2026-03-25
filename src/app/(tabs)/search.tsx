@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "expo-router"; 
 import { InterestKey, INTEREST_TAGS } from "@/types/type"; 
-import { SearchScreenUI } from "@/screens/search/search-screen";
+import { SearchScreenUI } from "@/screens/search/search-UI";
 
 export default function SearchScreenLogic() {
   // Stores the navigation tool in the router var.

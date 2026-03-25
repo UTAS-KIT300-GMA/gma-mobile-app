@@ -26,6 +26,7 @@ export default function ProfileUI({
   onBack,
   onNavigate,
 }: ProfileUIProps) {
+  // Array defining the navigation options on the profile screen.
   const menuItems = [
     { id: "edit", label: "Edit profile", path: "/edit-profile" },
     {
@@ -34,9 +35,15 @@ export default function ProfileUI({
       path: "/(profile)/edit-interests",
     },
     {
+      id: "payment",
+      label: "Manage payment methods",
+      // Updated path to point to your new sub-screen file location
+      path: "/(profile)/manage-payment-method", 
+    },
+    {
       id: "notifs",
       label: "Notifications setting",
-      path: "/notification-settings",
+      path: "(profile)/notifications-settings-logic",
     },
     { id: "saved", label: "Saved events", path: "/saved-events" },
   ];
@@ -57,6 +64,7 @@ export default function ProfileUI({
             size={130}
             color={colors.primary}
           />
+          {/* Displays the Busy spinner while data is being fetched, otherwise shows name */}
           {loading ? (
             <ActivityIndicator
               color={colors.primary}
@@ -99,7 +107,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#ffffff",
   },
-
   content: {
     paddingHorizontal: 18,
     paddingTop: 26,

@@ -29,6 +29,11 @@ export type EventDoc = {
   };
 };
 
+export interface ProfileFormData {
+  firstName: string;
+  lastName: string;
+  email: string; 
+}
 // Stores the valid spelling for every Hobart category.
 export type InterestKey =
   | "Social Networking" | "Cultural & Community Events" | "Creative Arts & Crafts"
