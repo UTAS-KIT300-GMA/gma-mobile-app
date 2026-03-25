@@ -24,7 +24,12 @@
           "data": [
             {
               "scheme": "https",
-              "host": "gma-app.web.app",
+              "host": "kit300-p4-gma.firebaseapp.com",
+              "pathPrefix": "/"
+            },
+            {
+              "scheme": "https",
+              "host": "kit300-p4-gma.web.app",
               "pathPrefix": "/"
             }
           ],
@@ -33,22 +38,21 @@
       ]
     },
     "plugins": [
-  "expo-router",
-  "@react-native-firebase/auth",
-  "expo-splash-screen"
-],
-    
+      "expo-router",
+      "@react-native-firebase/auth",
+      "expo-splash-screen"
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
       "bundleIdentifier": "com.gma.connect",
-      "associatedDomains": ["applinks:gma-app.web.app"]
+      "associatedDomains": [
+        "applinks:kit300-p4-gma.firebaseapp.com",
+        "applinks:kit300-p4-gma.web.app"
+      ]
     },
     "extra": {
-      "router": {
-        "root": "./src/app"
-      },
       "eas": {
         "projectId": "c2d2ee93-087d-4c06-8b37-d4e70f5f5153"
       }

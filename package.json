@@ -15,7 +15,9 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "clean": "rm -rf android/app/build && cd android && ./gradlew clean && cd .."
+    "clean": "rm -rf android/app/build && cd android && ./gradlew clean && cd ..",
+    "eas-build-pre-install": "cp $GOOGLE_SERVICES_JSON ./google-services.json"
+    
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
@@ -61,4 +63,5 @@
     "typescript": "^5.9.3"
   },
   "private": true
+  
 }

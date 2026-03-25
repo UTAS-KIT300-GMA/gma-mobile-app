@@ -5,7 +5,6 @@
  */
 
 import { useRouter } from "expo-router"; 
-import { Ionicons } from "@expo/vector-icons";
 import { colors } from "@/theme/ThemeProvider";
 import { useMemo, useState } from "react";
 import {
@@ -77,12 +76,6 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       
-      {/* NAVIGATION: Back Button to return to the previous screen */}
-      <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
-        <Ionicons name="arrow-back" size={24} color={colors.textOnSecondary} />
-        <Text style={styles.backButtonText}>Back to Profile</Text>
-      </TouchableOpacity>
-
       <View style={styles.box}>
         {/* HEADER: User Avatar and Name display */}
         <View style={styles.avatarSection}>

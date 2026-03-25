@@ -102,8 +102,7 @@ export default function ProfileSetupRoute() {
         onboardingComplete: true 
       });
 
-      // After successful save, move the user to the main tabs home screen.
-      router.replace("/(tabs)/home" as any);
+      
       
     } catch (e: any) {
       console.error("Save Error:", e);

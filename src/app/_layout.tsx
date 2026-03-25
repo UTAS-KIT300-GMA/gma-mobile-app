@@ -11,7 +11,7 @@ import { FirebaseAuthTypes, onAuthStateChanged } from "@react-native-firebase/au
 import { Slot, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, Alert} from "react-native";
 import { colors } from "@/theme/ThemeProvider";
 
 
