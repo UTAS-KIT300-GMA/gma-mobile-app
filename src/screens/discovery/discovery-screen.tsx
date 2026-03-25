@@ -187,6 +187,7 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
+    paddingHorizontal: 8,
   },
 
   center: {
@@ -240,7 +241,7 @@ const styles = StyleSheet.create({
   sortButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: 5,
     paddingVertical: 8,
     borderRadius: 10,
   },
