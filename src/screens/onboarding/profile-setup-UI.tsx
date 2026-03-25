@@ -1,3 +1,10 @@
+/**
+ * ProfileSetupScreen.tsx
+ * * This component allows users to select their interests across three "Pillars" 
+ * (Connect, Grow, Thrive) and saves them to their Hobart Firebase profile.
+ */
+
+import { useRouter } from "expo-router"; 
 import { colors } from "@/theme/ThemeProvider";
 import { useMemo, useState } from "react";
 import {
@@ -11,25 +18,45 @@ import {
 
 import { InterestKey } from "@/types/type";
 
-
+// Define the shape of data this component expects from its parent
 interface Props {
   onSave: (selectedTags: InterestKey[]) => void;
-  saving: boolean;
-  userName?: string; 
+  saving: boolean;                              
+  userName?: string;
+  isEditing?: boolean;
+  initialInterests?: InterestKey[];                            
 }
 
 export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props) {
+  // Access the Expo Router for stack navigation
+  const router = useRouter();
   
+  /**
+   * STATE: selected
+   * Stores interests as a key-value pair (e.g., {"Yoga": true}).
+   * Using Partial<Record> allows us to only store the keys the user interacts with.
+   */
   const [selected, setSelected] = useState<Partial<Record<InterestKey, boolean>>>({});
 
+  /**
+   * MEMOIZED VALUE: selectedTags
+   * Converts the 'selected' object into a clean array of strings for the database.
+   * useMemo ensures this calculation only runs when the 'selected' state changes.
+   */
   const selectedTags = useMemo(() => {
     return (Object.keys(selected) as InterestKey[]).filter((k) => selected[k]);
   }, [selected]);
 
+  // Toggles the boolean value of an interest when a pill is tapped
   const toggle = (key: InterestKey) => {
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  /**
+   * RENDER HELPER: renderPill
+   * Generates the UI for each individual interest tag.
+   * Swaps styles based on the 'isActive' boolean.
+   */
   const renderPill = (key: InterestKey) => {
     const isActive = selected[key];
     return (
@@ -37,6 +64,7 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
         key={key}
         style={[styles.pill, isActive && styles.pillActive]}
         onPress={() => toggle(key)}
+        activeOpacity={0.7}
       >
         <Text style={[styles.pillText, isActive && styles.pillTextActive]}>
           {key}
@@ -47,10 +75,15 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      
       <View style={styles.box}>
+        {/* HEADER: User Avatar and Name display */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
-            <Text style={styles.avatarInitials}>{userName.charAt(0)}</Text>
+            {/* Logic: Get the first letter of the name, fallback to 'U' if empty */}
+            <Text style={styles.avatarInitials}>
+              {(userName || "U").charAt(0).toUpperCase()}
+            </Text>
           </View>
           <Text style={styles.username}>{userName}</Text>
         </View>
@@ -58,7 +91,7 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
         <Text style={styles.heading1}>Tailor Your Hobart Experience</Text>
         <Text style={styles.subHeading}>Select interests to personalize your feed.</Text>
 
-        {/* --- PILLAR: CONNECT --- */}
+        {/* --- PILLAR 1: CONNECT (Social) --- */}
         <Text style={styles.pillarHeader}>Connect (Social & Community)</Text>
         <View style={styles.tagWrapper}>
           {[
@@ -68,7 +101,7 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
-        {/* --- PILLAR: GROW --- */}
+        {/* --- PILLAR 2: GROW (Professional) --- */}
         <Text style={styles.pillarHeader}>Grow (Professional & Skills)</Text>
         <View style={styles.tagWrapper}>
           {[
@@ -78,7 +111,7 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
-        {/* --- PILLAR: THRIVE --- */}
+        {/* --- PILLAR 3: THRIVE (Wellness) --- */}
         <Text style={styles.pillarHeader}>Thrive (Health & Wellness)</Text>
         <View style={styles.tagWrapper}>
           {[
@@ -88,6 +121,7 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
+        {/* ACTION: Save Button. Shows a spinner when 'saving' is true */}
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           disabled={saving}
@@ -125,7 +159,7 @@ const styles = StyleSheet.create({
   avatarCircle: {
     width: 70,
     height: 70,
-    borderRadius: 35,
+    borderRadius: 35, 
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
@@ -160,13 +194,13 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginTop: 20,
     marginBottom: 10,
-    borderLeftWidth: 4,
+    borderLeftWidth: 4, 
     borderLeftColor: "#a64d79",
     paddingLeft: 10,
   },
   tagWrapper: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    flexWrap: "wrap", 
     gap: 8,
   },
   pill: {
@@ -176,9 +210,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     marginBottom: 4,
+    backgroundColor: "#fff",
   },
   pillActive: {
-    backgroundColor: "#a64d79",
+    backgroundColor: "#a64d79", 
     borderColor: "#a64d79",
   },
   pillText: {
@@ -197,11 +232,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   saveButtonDisabled: {
-    opacity: 0.6,
+    opacity: 0.6, 
   },
   saveButtonText: {
     color: "#ffffff",
     fontSize: 16,
     fontWeight: "700",
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+    marginTop: 10, 
+  },
+  backButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: colors.textOnSecondary,
+    fontWeight: '500',
   },
 });

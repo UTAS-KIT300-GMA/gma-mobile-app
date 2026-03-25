@@ -1,3 +1,9 @@
+/**
+ * FORGOT PASSWORD HOOK
+ * A specialized logic hook for managing the password recovery request.
+ * Encapsulates validation, loading states, and error handling for 
+ * triggering the Firebase reset email independently of the UI.
+ */
 import { useState } from "react";
 import { sendPasswordReset, getFriendlyError } from "@/services/authService";
 
