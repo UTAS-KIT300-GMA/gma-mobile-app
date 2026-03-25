@@ -6,20 +6,20 @@
  */
 import { useEffect } from "react";
 import {
+  confirmPasswordReset,
+  createUserWithEmailAndPassword,
+  FirebaseAuthTypes,
   getAuth,
   onAuthStateChanged,
-  FirebaseAuthTypes,
-  signOut,
   reload,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   sendPasswordResetEmail,
-  confirmPasswordReset,
   verifyPasswordResetCode,
   applyActionCode,
   sendEmailVerification,
   deleteUser,
-  updateEmail
+  updateEmail,
+  signOut,
+  signInWithEmailAndPassword
 } from "@react-native-firebase/auth";
 import {
   getFirestore,
@@ -30,6 +30,7 @@ import {
   updateDoc,
   getDoc
 } from "@react-native-firebase/firestore";
+
 
 
 // handles user authentication (login, register etc).
@@ -43,8 +44,10 @@ export const ERROR_MESSAGES: Record<string, string> = {
   "auth/invalid-email": "The email address is invalid.",
   "auth/user-not-found": "No account found with this email.",
   "auth/wrong-password": "Incorrect password.",
-  "auth/expired-action-code": "The reset link has expired. Please request a new one.",
-  "auth/invalid-action-code": "The reset link is invalid or has already been used.",
+  "auth/expired-action-code":
+    "The reset link has expired. Please request a new one.",
+  "auth/invalid-action-code":
+    "The reset link is invalid or has already been used.",
   "auth/too-many-requests": "Too many attempts. Try again later.",
 };
 

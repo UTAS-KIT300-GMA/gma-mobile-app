@@ -1,15 +1,10 @@
-import { router } from "expo-router";
-import {
-  ActivityIndicator,
-  Alert,
-  FlatList,
-  StyleSheet,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { EventDoc } from "@/types/type";
 import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
+import { colors } from "@/theme/ThemeProvider";
+import { EventDoc } from "@/types/type";
+import { router } from "expo-router";
+import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type HomeUIProps = {
   events: EventDoc[];
@@ -19,7 +14,7 @@ type HomeUIProps = {
 export default function HomeUI({ events, loading }: HomeUIProps) {
   // Navigation Handlers
   const handleProfilePress = () => {
-    console.log("Navigating to Profile..."); 
+    console.log("Navigating to Profile...");
     router.push("/(profile)" as any);
   };
 
@@ -29,16 +24,16 @@ export default function HomeUI({ events, loading }: HomeUIProps) {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader 
-        title="GMA Connect" 
+      <AppHeader
+        title="GMA Connect"
         onPressProfile={handleProfilePress}
         onPressNotifications={handleNotificationPress}
       />
-      
+
       <View style={styles.container}>
         {loading ? (
           <View style={styles.center}>
-            <ActivityIndicator color="#a64d79" size="large" />
+            <ActivityIndicator color={colors.primary} size="large" />
           </View>
         ) : (
           <FlatList
@@ -48,7 +43,16 @@ export default function HomeUI({ events, loading }: HomeUIProps) {
             renderItem={({ item }) => (
               <EventCard
                 event={item}
-                onPressRsvp={() => Alert.alert("RSVP", "To be implemented")}
+                // Defines the onPressRsvp handler to navigate to the booking screen with the event ID as a parameter.
+                onPressRsvp={() => {
+                  router.push({
+                    pathname: "/event/booking",
+                    params: {
+                      eventId: item.id,
+                    },
+                  } as any);
+                }}
+                // Defines the onPressCard handler to navigate to the event details screen with all necessary event data as parameters.
                 onPressCard={() => {
                   router.push({
                     pathname: "/event/event-details",
@@ -79,8 +83,8 @@ export default function HomeUI({ events, loading }: HomeUIProps) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#ffffff" },
-  container: { flex: 1, backgroundColor: "#ffffff" },
+  safe: { flex: 1, backgroundColor: colors.textOnPrimary },
+  container: { flex: 1, backgroundColor: colors.textOnPrimary },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   listContent: { padding: 10, paddingBottom: 24 },
 });

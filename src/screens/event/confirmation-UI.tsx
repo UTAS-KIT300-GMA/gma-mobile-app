@@ -1,37 +1,64 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { AppHeader } from "@/components/AppHeader";
+import { colors } from "@/theme/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React from "react";
+import {
+  ImageBackground,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export const BookingConfirmedUI = ({ details, onGoToBookings, onViewDetails }: any) => (
+export const BookingConfirmedUI = ({
+  details,
+  onGoToBookings,
+  onViewDetails,
+}: any) => (
   <SafeAreaView style={styles.safe}>
-    <View style={styles.header}>
-      <TouchableOpacity onPress={onViewDetails}>
-        <Ionicons name="chevron-back" size={28} color="#9D246E" />
-      </TouchableOpacity>
-      <Text style={styles.headerTitle}>Payment</Text>
-      <View style={{ width: 28 }} />
-    </View>
+    <AppHeader title="Confirmation" showBack={true} />
 
     <View style={styles.content}>
       <Ionicons name="checkmark-circle" size={100} color="#4CAF50" />
       <Text style={styles.statusText}>Booking Confirmed</Text>
 
       <View style={styles.card}>
-        <Image source={{ uri: 'https://via.placeholder.com/300' }} style={styles.cardImg} />
-        <View style={styles.cardOverlay}>
+        <ImageBackground source={{ uri: details.image }} style={styles.image}>
+          {/* Image overlay */}
+          <LinearGradient
+            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.65)"]}
+            locations={[0, 0.65, 0.85, 1]}
+            start={{ x: 0.3, y: 0 }}
+            end={{ x: 0.3, y: 1 }}
+            style={styles.imageOverlay}
+          />
           <Text style={styles.eventTitle}>{details.title}</Text>
-          <Text style={styles.eventInfo}>{details.time}{"\n"}{details.location}</Text>
-        </View>
+          <Text style={styles.eventInfo}>
+            {details.time}
+            {"\n"}
+            {details.location}
+          </Text>
+        </ImageBackground>
       </View>
 
       <View style={styles.detailsBox}>
-        <View style={styles.row}><Text>Ticket Type:</Text><Text>Free</Text></View>
-        <View style={styles.row}><Text>Number of Ticket:</Text><Text>1</Text></View>
-        <View style={styles.row}><Text>Booking ID:</Text><Text>{details.bookingId}</Text></View>
-        <View style={[styles.row, { marginTop: 10 }]}>
-          <Text style={{ fontWeight: 'bold' }}>Total Cost:</Text>
-          <Text style={{ fontWeight: 'bold' }}>{details.totalCost}</Text>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailRowText}>Ticket Type:</Text>
+          <Text style={styles.detailRowText}>{details.ticketType}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailRowText}>Number of Ticket:</Text>
+          <Text style={styles.detailRowText}>{details.ticketCount}</Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailRowText}>Booking ID:</Text>
+          <Text style={styles.detailRowText}>{details.bookingId}</Text>
+        </View>
+        <View style={[styles.detailRow, { marginTop: 10 }]}>
+          <Text style={styles.detailRowText}>Total Cost:</Text>
+          <Text style={styles.detailRowText}>{details.totalCost}</Text>
         </View>
       </View>
 
@@ -46,20 +73,98 @@ export const BookingConfirmedUI = ({ details, onGoToBookings, onViewDetails }: a
 );
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FDF5F0' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, backgroundColor: 'white' },
-  headerTitle: { fontSize: 20, fontWeight: 'bold', color: '#9D246E' },
-  content: { flex: 1, alignItems: 'center', padding: 20 },
-  statusText: { fontSize: 22, fontWeight: 'bold', color: '#3A1D3D', marginVertical: 15 },
-  card: { width: '100%', height: 180, borderRadius: 15, overflow: 'hidden', marginBottom: 20 },
-  cardImg: { width: '100%', height: '100%' },
-  cardOverlay: { position: 'absolute', bottom: 0, left: 0, right: 0, padding: 15, backgroundColor: 'rgba(0,0,0,0.4)' },
-  eventTitle: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-  eventInfo: { color: 'white', fontSize: 12 },
-  detailsBox: { backgroundColor: 'white', width: '100%', padding: 20, borderRadius: 15, marginBottom: 25 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  mainBtn: { backgroundColor: '#9D246E', width: '100%', padding: 15, borderRadius: 10, alignItems: 'center', marginBottom: 12 },
-  mainBtnText: { color: 'white', fontWeight: 'bold' },
-  secBtn: { backgroundColor: 'white', width: '100%', padding: 15, borderRadius: 10, alignItems: 'center', borderWidth: 1, borderColor: '#DDD' },
-  secBtnText: { color: '#9D246E', fontWeight: 'bold' },
+  safe: {
+    flex: 1,
+    backgroundColor: colors.textOnPrimary,
+  },
+
+  content: {
+    flex: 1,
+    alignItems: "center",
+    padding: 20,
+  },
+  statusText: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: colors.saveBtnTextColor,
+    marginBottom: 25,
+  },
+
+  card: {
+    width: "95%",
+    height: 200,
+    borderRadius: 15,
+    overflow: "hidden",
+    marginBottom: 10,
+  },
+
+  image: {
+    height: "100%",
+    width: "100%",
+    justifyContent: "flex-end",
+  },
+
+  // Image overlay and is positioned absolutely
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+
+  eventTitle: {
+    marginLeft: 20,
+    color: colors.textOnPrimary,
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+  eventInfo: {
+    marginLeft: 20,
+    marginBottom: 10,
+    color: colors.textOnPrimary,
+    fontSize: 14,
+  },
+  detailsBox: {
+    backgroundColor: "white",
+    width: "95%",
+    padding: 20,
+    elevation: 2,
+    borderRadius: 15,
+    marginBottom: 25,
+  },
+  detailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  detailRowText: {
+    fontWeight: "600",
+    fontSize: 16,
+    color: colors.saveBtnTextColor,
+  },
+  mainBtn: {
+    backgroundColor: colors.primary,
+    width: "100%",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  mainBtnText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 20,
+  },
+  secBtn: {
+    backgroundColor: "white",
+    width: "100%",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: colors.textOnPrimary,
+  },
+  secBtnText: {
+    color: colors.primary,
+    fontWeight: "bold",
+    fontSize: 20,
+  },
 });

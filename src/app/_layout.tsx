@@ -8,7 +8,7 @@
 import { auth, db, doc, applyActionCode } from "@/services/authService";
 import { onSnapshot } from "@react-native-firebase/firestore";
 import { FirebaseAuthTypes, onAuthStateChanged } from "@react-native-firebase/auth";
-import { Slot, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, View, Alert} from "react-native";
@@ -185,6 +185,5 @@ export default function RootLayout() {
       </View>
     );
   }
-
-  return <Slot />;
+return <Stack screenOptions={{ headerShown: false }} />;
 }

@@ -1,3 +1,7 @@
+import { AppHeader } from "@/components/AppHeader";
+import { colors } from "@/theme/ThemeProvider";
+import { INTEREST_TAGS, InterestKey } from "@/types/type";
+import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React from "react";
 import {
@@ -9,9 +13,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "@/components/AppHeader";
-import { InterestKey, INTEREST_TAGS } from "@/types/type";
-
 
 interface SearchScreenUIProps {
   query: string;
@@ -44,16 +45,26 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
 }) => {
   return (
     <SafeAreaView style={styles.safe}>
-      <AppHeader title="GMA Connect" />
+      <AppHeader title="GMA Search" />
       <ScrollView contentContainerStyle={styles.container}>
-        <TextInput
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search events / courses"
-          style={styles.searchBar}
-          placeholderTextColor="#9ca3af"
-        />
+        {/* Search Bar */}
+        <View style={styles.searchBar}>
+          <Ionicons
+            name="search"
+            size={20}
+            color={colors.saveBtnTextColor}
+            style={styles.searchIcon}
+          />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Search events / courses"
+            style={styles.searchInput}
+            placeholderTextColor={colors.saveBtnTextColor}
+          />
+        </View>
 
+        {/* Interest Tags */}
         <Text style={styles.h1}>Interest Tags</Text>
         <View style={styles.tagsWrap}>
           {INTEREST_TAGS.map((t) => {
@@ -72,19 +83,21 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
           })}
         </View>
 
+        {/* Location Input */}
         <Text style={styles.h1}>Location</Text>
         <TextInput
           value={location}
           onChangeText={setLocation}
           placeholder="Enter location"
           style={styles.input}
-          placeholderTextColor="#9ca3af"
+          placeholderTextColor={colors.primary}
         />
         <Text style={styles.helper}>
           (Google location autocomplete can be added next; this is a free-text
           placeholder for now.)
         </Text>
 
+        {/* Date Picker */}
         <Text style={styles.h1}>Date</Text>
         <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
           <Text style={styles.dateText}>
@@ -108,13 +121,13 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
             style={[styles.button, styles.applyButton]}
             onPress={handleApply}
           >
-            <Text style={styles.buttonText}>Apply</Text>
+            <Text style={styles.applyButton}>Apply</Text>
           </Pressable>
           <Pressable
             style={[styles.button, styles.resetButton]}
             onPress={handleReset}
           >
-            <Text style={styles.buttonText}>Reset</Text>
+            <Text style={styles.resetButton}>Reset</Text>
           </Pressable>
         </View>
       </ScrollView>
@@ -123,65 +136,122 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
 };
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#ffffff" },
-  container: { padding: 16, paddingBottom: 24 },
+  safe: {
+    flex: 1,
+    backgroundColor: colors.textOnPrimary,
+  },
+
+  container: {
+    padding: 20,
+    paddingBottom: 24,
+  },
+
   searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    paddingHorizontal: 14,
+    borderColor: colors.textOnPrimary,
+    borderRadius: 24,
+    elevation: 3,
+    paddingHorizontal: 16,
+    backgroundColor: colors.textOnPrimary,
+  },
+
+  searchIcon: {
+    marginRight: 8,
+  },
+
+  searchInput: {
+    flex: 1,
     paddingVertical: 12,
     fontSize: 15,
-    backgroundColor: "#ffffff",
   },
+
   h1: {
     marginTop: 18,
     marginBottom: 10,
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: "800",
-    color: "#111827",
+    color: colors.saveBtnTextColor,
   },
+
   tagsWrap: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
   },
+
   tag: {
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: colors.textOnPrimary,
+    elevation: 2,
+    backgroundColor: colors.textOnPrimary,
   },
+
+  tagText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.textOnSecondary,
+  },
+
   tagActive: {
-    backgroundColor: "#a64d79",
-    borderColor: "#a64d79",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
-  tagText: { fontSize: 12, fontWeight: "700", color: "#374151" },
-  tagTextActive: { color: "#ffffff" },
+
+  tagTextActive: { color: colors.textOnPrimary },
+
   input: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.textOnPrimary,
     borderRadius: 12,
-    paddingHorizontal: 14,
+    paddingHorizontal: 15,
     paddingVertical: 12,
-    backgroundColor: "#ffffff",
+    fontSize: 16,
+    fontWeight: "500",
+    elevation: 2,
+    backgroundColor: colors.textOnPrimary,
   },
-  dateText: { color: "#111827", fontSize: 15, fontWeight: "600" },
-  helper: { marginTop: 8, color: "#6b7280", fontSize: 12 },
+
+  dateText: {
+    color: colors.primary,
+    fontSize: 15,
+    fontWeight: "600",
+  },
+
+  helper: {
+    marginTop: 8,
+    color: colors.darkGrey,
+    fontSize: 12,
+  },
+
   buttonRow: {
     marginTop: 18,
     flexDirection: "row",
     gap: 12,
   },
+
   button: {
     flex: 1,
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: "center",
   },
-  applyButton: { backgroundColor: "#25292e" },
-  resetButton: { backgroundColor: "#a64d79" },
-  buttonText: { color: "#ffffff", fontWeight: "800" },
+
+  applyButton: {
+    backgroundColor: colors.saveBtnColor,
+    color: colors.saveBtnTextColor,
+    fontSize: 16,
+    fontWeight: "600",
+  },
+
+  resetButton: {
+    backgroundColor: colors.darkGrey,
+    color: colors.textOnPrimary,
+    fontSize: 16,
+    fontWeight: "600",
+  },
 });
