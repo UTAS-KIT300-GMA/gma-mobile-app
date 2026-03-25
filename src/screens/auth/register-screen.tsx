@@ -1,5 +1,6 @@
 import { RegisterData } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -15,7 +16,6 @@ import {
   View,
 } from "react-native";
 import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
-import { Ionicons } from "@expo/vector-icons";
 
 function PasswordStrengthHint({ password }: { password: string }) {
   if (!password) return null;
@@ -404,15 +404,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 12,
     marginTop: -8,
-    marginLeft: 4,
+    alignSelf: "flex-start",
   },
 
   hintValid: {
     color: "green",
+    alignSelf: "flex-start",
   },
 
   hintInvalid: {
     color: colors.primary,
+    alignSelf: "flex-start",
   },
 
   checkboxRow: {
