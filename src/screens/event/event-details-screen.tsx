@@ -128,9 +128,17 @@ const styles = StyleSheet.create({
     color: colors.saveBtnTextColor,
   },
 
-  dateText: { fontSize: 16, color: colors.saveBtnTextColor, marginBottom: 20 },
+  dateText: {
+    fontSize: 16,
+    color: colors.saveBtnTextColor,
+    marginBottom: 20,
+  },
 
-  description: { fontSize: 16, lineHeight: 24, color: colors.saveBtnTextColor },
+  description: {
+    fontSize: 16,
+    lineHeight: 24,
+    color: colors.saveBtnTextColor,
+  },
 
   infoRow: {
     flexDirection: "row",
@@ -140,7 +148,7 @@ const styles = StyleSheet.create({
 
   infoText: {
     marginLeft: 8,
-    fontSize: 14,
+    fontSize: 16,
     color: colors.saveBtnTextColor,
   },
 

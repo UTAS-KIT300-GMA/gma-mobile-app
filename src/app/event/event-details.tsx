@@ -34,13 +34,23 @@ export default function EventDetailScreen() {
 
         if (eventSnap.exists() && mounted) {
           const data = eventSnap.data();
-          // Converts the Firestore timestamp to a readable string format.
-          let parsedDate = data?.dateTime;
-          if (data?.dateTime?.toDate)
-            parsedDate = data.dateTime.toDate().toISOString();
+
+          // Logs the fetched event data for debugging purposes.
+          console.log("Fetched event data:", data);
+
+          // Determines the event type based on ticket prices. If both member and non-member prices are 0, it's a free event; otherwise, it's paid.
+          const memberPrice = data?.ticketPrices?.member ?? 0;
+          const nonMemberPrice = data?.ticketPrices?.nonMember ?? 0;
+
+          const derivedType =
+            memberPrice === 0 && nonMemberPrice === 0 ? "free" : "paid";
 
           // Stores the combined ID and data in the event var.
-          setEvent({ id: eventSnap.id, ...data, dateTime: parsedDate || null });
+          setEvent({
+            id: eventSnap.id,
+            ...data,
+            type: derivedType,
+          });
         }
 
         const uid = auth.currentUser?.uid;
