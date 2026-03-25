@@ -142,8 +142,11 @@ export const DiscoveryScreen: React.FC<DiscoveryProps> = ({
             <Text style={styles.sortSheetTitle}>Sort Events</Text>
 
             {[
+              { key: "default", label: "Default" },
               { key: "time_asc", label: "Soonest time" },
               { key: "time_desc", label: "Latest time" },
+              { key: "free_only", label: "Free events only" },
+              { key: "subscriber_only", label: "Subscriber events only" },
               { key: "location_nearest", label: "Nearest location" },
               { key: "location_furthest", label: "Furthest location" },
             ].map((option) => (

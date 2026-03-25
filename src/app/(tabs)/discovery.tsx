@@ -31,7 +31,8 @@ export default function DiscoveryScreen() {
     {},
   );
   const [loading, setLoading] = useState<boolean>(true);
-  const [sortOption, setSortOption] = useState("time_asc");
+  const [sortOption, setSortOption] = useState("default");
+  const [accessFilter, setAccessFilter] = useState("all");
 
   useEffect(() => {
     let mounted = true;
@@ -73,29 +74,43 @@ export default function DiscoveryScreen() {
     };
   }, []);
 
-  // Filtering logic based on the selected category.
-  // If "all" is selected, it returns the full list of events;
-  // otherwise, it filters events by matching the category (case-insensitive).
+  // Filtering logic based on both category and access types, i.e. free and subscriber.
+  // It checks if each event matches the selected category and access filter,
+  // returning only those that satisfy both conditions.
   const filteredEvents = useMemo(() => {
-    if (category === "all") return events;
-    return events.filter(
-      (e) => (e.category ?? "").toLowerCase() === category.toLowerCase(),
-    );
-  }, [category, events]);
+    return events.filter((event) => {
+      // Checks if the event matches the selected category filter.
+      const matchesCategory =
+        category === "all" ||
+        (event.category ?? "").toLowerCase() === category.toLowerCase();
+
+      // Checks if the event matches the selected access filter.
+      const matchesAccess =
+        accessFilter === "all" ||
+        (accessFilter === "free" && event.type === "free") ||
+        (accessFilter === "subscriber" && event.type !== "free");
+
+      return matchesCategory && matchesAccess;
+    });
+  }, [events, category, accessFilter]);
 
   // Sorting logic based on the selected sort option.
   // Currently supports sorting by time (ascending and descending).
-  const sortedEvents = [...filteredEvents].sort((a, b) => {
+  const sortedEvents = useMemo(() => {
+    const sorted = [...filteredEvents];
+
     if (sortOption === "time_asc") {
-      return a.dateTime.toDate().getTime() - b.dateTime.toDate().getTime();
+      sorted.sort(
+        (a, b) => a.dateTime.toDate().getTime() - b.dateTime.toDate().getTime(),
+      );
+    } else if (sortOption === "time_desc") {
+      sorted.sort(
+        (a, b) => b.dateTime.toDate().getTime() - a.dateTime.toDate().getTime(),
+      );
     }
-
-    if (sortOption === "time_desc") {
-      return b.dateTime.toDate().getTime() - a.dateTime.toDate().getTime();
-    }
-
-    return 0;
-  });
+    // Default returns original filtered order
+    return sorted;
+  }, [filteredEvents, sortOption]);
 
   const handleBookmark = async (event: EventDoc) => {
     const uid = auth.currentUser?.uid;
