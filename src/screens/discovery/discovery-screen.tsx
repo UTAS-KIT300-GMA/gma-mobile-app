@@ -107,7 +107,7 @@ export const DiscoveryScreen: React.FC<DiscoveryProps> = ({
               <View style={styles.center}>
                 <Ionicons
                   name="calendar-outline"
-                  size={50}
+                  size={100}
                   color={colors.darkGrey}
                 />
                 <Text style={styles.emptyText}>No events found.</Text>
@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 50,
   },
   listContent: {
     padding: 10,
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
   emptyText: {
     marginTop: 10,
     color: colors.darkGrey,
-    fontSize: 14,
+    fontSize: 24,
   },
 
   sortButton: {
