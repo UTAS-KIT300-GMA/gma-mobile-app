@@ -83,7 +83,7 @@ export const DiscoveryScreen: React.FC<DiscoveryProps> = ({
             >
               <Ionicons
                 name="swap-vertical-outline"
-                size={22}
+                size={26}
                 color={colors.primary}
               />
             </Pressable>
