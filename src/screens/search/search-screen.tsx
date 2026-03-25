@@ -1,3 +1,6 @@
+import { AppHeader } from "@/components/AppHeader";
+import { colors } from "@/theme/ThemeProvider";
+import { INTEREST_TAGS, InterestKey } from "@/types/type";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React from "react";
 import {
@@ -9,9 +12,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { AppHeader } from "@/components/AppHeader";
-import { InterestKey, INTEREST_TAGS } from "@/types/type";
-
 
 interface SearchScreenUIProps {
   query: string;
@@ -151,14 +151,21 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    backgroundColor: "#ffffff",
+    borderColor: colors.textOnPrimary,
+    elevation: 2,
+    backgroundColor: colors.textOnPrimary,
   },
+  tagText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.saveBtnTextColor,
+  },
+
   tagActive: {
     backgroundColor: "#a64d79",
     borderColor: "#a64d79",
   },
-  tagText: { fontSize: 12, fontWeight: "700", color: "#374151" },
+
   tagTextActive: { color: "#ffffff" },
   input: {
     borderWidth: 1,
