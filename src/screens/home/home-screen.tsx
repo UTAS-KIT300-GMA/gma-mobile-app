@@ -1,5 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
+import { colors } from "@/theme/ThemeProvider";
 import { EventDoc } from "@/types/type";
 import { router } from "expo-router";
 import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
@@ -32,7 +33,7 @@ export default function HomeUI({ events, loading }: HomeUIProps) {
       <View style={styles.container}>
         {loading ? (
           <View style={styles.center}>
-            <ActivityIndicator color="#a64d79" size="large" />
+            <ActivityIndicator color={colors.primary} size="large" />
           </View>
         ) : (
           <FlatList
@@ -82,8 +83,8 @@ export default function HomeUI({ events, loading }: HomeUIProps) {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#ffffff" },
-  container: { flex: 1, backgroundColor: "#ffffff" },
+  safe: { flex: 1, backgroundColor: colors.textOnPrimary },
+  container: { flex: 1, backgroundColor: colors.textOnPrimary },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
   listContent: { padding: 10, paddingBottom: 24 },
 });
