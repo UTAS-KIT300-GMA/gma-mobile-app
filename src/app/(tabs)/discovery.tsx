@@ -62,11 +62,22 @@ export default function DiscoveryScreen() {
           if (mounted) setBookmarkedIds(bookmarkMap);
         }
       } catch (e: any) {
-        Alert.alert("Error", e?.message ?? "Failed to load events.");
+        // Checks if the error is a permission-denied error (usually caused by the user logging out).
+        // Silently returns to prevent a crash or alert as the app navigates to the login screen.
+        if (e?.code === 'firestore/permission-denied' || e?.message?.includes('permission-denied')) {
+          console.log("Suppressed permission error during logout in Discovery.");
+          return; 
+        }
+
+        // If it is a genuine fetching error, displays an alert to the user.
+        if (mounted) {
+          Alert.alert("Error", e?.message ?? "Failed to load events.");
+        }
       } finally {
+        // setLoading function changes value of loading var to false as data is no longer being fetched.
         if (mounted) setLoading(false);
       }
-    };
+    }; 
 
     fetchData();
     return () => {

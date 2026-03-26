@@ -126,9 +126,17 @@ export default function RootLayout() {
         setInitializing(false);
       },
       // Type the error as generic Error
-      (error: Error) => {
+      (error: any) => {
+        // 1. Silently ignore permission errors during logout
+        if (error?.code === 'firestore/permission-denied' || error?.message?.includes('permission-denied')) {
+          console.log("Suppressed permission error during logout in Profile Listener.");
+          setInitializing(false);
+          return;
+        }
+
+        // 2. Only log actual errors to the emulator
         console.error("Profile Listener Error:", error);
-        setInitializing(false); // Stop loading even if there's an error.
+        setInitializing(false);
       }
     );
 
