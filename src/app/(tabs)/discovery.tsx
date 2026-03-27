@@ -1,3 +1,9 @@
+/**
+ **DISCOVERY ROUTE**
+ * This file handles the logic for the event discovery screen. 
+ * It manages fetching all events, filtering them by category or access, 
+ * sorting the results, and toggling user bookmarks.
+ */
 import {
   collection,
   deleteDoc,
@@ -16,6 +22,7 @@ import { DiscoveryScreen as DiscoveryScreenUI } from "@/screens/discovery/discov
 import { auth, db } from "@/services/authService";
 import { EventDoc } from "@/types/type";
 
+// Defines the category filters used in top nav.
 const CATEGORY_OPTIONS = [
   { key: "all", label: "All" },
   { key: "connect", label: "Connect" },
@@ -123,13 +130,30 @@ export default function DiscoveryScreen() {
     return sorted;
   }, [filteredEvents, sortOption]);
 
-  const handleBookmark = async (event: EventDoc) => {
-    const uid = auth.currentUser?.uid;
+  /**
+   * Saves or removes an event from the user's bookmark sub collection.
+   * 
+   * Parameters:
+   * event - The specific event data to be bookmarked or removed.
+   *
+   * Outcome:
+   * Updates the bookmarkedIds var and synchronizes the change with Firestore.
+   */
+    const handleBookmark = async (event: EventDoc) => {
+    
+      // Stores the user's UID from FirebaseAuth in the uid var.
+      const uid = auth.currentUser?.uid;
+    
+    // Stops the function and alerts the user if they are not logged in.
     if (!uid) return Alert.alert("Sign In", "Please log in to save events.");
 
+    // Checks the bookmarkedIds var to see if the event is already bookmarked.
     const isBookmarked = !!bookmarkedIds[event.id];
+
+    // Stores the specific Firestore path for the bookmark in the bookmarkRef var.
     const bookmarkRef = doc(db, "users", uid, "bookmarks", event.id);
 
+    // Updates the UI state immediately for a faster user experience.
     setBookmarkedIds((prev) => {
       const next = { ...prev };
       isBookmarked ? delete next[event.id] : (next[event.id] = true);
@@ -137,6 +161,7 @@ export default function DiscoveryScreen() {
     });
 
     try {
+      // Deletes the document if it was already saved, otherwise creates a new one.
       if (isBookmarked) await deleteDoc(bookmarkRef);
       else
         await setDoc(bookmarkRef, {
@@ -145,6 +170,7 @@ export default function DiscoveryScreen() {
           savedAt: serverTimestamp(),
         });
     } catch (e) {
+      // Reverts the UI state if the Firestore operation fails.
       setBookmarkedIds((prev) => {
         const next = { ...prev };
         isBookmarked ? (next[event.id] = true) : delete next[event.id];
@@ -175,7 +201,6 @@ export default function DiscoveryScreen() {
       category={category}
       setCategory={setCategory}
       options={CATEGORY_OPTIONS}
-      // Future props for sorting
       sortOption={sortOption}
       onSelectSort={(sort: string) => setSortOption(sort)}
     />

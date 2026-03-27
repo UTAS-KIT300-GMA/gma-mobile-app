@@ -1,18 +1,23 @@
+/**
+ * EDIT INTERESTS ROUTE
+ * This file handles the logic for the "Edit Interests" screen within the user profile.
+ * It fetches the user's existing selected tags from Firestore, allows them to modify 
+ * their selection, and updates the database before returning them to the profile.
+ */
 import EditInterestsUI from "@/screens/profile/edit-interests-UI"; 
-// Imported the modular Firebase tools (doc, getDoc, updateDoc) from your authService
 import { auth, db, doc, getDoc, updateDoc } from "@/services/authService";
 import { InterestKey } from "@/types/type";
 import { useRouter, useFocusEffect } from "expo-router";
 import { useState, useCallback } from "react";
 import { Alert, ActivityIndicator, View } from "react-native";
 
-export default function EditInterestsRoute() {
   /**
    * Logic for the edit interests sub-screen within the profile.
    * * Outcome:
    * Updates the user's selected interests in Firestore and 
    * returns them to the previous profile screen.
    */
+export default function EditInterestsRoute() {
 
   // Stores the navigation object from Expo Router in the router var.
   const router = useRouter();
@@ -82,9 +87,7 @@ export default function EditInterestsRoute() {
     }, [])
   );
 
-  // Stores the function instructions in the handleUpdate var.
-  const handleUpdate = async (selectedTags: InterestKey[]) => {
-    /**
+  /**
      * Handles the process of updating tags for an existing profile.
      * * Parameters:
      * selectedTags - An array var storing the interests tags selected by the user.
@@ -92,6 +95,8 @@ export default function EditInterestsRoute() {
      * Updates the users selected tags to their profile via firestore,
      * otherwise error is displayed if user is not logged in etc.  
      */
+  // Stores the function instructions in the handleUpdate var.
+  const handleUpdate = async (selectedTags: InterestKey[]) => {
 
     // If the saving var is true, stop function to prevent multiple database writes.
     if (saving) return;
@@ -103,6 +108,7 @@ export default function EditInterestsRoute() {
       return;
     }
 
+    // Changes the saving var to true to tell the app a background task has started.
     setSaving(true);
     try {
       console.log(`Updating tags for user ${user.email}:`, selectedTags);

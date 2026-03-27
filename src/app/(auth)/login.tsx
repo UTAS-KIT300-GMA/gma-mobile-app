@@ -1,6 +1,6 @@
 /**
- * LOGIN MANAGER
- * This file handles the login screen. It checks the user's email 
+  **LOGIN ROUTE**
+ * This file handles the login UI logic. It checks the user's email 
  * and password and makes sure their account is verified before 
  * letting them into the main app.
  */
@@ -10,37 +10,31 @@ import { Alert } from "react-native";
 import { getFriendlyError, loginUser, resendVerificationEmail } from "@/services/authService";
 import { LoginScreen } from "@/screens/auth/login-screen";
 
-/**
- * Sets up the logic for the login screen.
+export default function LoginRoute() {
+  /**
+ * Sets up the logic for the login UI.
  * * Outcome: 
  * Prepares the login process and navigation, then shows the 
  * login screen UI to the user.
  */
-export default function LoginRoute() {
   
-
-  // Stores the navigation tool in the router var to allow moving between the (auth) screens.
-  const router = useRouter();
-
-  // Stores a true/false value in the loading var to track if the app is currently trying to sign the user in.
-  const [loading, setLoading] = useState(false);
-
+  const router = useRouter();                    // Stores the navigation tool  to allow moving between screens.  
+  const [loading, setLoading] = useState(false); // Stores a true/false value, to track if the app is trying to sign user in.
+  const handleLogin = async (email: string, password: string) => {
   /**
- * Handles the login button and checks if the user is verified.
- * * Parameters:
+ *  Handles the login button and checks if the user is verified.
+ * 
+ ** Parameters:
  * email - The email the user typed in.
  * password - The password the user typed in.
- * * Outcome:
+ * 
+ ** Outcome:
  * Signs the user in. If they haven't verified their email, it 
  * shows a popup with options to resend the link or check their status.
  */
-  const handleLogin = async (email: string, password: string) => {
     
-    // Prevent multiple simultaneous login attempts
-    if (loading) return;
-
-    // Stores the email address in the cleanEmail var after removing extra spaces and making it lowercase.
-    const cleanEmail = email.trim().toLowerCase();
+    if (loading) return;                           // Prevent multiple simultaneous login attempts
+    const cleanEmail = email.trim().toLowerCase(); // Stores the email address after removing extra spaces and making it lowercase.
 
     // Validate inputs
     if (!cleanEmail || !password) {
@@ -48,7 +42,7 @@ export default function LoginRoute() {
       return;
     }
     
-    // Changes the loading var to true to tell the app a background task has started.
+    // Changes var to true to tell app, a background task has started.
     setLoading(true);
     try {
       // Attempt login
@@ -79,17 +73,17 @@ export default function LoginRoute() {
           ]
         );
       }
-
-    } catch (e) {
+      
       // Handles login errors
+    } catch (e) {
       Alert.alert("Login Error", getFriendlyError(e));
     } finally {
       setLoading(false);
     }
   };
-
+  
+  // Passes login logic,current state and navigation handlers to the UI screen.
   return (
-    // Passes the login handler, loading state, and navigation actions to the login screen component
     <LoginScreen 
       onLogin={handleLogin} 
       onRegisterPress={() => router.push("/register" as any)}

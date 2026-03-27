@@ -1,3 +1,9 @@
+/**
+ **EDIT PROFILE ROUTE**
+ * This file handles the logic for the edit profile screen. It fetches the user's 
+ * current data from Firestore, pre-fills the edit form, and saves any updated 
+ * profile data (including email and password) back to the database.
+ */
 import {
   EditProfileScreen,
   ProfileFormData,
@@ -21,14 +27,15 @@ import { auth, db } from "@/services/authService";
 import { EditProfileScreen } from "@/screens/profile/edit-profile-UI";
 import { ProfileFormData } from "@/types/type";
 
-export default function EditProfileRoute() {
-  /**
-   * logic for the edit-profile-screen
-   * * Outcome:
-   * Fetches the user's current data from Firestore and 
-   * saves the edits to Firestore.
+/**
+   * Logic for the edit-profile-screen.
+   *
+   * Outcome:
+   * Fetches the user's current data from Firestore, fills the edit form,
+   * and saves the updated profile data back to Firestore.
    */
-
+export default function EditProfileRoute() {
+  // Stores the navigation tool in the router var to allow moving between screens.
   const router = useRouter();
 
   // Stores the user's existing profile information for the form.
@@ -36,34 +43,51 @@ export default function EditProfileRoute() {
 
   // Tracks whether the profile is still being fetched.
   const [loading, setLoading] = useState(true);
-
+  
+  // Runs once, when this screen loads to fetch the user's existing profile data.
   useEffect(() => {
     async function loadProfile() {
+      
+      // Stores the current user account in the user var.
       const user = auth.currentUser;
-
+      
+      // If no user is logged in, changes the loading var to false and stops the function.
       if (!user) {
         setLoading(false);
         return;
       }
 
       try {
-        // Fetches user's profile from user's collection in Firestore.
+        // Retrieves the user's profile document from Firestore and stores it in the userDoc var.
         const userDoc = await getDoc(doc(db, "users", user.uid));
 
         if (userDoc.exists()) {
+          // Stores the raw data from the snapshot in the rawData var.
           const rawData = userDoc.data();
-          
-          // Updates the initial Data stored with cleaned values for the form.
+
+          // Changes the initialData var to the fetched values to pre-fill the UI.
           setInitialData({
             firstName: rawData?.firstName || "",
             lastName: rawData?.lastName || "",
-            email: user.email || rawData?.email || "", // Uses Auth email as the primary source.
+            gender: rawData?.gender || "",
+            password: "",
+            email: rawData?.email || user.email || "",
+          });
+        } else {
+          // Changes the initialData var to empty fallback values if the profile doc does not exist yet.
+          setInitialData({
+            firstName: "",
+            lastName: "",
+            gender: "",
+            password: "",
+            email: user.email || "",
           });
         }
       } catch (error) {
         console.error("Load Error:", error);
         Alert.alert("Error", "Could not load profile.");
       } finally {
+        // Changes the loading var to false as data is no longer being fetched.
         setLoading(false);
       }
     }
@@ -71,29 +95,37 @@ export default function EditProfileRoute() {
     loadProfile();
   }, []);
 
-  const handleSave = async (data: ProfileFormData) => {
-    /**
-     * Handles the validating and updating of the user's profile.
-     * * Parameters:
-     * data - The users edits from the form inputs.
-     * * Outcome:
-     * Updates the user's profile on Firestore and Auth account.
+  /**
+     * Handles validating and updating the user's profile.
+     *
+     * Parameters:
+     * data - The user's edited form values 
+     *
+     * Outcome:
+     * Updates Firestore profile fields and optionally updates Auth email/password,
+     * then navigates back to the profile screen.
      */
-
+  const handleSave = async (data: ProfileFormData) => {
+    
+    // Stores the current user account in the user var.
     const user = auth.currentUser;
     if (!user) return;
 
     try {
-     
-      // If the email in the form is different from the current Auth email, update Auth first.
-      if (data.email.toLowerCase() !== user.email?.toLowerCase()) {
-        await updateEmail(user, data.email.toLowerCase());
+      // Stores the document reference for the current user in the userRef var.
+      const userRef = doc(db, "users", user.uid);
+      
+      // Updates the Firebase Auth email if the user changed it in the form.
+      if (data.email && data.email !== user.email) {
+        await updateEmail(user, data.email);
       }
 
-      // Stores the doc ID of 'users' collection with Auth UID from FirebaseAuth in userRef var.
-      const userRef = doc(db, "users", user.uid);
+      // Updates the Firebase Auth password only if the user entered on (min 6 char).
+      if (data.password && data.password.trim().length >= 6) {
+        await updatePassword(user, data.password);
+      }
 
-      // Stores the updated fields in the updatePayload object var.
+      // Stores the structured profile data to be saved in the updatePayload var.
       const updatePayload = {
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
@@ -101,8 +133,10 @@ export default function EditProfileRoute() {
         updatedAt: Timestamp.now(), 
       };
 
+      // Updates the Firestore profile document with the new payload.
       await updateDoc(userRef, updatePayload);
-      
+
+      // Shows a success popup and navigates back to the previous screen.
       Alert.alert("Success", "Profile updated!");
       router.back();
     } catch (error: any) {
@@ -116,6 +150,7 @@ export default function EditProfileRoute() {
     }
   };
 
+  // Displays the busy spinner while data is being fetched.
   if (loading) {
     return (
       <View style={styles.center}>
@@ -124,6 +159,7 @@ export default function EditProfileRoute() {
     );
   }
 
+  // Passes the initial form data, save handler, and back navigation actions to the edit-profile UI.
   return (
     <EditProfileScreen
       initialData={initialData}
