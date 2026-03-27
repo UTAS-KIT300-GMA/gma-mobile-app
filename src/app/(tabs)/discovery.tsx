@@ -194,8 +194,8 @@ export default function DiscoveryScreen() {
       }}
       onRsvp={(item: EventDoc) => {
         router.push({
-          pathname: "/event/event-details",
-          params: { id: item.id },
+          pathname: "/event/booking",
+          params: { eventId: item.id }
         } as any);
       }}
       category={category}
