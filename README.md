@@ -1,50 +1,53 @@
-# Welcome to your Expo app 👋
+# 🌏 GMA Connect
+**Tasmania's Migrant Integration Platform**
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+GMA Connect is a mobile-first digital ecosystem built to support skilled migrants in Tasmania through intelligent event discovery, professional growth tracking, and community integration. 
 
-## Get started
+## 🛠 Technical Stack
 
-1. Install dependencies
+* **Language:** TypeScript (Strict typing for robust, error-resistant mobile development)
+* **Frontend:** React Native (Expo)
+* **Routing:** Expo Router (File-based routing)
+* **Backend:** Firebase (Authentication & Firestore)
+* **Payments:** Google Play Billing Library (In-App Subscriptions)
+* **Architecture:** Modular Service-Controller-UI pattern
 
-   ```bash
-   npm install
-   ```
+## 🏗 Project Structure
 
-2. Start the app
+The codebase strictly follows a separation of concerns, dividing logic, navigation, and presentation:
 
-   ```bash
-   npx expo start
-   ```
+* **`/app` (Routes):** Manages screen-specific logic and navigation "handshakes" (e.g., passing `eventId` safely).
+* **`/services` (Logic):** Handles raw Firebase API calls and business logic (e.g., `authService.ts`).
+* **`/components` (UI):** Reusable, styled, "dumb" components (e.g., `<EventCard />`).
+* **`/theme`:** Centralized styling and color palettes.
 
-In the output, you'll find options to open the app in a
+## ✨ Core Features & Technical Highlights
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+* **End-to-End Type Safety:** Utilizes TypeScript interfaces for Firebase documents and component props, ensuring reliable data structures and predicting errors at compile time.
+* **Atomic Registration:** The `authService` implements an automatic rollback. If a user's Firestore profile creation fails during sign-up, the Firebase Auth account is immediately deleted to prevent orphaned "ghost" accounts.
+* **Smart Navigation Handshakes:** Implements strict parameter handling (`eventId`) and `finally` blocks in route controllers to guarantee loading states resolve, preventing infinite spinners.
+* **Optimistic Bookmarking:** UI updates instantly when saving events, syncing with Firestore in the background.
+* **Subscription Model:** Handles free vs. premium tier access via Google Play Store integration, restricting access to member-only events.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 🚀 Getting Started
 
-## Get a fresh project
+### Prerequisites
+Before you begin, ensure you have the following installed on your local machine:
 
-When you're ready, run:
+* **[Git](https://git-scm.com/):** For version control and cloning the repository.
+* **[Node.js](https://nodejs.org/) & npm:** The JavaScript/TypeScript runtime and package manager required to run the Expo server.
+* **[Expo CLI](https://docs.expo.dev/):** The command-line tool for React Native app development.
+* **[Android Studio](https://developer.android.com/studio):** For running virtual device emulators.
+* **Code Editor:** [Visual Studio Code](https://code.visualstudio.com/) is highly recommended, especially for its excellent TypeScript and React Native support.
 
+### 1. Installation
+Clone the repository and install dependencies:
 ```bash
-npm run reset-project
-```
+# Clone the repository into a local folder named 'gma-connect'
+git clone https://github.com/UTAS-KIT300-GMA/gma-mobile-app.git gma-connect
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+# Navigate into the project directory
+cd gma-connect
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+# Install all required packages
+npm install
