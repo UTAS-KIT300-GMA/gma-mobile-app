@@ -1,6 +1,7 @@
 import { RegisterData } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -8,6 +9,7 @@ import {
   Image,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -52,63 +54,26 @@ export function RegisterScreen({
   const [gender, setGender] = useState<"Male" | "Female" | "Other" | "">("");
   const [agreed, setAgreed] = useState(false);
 
-  // Store DOB as text while user is typing
-  const [dateOfBirthText, setDateOfBirthText] = useState("");
+  // Date Picker States
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
+  const [showPicker, setShowPicker] = useState(false);
   const [dateOfBirthError, setDateOfBirthError] = useState("");
 
-  const parseDateOfBirth = (text: string): Date | null => {
-    const trimmed = text.trim();
-
-    // Must match YYYY-MM-DD exactly
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
-      return null;
-    }
-
-    const [yearString, monthString, dayString] = trimmed.split("-");
-    const year = Number(yearString);
-    const month = Number(monthString);
-    const day = Number(dayString);
-
-    if (
-      !Number.isInteger(year) ||
-      !Number.isInteger(month) ||
-      !Number.isInteger(day) ||
-      month < 1 ||
-      month > 12 ||
-      day < 1 ||
-      day > 31
-    ) {
-      return null;
-    }
-
-    const parsedDate = new Date(year, month - 1, day);
-
-    // Reject impossible dates like 2025-02-31
-    if (
-      parsedDate.getFullYear() !== year ||
-      parsedDate.getMonth() !== month - 1 ||
-      parsedDate.getDate() !== day
-    ) {
-      return null;
-    }
-
-    return parsedDate;
-  };
-
   const handleSubmit = () => {
-    const parsedDateOfBirth = parseDateOfBirth(dateOfBirthText);
-
-    if (!parsedDateOfBirth) {
-      setDateOfBirthError("Please enter a valid date in YYYY-MM-DD format.");
+    if (!firstName || !lastName || !email || !password || !gender) {
+      Alert.alert("Error", "Please fill in all fields.");
       return;
     }
 
-    setDateOfBirthError("");
+    if (!dateOfBirth) {
+      setDateOfBirthError("Please select your date of birth.");
+      return;
+    }
 
     if (!agreed) {
       Alert.alert(
         "Required",
-        "You must agree to the terms and privacy policy.",
+        "You must agree to the terms and privacy policy."
       );
       return;
     }
@@ -117,7 +82,7 @@ export function RegisterScreen({
       firstName,
       lastName,
       gender: gender.toLowerCase() as "male" | "female" | "other",
-      dateOfBirth: parsedDateOfBirth,
+      dateOfBirth: dateOfBirth,
     });
   };
 
@@ -130,7 +95,7 @@ export function RegisterScreen({
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Vignette overlay */}
+        {/* Vignette overlay fills the entire screen and is positioned absolutely */}
         <View style={styles.vignetteWrapper} pointerEvents="none">
           <Svg width="100%" height="100%" viewBox="0 0 412 917">
             <Defs>
@@ -172,19 +137,38 @@ export function RegisterScreen({
             onChangeText={setLastName}
           />
 
-          <TextInput
-            style={styles.input}
-            placeholder="Date of Birth (YYYY-MM-DD)"
-            placeholderTextColor="#999"
-            keyboardType="numeric"
-            value={dateOfBirthText}
-            onChangeText={(text) => {
-              setDateOfBirthText(text);
-              if (dateOfBirthError) {
-                setDateOfBirthError("");
-              }
-            }}
-          />
+          {/* Date of Birth Picker Menu Trigger */}
+          <Pressable
+            style={[styles.input, { justifyContent: "center" }]}
+            onPress={() => setShowPicker(true)}
+          >
+            <Text
+              style={{
+                color: dateOfBirth ? "#000" : "#999",
+                fontSize: 14,
+              }}
+            >
+              {dateOfBirth
+                ? dateOfBirth.toLocaleDateString("en-GB")
+                : "Date of Birth (DD/MM/YYYY)"}
+            </Text>
+          </Pressable>
+
+          {showPicker && (
+            <DateTimePicker
+              value={dateOfBirth ?? new Date(2000, 0, 1)}
+              mode="date"
+              display={Platform.OS === "ios" ? "spinner" : "default"}
+              maximumDate={new Date()}
+              onChange={(_, selectedDate) => {
+                setShowPicker(false);
+                if (selectedDate) {
+                  setDateOfBirth(selectedDate);
+                  setDateOfBirthError("");
+                }
+              }}
+            />
+          )}
 
           {dateOfBirthError ? (
             <Text style={styles.errorText}>{dateOfBirthError}</Text>
@@ -332,6 +316,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    minHeight: 48,
   },
 
   primaryButton: {
@@ -356,6 +341,7 @@ const styles = StyleSheet.create({
     marginTop: -6,
     marginBottom: 12,
     marginLeft: 2,
+    alignSelf: "flex-start",
   },
 
   redirectionText: {
@@ -372,6 +358,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 12,
     gap: 8,
+    width: "100%",
   },
 
   genderButton: {
