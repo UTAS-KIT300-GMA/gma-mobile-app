@@ -37,7 +37,7 @@ Before you begin, ensure you have the following installed on your local machine:
 * **[Git](https://git-scm.com/):** For version control and cloning the repository.
 * **[Node.js](https://nodejs.org/) & npm:** The JavaScript/TypeScript runtime and package manager required to run the Expo server.
 * **[Expo CLI](https://docs.expo.dev/):** The command-line tool for React Native app development.
-* **[Android Studio](https://developer.android.com/studio):** For running virtual device emulators (alternatively, you can use the Expo Go app on a physical phone).
+* **[Android Studio](https://developer.android.com/studio):** For running virtual device emulators.
 * **Code Editor:** [Visual Studio Code](https://code.visualstudio.com/) is highly recommended, especially for its excellent TypeScript and React Native support.
 
 ### 1. Installation
