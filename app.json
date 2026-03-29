@@ -40,7 +40,8 @@
     "plugins": [
       "expo-router",
       "@react-native-firebase/auth",
-      "expo-splash-screen"
+      "expo-splash-screen",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true
@@ -55,7 +56,8 @@
     "extra": {
       "eas": {
         "projectId": "c2d2ee93-087d-4c06-8b37-d4e70f5f5153"
-      }
+      },
+      "googleWebClientId": "1056021584152-0ks0i3jlit8dl8b85di729bbkqirilsr.apps.googleusercontent.com"
     }
   }
 }

@@ -20,6 +20,7 @@ navigating to the registration screen, and resetting the password.
 
 interface Props {
   onLogin: (email: string, pass: string) => void;
+  onGoogleLogin: () => void;
   loading: boolean;
   onRegisterPress: () => void;
   onForgotPress: () => void;
@@ -27,6 +28,7 @@ interface Props {
 
 export const LoginScreen = ({
   onLogin,
+  onGoogleLogin,
   loading,
   onRegisterPress,
   onForgotPress,
@@ -98,17 +100,37 @@ export const LoginScreen = ({
           )}
         </TouchableOpacity>
 
-        {/* New Navigation Links */}
-        <TouchableOpacity onPress={onForgotPress} style={styles.link}>
-          <Text style={styles.linkText}>Forgot Password?</Text>
+          {/* OR Divider */}
+          <View style={styles.orContainer}>
+            <View style={styles.divider} />
+            <Text style={styles.orText}>or</Text>
+            <View style={styles.divider} />
+          </View>
+
+          {/* Google Login Button */}
+          <TouchableOpacity
+              onPress={onGoogleLogin}
+              style={styles.googleButton}
+              disabled={loading}
+          >
+            <Image
+                source={require("../../../assets/images/google-icon.png")}
+                style={styles.googleIcon}
+                resizeMode="contain"
+            />
+            <Text style={styles.googleButtonText}>Sign in with Google</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={onForgotPress} style={styles.link}>
+            <Text style={styles.linkText}>Forgot Password?</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Register Link */}
+        <TouchableOpacity onPress={onRegisterPress} style={styles.registerContainer}>
+          <Text style={styles.bottomLink}>{"Don't have an account? Sign Up"}</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Register Link */}
-      <TouchableOpacity onPress={onRegisterPress} style={styles.link}>
-        <Text style={styles.bottomLink}>Don't have an account? Sign Up</Text>
-      </TouchableOpacity>
-    </View>
   );
 };
 
@@ -119,41 +141,32 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     padding: 20,
   },
-
   content: {
     backgroundColor: colors.background,
     alignSelf: "center",
-    transform: [{ translateY: -40 }],
     width: "90%",
-    height: 350,
     borderRadius: 18,
     padding: 30,
-    gap: 15,
     shadowColor: colors.saveBtnTextColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
   },
-
   // Vignette overlay fills the entire screen and is positioned absolutely
   vignetteWrapper: {
     ...StyleSheet.absoluteFillObject,
   },
-
   logoContainer: {
     marginBottom: 40,
     alignItems: "center",
-    transform: [{ translateY: -40 }],
   },
-
   logo: {
     width: 200,
     height: 120,
     padding: 0,
     margin: 0,
   },
-
   inputShadow: {
     shadowColor: colors.saveBtnTextColor,
     shadowOffset: { width: 0, height: 5 },
@@ -161,56 +174,88 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 4,
     borderRadius: 10,
-    marginTop: 10,
-    marginBottom: 10,
+    marginBottom: 15,
   },
-
   inputContainer: {
     borderRadius: 10,
     overflow: "hidden",
     backgroundColor: colors.textOnPrimary,
   },
-
   input: {
     paddingVertical: 16,
     paddingHorizontal: 16,
     backgroundColor: colors.textOnPrimary,
   },
-
   button: {
     backgroundColor: colors.primary,
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
-    transform: [{ translateY: 20 }],
+    marginTop: 5,
   },
-
   buttonText: {
     color: colors.textOnPrimary,
     fontWeight: "bold",
     fontSize: 16,
   },
-
+  orContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 15,
+  },
+  divider: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.lightGrey,
+  },
+  orText: {
+    marginHorizontal: 10,
+    color: "#999",
+    fontSize: 14,
+  },
+  googleButtonContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  googleButton: {
+    backgroundColor: colors.textOnPrimary,
+    padding: 15,
+    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  googleIcon: {
+    width: 20,
+    height: 20,
+    position: "absolute",
+    left: 15,
+  },
+  googleButtonText: {
+    color: colors.darkGrey,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  link: {
+    marginTop: 15,
+    alignItems: "center",
+  },
+  linkText: {
+    color: colors.saveBtnTextColor,
+    fontWeight: "600",
+    fontSize: 13,
+    textDecorationLine: "underline",
+  },
+  registerContainer: {
+    marginTop: 30,
+    alignItems: "center",
+  },
   bottomLink: {
     color: colors.saveBtnColor,
     fontWeight: "600",
     fontSize: 14,
     textDecorationLine: "underline",
-    position: "absolute",
-    bottom: -100,
-    alignSelf: "center",
-  },
-
-  link: {
-    marginTop: 10,
-    alignItems: "center",
-  },
-
-  linkText: {
-    color: colors.saveBtnTextColor,
-    fontWeight: "600",
-    fontSize: 14,
-    textDecorationLine: "underline",
-    transform: [{ translateY: 20 }],
   },
 });
