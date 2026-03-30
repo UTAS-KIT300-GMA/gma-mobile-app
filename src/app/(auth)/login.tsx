@@ -1,6 +1,6 @@
 /**
- * LOGIN MANAGER
- * This file handles the login screen. It checks the user's email
+ **LOGIN ROUTE**
+ * This file handles the login UI logic. It checks the user's email
  * and password and makes sure their account is verified before
  * letting them into the main app.
  */
@@ -57,9 +57,9 @@ type GoogleSignInUser = {
  * login screen UI to the user.
  */
 export default function LoginRoute() {
-  const router = useRouter();
+  const router = useRouter(); // Stores the navigation tool  to allow moving between screens.
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false); // Stores a true/false value, to track if the app is trying to sign user in.
 
   useEffect(() => {
     if (webClientId) {
@@ -108,22 +108,34 @@ export default function LoginRoute() {
   };
 
   /**
-   * Handles the login button and checks if the user is verified.
+   *  Handles the login button and checks if the user is verified.
+   *
+   ** Parameters:
+   * email - The email the user typed in.
+   * password - The password the user typed in.
+   *
+   ** Outcome:
+   * Signs the user in. If they haven't verified their email, it
+   * shows a popup with options to resend the link or check their status.
    */
   const handleLogin = async (email: string, password: string) => {
-    if (loading) return;
+    if (loading) return; // Prevent multiple simultaneous login attempts
 
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase(); // Stores the email address after removing extra spaces and making it lowercase.
 
+    // Validate inputs
     if (!cleanEmail || !password) {
       Alert.alert("Error", "Please enter email and password.");
       return;
     }
 
+    // Changes var to true to tell app, a background task has started.
     setLoading(true);
     try {
+      // Attempt login
       const { verified } = await loginUser(cleanEmail, password);
 
+      // Email is not verified
       if (!verified) {
         Alert.alert(
             "Verify Email",
@@ -133,6 +145,7 @@ export default function LoginRoute() {
                 text: "Resend Email",
                 onPress: async () => {
                   try {
+                    // Sends a new verification email using authService
                     await resendVerificationEmail();
                     Alert.alert("Sent", "Verification email resent.");
                   } catch (e) {
@@ -147,6 +160,7 @@ export default function LoginRoute() {
             ],
         );
       }
+      // Handles login errors
     } catch (e) {
       Alert.alert("Login Error", getFriendlyError(e));
     } finally {
@@ -154,6 +168,7 @@ export default function LoginRoute() {
     }
   };
 
+  // Passes login logic,current state and navigation handlers to the UI screen.
   return (
       <LoginScreen
           onLogin={handleLogin}
