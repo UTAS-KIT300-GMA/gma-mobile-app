@@ -7,7 +7,7 @@
 import {
   EditProfileScreen,
   ProfileFormData,
-} from "@/screens/profile/edit-profile-screen";
+} from "@/screens/profile/edit-profile-UI";
 import { auth, db } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
 import { updateEmail, updatePassword } from "@react-native-firebase/auth";

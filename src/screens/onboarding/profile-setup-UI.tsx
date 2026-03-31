@@ -1,7 +1,5 @@
 /**
- * ProfileSetupScreen.tsx
- * * This component allows users to select their interests across three "Pillars" 
- * (Connect, Grow, Thrive) and saves them to their Hobart Firebase profile.
+ * ProfileSetupScreen.tsx (Resolved Hobart Edition)
  */
 
 import { useRouter } from "expo-router"; 
@@ -18,45 +16,30 @@ import {
 
 import { InterestKey } from "@/types/type";
 
-// Define the shape of data this component expects from its parent
+// We keep your "HEAD" Props because they support the Editing state for Hobart users
 interface Props {
   onSave: (selectedTags: InterestKey[]) => void;
-  saving: boolean;                              
+  saving: boolean;                               
   userName?: string;
   isEditing?: boolean;
-  initialInterests?: InterestKey[];                            
+  initialInterests?: InterestKey[];                               
 }
 
 export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props) {
-  // Access the Expo Router for stack navigation
   const router = useRouter();
   
-  /**
-   * STATE: selected
-   * Stores interests as a key-value pair (e.g., {"Yoga": true}).
-   * Using Partial<Record> allows us to only store the keys the user interacts with.
-   */
+  // Initialize state—keeping your logic for the record object
   const [selected, setSelected] = useState<Partial<Record<InterestKey, boolean>>>({});
 
-  /**
-   * MEMOIZED VALUE: selectedTags
-   * Converts the 'selected' object into a clean array of strings for the database.
-   * useMemo ensures this calculation only runs when the 'selected' state changes.
-   */
+  // Converts selected object to array for Firestore
   const selectedTags = useMemo(() => {
     return (Object.keys(selected) as InterestKey[]).filter((k) => selected[k]);
   }, [selected]);
 
-  // Toggles the boolean value of an interest when a pill is tapped
   const toggle = (key: InterestKey) => {
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  /**
-   * RENDER HELPER: renderPill
-   * Generates the UI for each individual interest tag.
-   * Swaps styles based on the 'isActive' boolean.
-   */
   const renderPill = (key: InterestKey) => {
     const isActive = selected[key];
     return (
@@ -91,53 +74,36 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
         <Text style={styles.heading1}>Tailor Your Hobart Experience</Text>
         <Text style={styles.subHeading}>Select interests to personalize your feed.</Text>
 
-        {/* --- PILLAR 1: CONNECT (Social) --- */}
+        {/* --- PILLAR 1: CONNECT --- */}
         <Text style={styles.pillarHeader}>Connect (Social & Community)</Text>
         <View style={styles.tagWrapper}>
           {[
-            "Social Networking",
-            "Creative Arts & Crafts",
-            "Cultural & Community Events",
-            "Book Club",
-            "Games, Trivia & Bingo",
-            "Food & Cooking",
-            "Music & Karaoke",
-            "Theatre & Movies",
+            "Social Networking", "Creative Arts & Crafts", "Cultural & Community Events",
+            "Book Club", "Games, Trivia & Bingo", "Food & Cooking",
+            "Music & Karaoke", "Theatre & Movies",
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
-        {/* --- PILLAR 2: GROW (Professional) --- */}
+        {/* --- PILLAR 2: GROW --- */}
         <Text style={styles.pillarHeader}>Grow (Professional & Skills)</Text>
         <View style={styles.tagWrapper}>
           {[
-            "Professional Networking",
-            "Entrepreneurship",
-            "Career Development & Info",
-            "Workshops & Skill Share",
-            "Mentoring & Coaching",
-            "Financial Literacy & Investing",
-            "Real Estate & Home Ownership",
-            "Public Speaking & Communication",
+            "Professional Networking", "Entrepreneurship", "Career Development & Info",
+            "Workshops & Skill Share", "Mentoring & Coaching", "Financial Literacy & Investing",
+            "Real Estate & Home Ownership", "Public Speaking & Communication",
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
-        {/* --- PILLAR 3: THRIVE (Wellness) --- */}
+        {/* --- PILLAR 3: THRIVE --- */}
         <Text style={styles.pillarHeader}>Thrive (Health & Wellness)</Text>
         <View style={styles.tagWrapper}>
           {[
-            "Running & Walking",
-            "Team Sports",
-            "Hiking & Outdoor Adventure",
-            "Yoga & Pilates",
-            "Gym & Fitness",
-            "Climbing & Extreme Sports",
-            "Wellness & Retreats",
-            "Cycling & Riding",
-            "Healthy Eating",
+            "Running & Walking", "Team Sports", "Hiking & Outdoor Adventure",
+            "Yoga & Pilates", "Gym & Fitness", "Climbing & Extreme Sports",
+            "Wellness & Retreats", "Cycling & Riding", "Healthy Eating",
           ].map((tag) => renderPill(tag as InterestKey))}
         </View>
 
-        {/* ACTION: Save Button. Shows a spinner when 'saving' is true */}
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           disabled={saving}
@@ -161,19 +127,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-
   contentContainer: {
     paddingTop: 40,
     paddingBottom: 40,
     paddingHorizontal: 15,
-    justifyContent: "center",
   },
-
   box: {
     backgroundColor: colors.background,
     borderRadius: 16,
     padding: 20,
   },
+  // We keep your Avatar Styles
   avatarSection: {
     alignItems: "center",
     marginBottom: 20,
@@ -200,12 +164,16 @@ const styles = StyleSheet.create({
   heading1: {
     color: colors.saveBtnTextColor,
     fontSize: 29,
-    marginTop: 60,
+    marginTop: 20,
     fontWeight: "700",
     textAlign: "center",
-    alignSelf: "flex-start",
   },
-
+  subHeading: {
+    color: colors.textOnSecondary,
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 20,
+  },
   pillarHeader: {
     color: colors.saveBtnTextColor,
     fontSize: 16,
@@ -213,34 +181,33 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     borderLeftWidth: 4, 
-    borderLeftColor: "#a64d79",
+    borderLeftColor: "#a64d79", // Keeping your brand purple
     paddingLeft: 10,
   },
-
   tagWrapper: {
     flexDirection: "row",
     flexWrap: "wrap", 
     gap: 8,
   },
-
-  // --- Inactive State of Tags ---
   pill: {
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: colors.textOnPrimary,
-    backgroundColor: colors.textOnPrimary,
-    marginBottom: 4,
+    borderColor: "#ddd",
     backgroundColor: "#fff",
+    marginBottom: 4,
   },
   pillActive: {
     backgroundColor: "#a64d79", 
     borderColor: "#a64d79",
   },
-
+  pillText: {
+    color: colors.primary,
+    fontSize: 14,
+  },
   pillTextActive: {
-    color: colors.textOnPrimary,
+    color: "#fff",
     fontWeight: "600",
   },
   saveButton: {
@@ -258,18 +225,6 @@ const styles = StyleSheet.create({
     color: colors.saveBtnTextColor,
     fontSize: 16,
     fontWeight: "700",
-  },
-  backButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginBottom: 10,
-    marginTop: 10, 
-  },
-  backButtonText: {
-    marginLeft: 8,
-    fontSize: 16,
-    color: colors.textOnSecondary,
-    fontWeight: '500',
+    alignSelf: "center",
   },
 });

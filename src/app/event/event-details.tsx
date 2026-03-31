@@ -1,4 +1,4 @@
-import EventDetailUI from "@/screens/event/event-details-screen"; // Default import will clean up other screens later.
+import EventDetailUI from "@/screens/event/event-details-UI"; // Default import will clean up other screens later.
 import { auth, db } from "@/services/authService";
 import {
   deleteDoc,

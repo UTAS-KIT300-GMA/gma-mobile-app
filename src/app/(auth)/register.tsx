@@ -4,6 +4,7 @@
  * provide all their info, creates their account, and starts the 
  * email verification process.
  */
+
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Alert } from "react-native";
