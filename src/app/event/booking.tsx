@@ -1,15 +1,5 @@
 import { formatDateTime } from "@/components/utils";
-import { BookingScreenUI } from "@/screens/event/booking-UI";
-import { auth, db } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  serverTimestamp,
-} from "@react-native-firebase/firestore";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert, ActivityIndicator, View } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";

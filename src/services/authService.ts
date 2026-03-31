@@ -4,35 +4,34 @@
  * Handles raw API calls for Authentication (Login, Register, Password Resets)
  * and Firestore user profile management.
  */
-import { useEffect } from "react";
 import {
-  getAuth,
-  onAuthStateChanged,
-  FirebaseAuthTypes,
-  signOut,
-  reload,
-  sendPasswordResetEmail,
-  verifyPasswordResetCode,
   applyActionCode,
-  sendEmailVerification,
+  confirmPasswordReset,
+  createUserWithEmailAndPassword,
   deleteUser,
-  updateEmail,
-  signOut,
-  signInWithEmailAndPassword,
+  FirebaseAuthTypes,
+  getAuth,
   GoogleAuthProvider,
+  onAuthStateChanged,
+  reload,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithCredential,
+  signInWithEmailAndPassword,
+  signOut,
+  updateEmail,
+  verifyPasswordResetCode,
 } from "@react-native-firebase/auth";
 import {
-  getFirestore,
-  Timestamp,
-  serverTimestamp,
   doc,
+  getDoc,
+  getFirestore,
+  serverTimestamp,
   setDoc,
+  Timestamp,
   updateDoc,
-  getDoc
 } from "@react-native-firebase/firestore";
-
-
+import { useEffect } from "react";
 
 export const auth = getAuth(); // Stores Auth instance in the auth var to initialize.
 
@@ -45,9 +44,9 @@ export const ERROR_MESSAGES: Record<string, string> = {
   "auth/user-not-found": "No account found with this email.",
   "auth/wrong-password": "Incorrect password.",
   "auth/expired-action-code":
-      "The reset link has expired. Please request a new one.",
+    "The reset link has expired. Please request a new one.",
   "auth/invalid-action-code":
-      "The reset link is invalid or has already been used.",
+    "The reset link is invalid or has already been used.",
   "auth/too-many-requests": "Too many attempts. Try again later.",
 };
 
@@ -75,7 +74,10 @@ export async function loginUser(email: string, pass: string) {
   await reload(user);
   const refreshedUser = auth.currentUser;
   // Returns the user object and true/false if they have verified their email
-  return { user: refreshedUser, verified: refreshedUser?.emailVerified ?? false };
+  return {
+    user: refreshedUser,
+    verified: refreshedUser?.emailVerified ?? false,
+  };
 }
 
 /**
@@ -91,9 +93,9 @@ export async function loginUser(email: string, pass: string) {
 
  */
 export async function registerUser(
-    email: string,
-    password: string,
-    profile: RegisterData
+  email: string,
+  password: string,
+  profile: RegisterData,
 ) {
   const { user } = await createUserWithEmailAndPassword(auth, email, password); // Creates users login credentials in Firebase Auth
 
@@ -134,7 +136,7 @@ export type GoogleSignInProfile = {
  * core fields as email/password registration. Does not overwrite an existing profile.
  */
 export async function ensureGoogleUserFirestoreProfile(
-    googleUser?: GoogleSignInProfile,
+  googleUser?: GoogleSignInProfile,
 ): Promise<void> {
   const user = auth.currentUser;
   if (!user) throw new Error("No signed-in user");
@@ -158,7 +160,7 @@ export async function ensureGoogleUserFirestoreProfile(
   if (!firstName) firstName = "User";
 
   const photo =
-      user.photoURL ?? (googleUser?.photo ? String(googleUser.photo) : null);
+    user.photoURL ?? (googleUser?.photo ? String(googleUser.photo) : null);
 
   await setDoc(userRef, {
     email,
@@ -191,7 +193,7 @@ export async function signInWithGoogleIdToken(idToken: string) {
  ** Outcome:
  * Updates Firebase Auth and Firestore with user's new email address.
  */
- export async function updateUserEmail(newEmail: string) {
+export async function updateUserEmail(newEmail: string) {
   const user = auth.currentUser;
   if (!user) throw new Error("No user logged in");
 
@@ -202,7 +204,7 @@ export async function signInWithGoogleIdToken(idToken: string) {
   const userRef = doc(db, "users", user.uid);
   await updateDoc(userRef, {
     email: newEmail.toLowerCase(),
-    updatedAt: serverTimestamp()
+    updatedAt: serverTimestamp(),
   });
 }
 
@@ -306,7 +308,9 @@ export function getFriendlyError(e: any): string {
  ** Outcome:
  * The app stays in sync with the user's authentication state across different screens.
  */
-export function useAuthState(callback: (user: FirebaseAuthTypes.User | null) => void) {
+export function useAuthState(
+  callback: (user: FirebaseAuthTypes.User | null) => void,
+) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, callback);
     return () => unsubscribe();
@@ -315,11 +319,12 @@ export function useAuthState(callback: (user: FirebaseAuthTypes.User | null) => 
 
 // Export Firestore utilities for use on other files
 export {
-  Timestamp,
-  serverTimestamp,
-  doc,
-  setDoc,
-  updateDoc,
   applyActionCode,
-  getDoc
+  doc,
+  getDoc,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+  updateDoc
 };
+
