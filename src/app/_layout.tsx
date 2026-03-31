@@ -1,33 +1,41 @@
 /**
  * ROOT NAVIGATION GUARD
- * The "Traffic Controller" of the application. 
- * Orchestrates global routing logic by checking Auth status, Email Verification, 
+ * The "Traffic Controller" of the application.
+ * Orchestrates global routing logic by checking Auth status, Email Verification,
  * and Onboarding completion to ensure users are always in the correct app section.
  */
 
-import { auth, db, doc, applyActionCode } from "@/services/authService";
-import { onSnapshot } from "@react-native-firebase/firestore";
-import { FirebaseAuthTypes, onAuthStateChanged } from "@react-native-firebase/auth";
-import { Stack, useRouter, useSegments } from "expo-router";
-import * as Linking from "expo-linking";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View, Alert} from "react-native";
+import { applyActionCode, auth, db, doc } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
-
+import {
+  FirebaseAuthTypes,
+  onAuthStateChanged,
+} from "@react-native-firebase/auth";
+import { onSnapshot } from "@react-native-firebase/firestore";
+import * as Linking from "expo-linking";
+import { Stack, useRouter, useSegments } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, View } from "react-native";
 
 export default function RootLayout() {
   // Stores the Firebase user object in the user var.
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
-  
+
   // Stores a boolean in the initializing var to track the first auth check.
   const [initializing, setInitializing] = useState(true);
-  
+
   // Stores whether the user has finished their interests in the isProfileValidated var.
-  const [isProfileValidated, setIsProfileValidated] = useState<boolean | null>(null);
+  const [isProfileValidated, setIsProfileValidated] = useState<boolean | null>(
+    null,
+  );
 
   // Stores the current folder path (segments) and the navigation tool (router).
   const segments = useSegments();
   const router = useRouter();
+
+  // Tracks whether the email verification link has been handled to prevent
+  // duplicate processing.
+  const [handledLink, setHandledLink] = useState(false);
 
   // Auth Listener, Watches for login or logout events.
   useEffect(() => {
@@ -38,7 +46,7 @@ export default function RootLayout() {
       if (!u) {
         setIsProfileValidated(false);
         setInitializing(false);
-      } 
+      }
       // User logged in but email not verified
       else if (u.emailVerified === false) {
         setInitializing(false);
@@ -49,7 +57,9 @@ export default function RootLayout() {
 
   // Deep Link Listener: Catches the Firebase email link when the app opens.
   useEffect(() => {
-    const handleDeepLink = async (event: Linking.EventType | { url: string }) => {
+    const handleDeepLink = async (
+      event: Linking.EventType | { url: string },
+    ) => {
       const { url } = event;
       if (!url) return;
 
@@ -58,16 +68,21 @@ export default function RootLayout() {
       // Checks if the incoming link is the Firebase action route.
       // Note: Expo parses paths without the leading slash.
       if (parsedUrl.path === "__/auth/action") {
-        const mode = parsedUrl.queryParams?.mode;
-        const oobCode = parsedUrl.queryParams?.oobCode as string;
+        const modeParam = parsedUrl.queryParams?.mode;
+        const codeParam = parsedUrl.queryParams?.oobCode;
+
+        const mode = Array.isArray(modeParam) ? modeParam[0] : modeParam;
+        const oobCode = Array.isArray(codeParam) ? codeParam[0] : codeParam;
 
         // Handles the Email Verification flow.
         if (mode === "verifyEmail" && oobCode) {
+          setHandledLink(true); // Mark the link as handled to prevent duplicates.
+
           try {
             // Verifies the code with Firebase.
             await applyActionCode(auth, oobCode);
-            
-            // Forces the local user object to refresh its data 
+
+            // Forces the local user object to refresh its data
             // so the Navigation Guard knows the email is verified.
             if (auth.currentUser) {
               await auth.currentUser.reload();
@@ -78,10 +93,28 @@ export default function RootLayout() {
             }
           } catch (error: any) {
             console.error("Email verification failed:", error);
-            Alert.alert("Verification Error", error.message);
+
+            if (error?.code === "auth/invalid-action-code") {
+              Alert.alert(
+                "Verification link invalid",
+                "This verification link is invalid, expired, or has already been used. Please request a new verification email.",
+                [
+                  {
+                    text: "OK",
+                    onPress: () => router.replace("/(auth)/verify-user"),
+                  },
+                ],
+              );
+              return;
+            }
+
+            Alert.alert(
+              "Verification Error",
+              "We could not verify your email. Please try again or request a new verification email.",
+            );
           }
         }
-        
+
         // Handles the Password Reset flow.
         else if (mode === "resetPassword" && oobCode) {
           // Routes the user to the reset password screen, passing the code.
@@ -101,7 +134,7 @@ export default function RootLayout() {
     return () => {
       subscription.remove();
     };
-  }, [router]); // Added router to dependency array as best practice
+  }, [router, handledLink]); // Added router and handledLink to dependency array as best practice
 
   // Profile Listener: Watches the Firestore 'users' doc for changes.
   useEffect(() => {
@@ -121,15 +154,20 @@ export default function RootLayout() {
           const hasInterests = !!(snap.data()?.selectedTags?.length > 0);
           setIsProfileValidated(hasInterests);
         }
-        
+
         // Stop the loading spinner now that we have an answer.
         setInitializing(false);
       },
       // Type the error as generic Error
       (error: any) => {
         // 1. Silently ignore permission errors during logout
-        if (error?.code === 'firestore/permission-denied' || error?.message?.includes('permission-denied')) {
-          console.log("Suppressed permission error during logout in Profile Listener.");
+        if (
+          error?.code === "firestore/permission-denied" ||
+          error?.message?.includes("permission-denied")
+        ) {
+          console.log(
+            "Suppressed permission error during logout in Profile Listener.",
+          );
           setInitializing(false);
           return;
         }
@@ -137,7 +175,7 @@ export default function RootLayout() {
         // 2. Only log actual errors to the emulator
         console.error("Profile Listener Error:", error);
         setInitializing(false);
-      }
+      },
     );
 
     return () => unsubscribe();
@@ -151,29 +189,45 @@ export default function RootLayout() {
     const inAuthGroup = segments[0] === "(auth)";
     const inOnboardingGroup = segments[0] === "(onboarding)";
     const isOnVerifyScreen = segments[1] === "verify-user";
+    const currentAuthScreen = segments[1];
 
-    // Unauthenticated 
+    // Unauthenticated will be sent to landing, but can access auth screens.
+    // No access to onboarding or main app.
+    const allowedUnauthenticatedScreens = [
+      "landing",
+      "login",
+      "register",
+      "forgot-password",
+      "reset-password",
+    ];
     if (!user) {
-      if (!inAuthGroup) router.replace("/(auth)/landing"); 
+      const isAllowedUnauthenticatedScreen =
+        inAuthGroup &&
+        typeof currentAuthScreen === "string" &&
+        allowedUnauthenticatedScreens.includes(currentAuthScreen);
+
+      if (!isAllowedUnauthenticatedScreen) {
+        router.replace("/(auth)/landing");
+      }
       return;
     }
 
-    // Unverified 
+    // Unverified
     if (!user.emailVerified) {
-      if (!isOnVerifyScreen) router.replace("/(auth)/verify-user"); 
+      if (!isOnVerifyScreen) router.replace("/(auth)/verify-user");
       return;
     }
 
-    // Authenticated but not onboarded 
+    // Authenticated but not onboarded
     if (isProfileValidated === false) {
-      if (!inOnboardingGroup) router.replace("/(onboarding)"); 
+      if (!inOnboardingGroup) router.replace("/(onboarding)");
       return;
     }
 
-    // Fully onboarded users 
+    // Fully onboarded users
     if (isProfileValidated === true) {
       if (inAuthGroup || inOnboardingGroup || isOnVerifyScreen) {
-        router.replace("/(tabs)"); 
+        router.replace("/(tabs)");
       }
     }
   }, [user, segments, initializing, isProfileValidated, router]); // Added router to dependency array
@@ -193,5 +247,5 @@ export default function RootLayout() {
       </View>
     );
   }
-return <Stack screenOptions={{ headerShown: false }} />;
+  return <Stack screenOptions={{ headerShown: false }} />;
 }
