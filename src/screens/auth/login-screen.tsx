@@ -100,37 +100,43 @@ export const LoginScreen = ({
           )}
         </TouchableOpacity>
 
-          {/* OR Divider */}
-          <View style={styles.orContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.orText}>or</Text>
-            <View style={styles.divider} />
-          </View>
-
-          {/* Google Login Button */}
-          <TouchableOpacity
-              onPress={onGoogleLogin}
-              style={styles.googleButton}
-              disabled={loading}
-          >
-            <Image
-                source={require("../../../assets/images/google-icon.png")}
-                style={styles.googleIcon}
-                resizeMode="contain"
-            />
-            <Text style={styles.googleButtonText}>Sign in with Google</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity onPress={onForgotPress} style={styles.link}>
-            <Text style={styles.linkText}>Forgot Password?</Text>
-          </TouchableOpacity>
+        {/* OR Divider */}
+        <View style={styles.orContainer}>
+          <View style={styles.divider} />
+          <Text style={styles.orText}>or</Text>
+          <View style={styles.divider} />
         </View>
 
-        {/* Register Link */}
-        <TouchableOpacity onPress={onRegisterPress} style={styles.registerContainer}>
-          <Text style={styles.bottomLink}>{"Don't have an account? Sign Up"}</Text>
+        {/* Google Login Button */}
+        <TouchableOpacity
+          onPress={onGoogleLogin}
+          style={styles.googleButton}
+          disabled={loading}
+        >
+          <Image
+            source={require("../../../assets/images/google-icon.png")}
+            style={styles.googleIcon}
+            resizeMode="contain"
+          />
+          <Text style={styles.googleButtonText}>Sign in with Google</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Register Link */}
+      <TouchableOpacity
+        onPress={onRegisterPress}
+        style={styles.registerContainer}
+      >
+        <Text style={styles.bottomLink}>
+          {"Don't have an account? Sign Up"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Forgot Password Link */}
+      <TouchableOpacity onPress={onForgotPress} style={styles.link}>
+        <Text style={styles.bottomLink}>Forgot Password?</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 
@@ -188,7 +194,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: colors.primary,
-    padding: 15,
+    padding: 14,
     borderRadius: 10,
     alignItems: "center",
     marginTop: 5,
@@ -210,7 +216,7 @@ const styles = StyleSheet.create({
   },
   orText: {
     marginHorizontal: 10,
-    color: "#999",
+    color: colors.darkGrey,
     fontSize: 14,
   },
   googleButtonContent: {
@@ -239,14 +245,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   link: {
-    marginTop: 15,
+    marginTop: 10,
     alignItems: "center",
-  },
-  linkText: {
-    color: colors.saveBtnTextColor,
-    fontWeight: "600",
-    fontSize: 13,
-    textDecorationLine: "underline",
   },
   registerContainer: {
     marginTop: 30,
