@@ -43,45 +43,65 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
   handleApply,
   handleReset,
 }) => {
+  const [showInterests, setShowInterests] = React.useState(true);
+
   return (
     <SafeAreaView style={styles.safe}>
       <AppHeader title="GMA Search" />
       <ScrollView contentContainerStyle={styles.container}>
         {/* Search Bar */}
         <View style={styles.searchBar}>
-          <Ionicons
-            name="search"
-            size={20}
-            color={colors.saveBtnTextColor}
-            style={styles.searchIcon}
-          />
+          <Pressable onPress={handleApply}>
+            <Ionicons
+              name="search"
+              size={20}
+              color={colors.saveBtnTextColor}
+              style={styles.searchIcon}
+            />
+          </Pressable>
           <TextInput
             value={query}
             onChangeText={setQuery}
             placeholder="Search events / courses"
             style={styles.searchInput}
             placeholderTextColor={colors.saveBtnTextColor}
+            onSubmitEditing={handleApply}
+            returnKeyType="search"
           />
         </View>
 
         {/* Interest Tags */}
-        <Text style={styles.h1}>Interest Tags</Text>
-        <View style={styles.tagsWrap}>
-          {INTEREST_TAGS.map((t) => {
-            const active = selected[t.key];
-            return (
-              <Pressable
-                key={t.key}
-                onPress={() => toggleTag(t.key)}
-                style={[styles.tag, active && styles.tagActive]}
-              >
-                <Text style={[styles.tagText, active && styles.tagTextActive]}>
-                  {t.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
+        <Pressable
+          style={styles.sectionHeader}
+          onPress={() => setShowInterests(!showInterests)}
+        >
+          <Text style={styles.h1}>Interest Tags</Text>
+          <Ionicons
+            name={showInterests ? "chevron-up" : "chevron-down"}
+            size={20}
+            color={colors.saveBtnTextColor}
+          />
+        </Pressable>
+        {showInterests && (
+          <View style={styles.tagsWrap}>
+            {INTEREST_TAGS.map((t) => {
+              const active = selected[t.key];
+              return (
+                <Pressable
+                  key={t.key}
+                  onPress={() => toggleTag(t.key)}
+                  style={[styles.tag, active && styles.tagActive]}
+                >
+                  <Text
+                    style={[styles.tagText, active && styles.tagTextActive]}
+                  >
+                    {t.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        )}
 
         {/* Location Input */}
         <Text style={styles.h1}>Location</Text>
@@ -165,6 +185,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     fontSize: 15,
+  },
+
+  sectionHeader: {
+    marginTop: 18,
+    marginBottom: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   h1: {

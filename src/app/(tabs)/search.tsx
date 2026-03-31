@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
-import { useRouter } from "expo-router"; 
-import { InterestKey, INTEREST_TAGS } from "@/types/type"; 
 import { SearchScreenUI } from "@/screens/search/search-UI";
+import { INTEREST_TAGS, InterestKey } from "@/types/type";
+import { useRouter } from "expo-router";
+import { useMemo, useState } from "react";
 
 export default function SearchScreenLogic() {
   // Stores the navigation tool in the router var.
@@ -36,6 +36,10 @@ export default function SearchScreenLogic() {
 
   // Stores the function instructions in the handleApply var.
   const handleApply = () => {
+    // Logic: Prevents the user from applying the search if they haven't typed anything.
+    if (!query.trim() && !location && !date) {
+      return;
+    }
     // Logic: Filters the selected store to create a clean array of only the active tags.
     const selectedTags = (Object.keys(selected) as InterestKey[]).filter(
       (k) => selected[k],
