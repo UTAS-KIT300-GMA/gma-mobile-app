@@ -3,7 +3,13 @@ import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
 import { EventDoc } from "@/types/type";
 import { router } from "expo-router";
-import { ActivityIndicator, FlatList, StyleSheet, View } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type HomeUIProps = {
@@ -31,6 +37,8 @@ export default function HomeUI({ events, loading }: HomeUIProps) {
       />
 
       <View style={styles.container}>
+        <Text style={styles.sectionTitle}>For You</Text>
+
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.primary} size="large" />
@@ -77,6 +85,9 @@ export default function HomeUI({ events, loading }: HomeUIProps) {
             )}
           />
         )}
+
+        <Text style={styles.sectionTitle}>Featured</Text>
+        <Text style={styles.sectionTitle}>You might be interested in...</Text>
       </View>
     </SafeAreaView>
   );
@@ -86,5 +97,12 @@ const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.textOnPrimary },
   container: { flex: 1, backgroundColor: colors.textOnPrimary },
   center: { flex: 1, alignItems: "center", justifyContent: "center" },
+  sectionTitle: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: colors.saveBtnTextColor,
+  },
   listContent: { padding: 10, paddingBottom: 24 },
 });

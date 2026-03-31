@@ -1,3 +1,4 @@
+import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -68,19 +69,8 @@ export default function ManagePaymentMethodScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <View style={styles.header}>
-        <Pressable
-          onPress={() => router.back()}
-          style={styles.headerIconButton}
-          hitSlop={10}
-        >
-          <Ionicons name="chevron-back" size={28} color={colors.primary} />
-        </Pressable>
-
-        <Text style={styles.headerTitle}>Payment Methods</Text>
-
-        <View style={styles.headerSpacer} />
-      </View>
+    {/* Header */}
+      <AppHeader title="Payment Methods" showBack={true} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -116,34 +106,7 @@ export default function ManagePaymentMethodScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#ffffff",
-  },
-  header: {
-    height: 64,
-    paddingHorizontal: 16,
-    backgroundColor: "#ffffff",
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: "#e5e7eb",
-    shadowColor: "#400F32",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  headerIconButton: {
-    padding: 4,
-    borderRadius: 999,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: colors.primary,
-  },
-  headerSpacer: {
-    width: 36,
+    backgroundColor: colors.textOnPrimary,
   },
   content: {
     paddingHorizontal: 28,
@@ -167,7 +130,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: "center",
     paddingHorizontal: 14,
-    shadowColor: "#400F32",
+    shadowColor: colors.saveBtnTextColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.18,
     shadowRadius: 3,
@@ -179,15 +142,15 @@ const styles = StyleSheet.create({
     borderColor: colors.primary,
   },
   optionRowUnselected: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.textOnPrimary,
     borderWidth: 1,
-    borderColor: "#ffffff",
+    borderColor: colors.textOnPrimary,
   },
   optionText: {
     fontSize: 16,
   },
   optionTextSelected: {
-    color: "#ffffff",
+    color: colors.textOnPrimary,
     fontWeight: "500",
   },
   optionTextUnselected: {
@@ -208,20 +171,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   saveButtonText: {
-    color: colors.textOnSecondary,
+    color: colors.saveBtnTextColor,
     fontSize: 16,
     fontWeight: "700",
   },
   cancelButton: {
     flex: 1,
-    backgroundColor: "#C0C0C0",
+    backgroundColor: colors.darkGrey,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
   },
   cancelButtonText: {
-    color: "#ffffff",
+    color: colors.textOnPrimary,
     fontSize: 16,
     fontWeight: "700",
   },

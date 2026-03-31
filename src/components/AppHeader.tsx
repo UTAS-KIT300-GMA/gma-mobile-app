@@ -184,6 +184,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "900",
     letterSpacing: 0.2,
+    marginLeft: 4,
   },
 
   actions: {
@@ -233,7 +234,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     textAlignVertical: "center",
     color: colors.primary,
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "900",
     letterSpacing: 0.2,
     textAlign: "center",

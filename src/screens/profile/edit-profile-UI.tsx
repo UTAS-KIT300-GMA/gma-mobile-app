@@ -79,7 +79,6 @@ export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
       >
         <ScrollView contentContainerStyle={styles.container}>
           <View style={styles.card}>
-            
             <Text style={styles.label}>First Name</Text>
             <TextInput
               style={styles.input}
@@ -149,18 +148,18 @@ export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
               onChangeText={setConfirmPassword}
               placeholder="Confirm new password"
               secureTextEntry
+              placeholderTextColor={colors.darkGrey}
             />
 
             <View style={styles.row}>
               <Pressable style={styles.btnSave} onPress={handleSavePress}>
                 <Text style={styles.btnText}>Save</Text>
               </Pressable>
-              
+
               <Pressable style={styles.btnCancel} onPress={onBack}>
                 <Text style={styles.btnText}>Cancel</Text>
               </Pressable>
             </View>
-
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
