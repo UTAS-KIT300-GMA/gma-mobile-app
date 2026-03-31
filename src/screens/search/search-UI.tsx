@@ -43,7 +43,7 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
   handleApply,
   handleReset,
 }) => {
-  const [showInterests, setShowInterests] = React.useState(true);
+  const [showInterests, setShowInterests] = React.useState(false);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   h1: {
     marginTop: 18,
     marginBottom: 10,
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "800",
     color: colors.saveBtnTextColor,
   },
