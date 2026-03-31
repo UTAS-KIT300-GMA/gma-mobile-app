@@ -28,7 +28,7 @@ export default function EventLayout() {
         options={{ title: 'Event Details', headerShown: false }}
       />
       <Stack.Screen 
-      // efines the 'Booking Confirmed' screen and hides the back button.
+      // Defines the 'Booking Confirmed' screen and hides the back button.
         name="confirmation" 
         options={{ title: 'Booking Confirmed', headerLeft: () => null, headerShown: false }}
       />

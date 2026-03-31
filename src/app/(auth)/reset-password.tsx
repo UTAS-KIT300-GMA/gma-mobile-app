@@ -9,13 +9,13 @@ import { useEffect, useMemo, useState } from "react";
 import { getFriendlyError, getPasswordResetEmail, resetPasswordWithCode } from "@/services/authService";
 import { ResetPasswordScreen } from "@/screens/auth/reset-password-screen";
 
-export default function ResetPasswordRoute() {
- /**
+/**
  * Sets up the logic for the password reset UI.
  * * Outcome: 
  * Validates the reset code from the URL and manages the password update state.
  */
-
+export default function ResetPasswordRoute() {
+  
   const router = useRouter();                                  // Stores the navigation tool to allow moving between screens.
   const params = useLocalSearchParams<{ oobCode?: string }>(); // Stores the reset code from the email link.
   
@@ -32,14 +32,14 @@ export default function ResetPasswordRoute() {
   const [modalMessage, setModalMessage] = useState("");              // Stores message for feedback popup.
   const [isSuccess, setIsSuccess] = useState(false);                 // Stores true/false value, to track if password was changed successfully.
 
-  useEffect(() => {
   /**
   ** Checks if the reset link from the email is still valid.
   * 
   ** Outcome: 
   * Retrieves the user's email if the link works, otherwise it shows an error.
   */
-
+  useEffect(() => {
+  
     // Exit if no reset code is found in the URL.
     if (!oobCode) return;
     
@@ -52,17 +52,17 @@ export default function ResetPasswordRoute() {
       .finally(() => setCheckingCode(false));
   }, [oobCode]);
 
-  const handleSave = async (newPass: string, confirmPass: string, manualCode?: string) => {
   /**
    ** Saves the new password the user typed in.
    *
    ** Parameters:
-   * newPass - the new password entered
-   * confirmPass - the second time the password was entered
+   * @param newPass - the new password entered
+   * @param confirmPass - the second time the password was entered
    * 
    ** Outcome: 
    *Updates the password in the database and shows a success or error message.
    */
+  const handleSave = async (newPass: string, confirmPass: string, manualCode?: string) => {
     
     const effectiveCode = oobCode ?? manualCode?.trim(); // Stores reset code by checking email link first, or using the typed-in code if the link is missing.
 

@@ -5,50 +5,31 @@
  * and Onboarding completion to ensure users are always in the correct app section.
  */
 
-import { auth, db, doc, applyActionCode } from "@/services/authService";
-import { onSnapshot } from "@react-native-firebase/firestore";
-import { FirebaseAuthTypes, onAuthStateChanged } from "@react-native-firebase/auth";
+import { auth, applyActionCode } from "@/services/authService";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { ActivityIndicator, View, Alert} from "react-native";
 import { colors } from "@/theme/ThemeProvider";
+import { useAuth } from "@/hooks/useAuth";
 
 
 export default function RootLayout() {
-  // Stores the Firebase user object in the user var.
-  const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
-  
-  // Stores a boolean in the initializing var to track the first auth check.
-  const [initializing, setInitializing] = useState(true);
-  
-  // Stores whether the user has finished their interests in the isProfileValidated var.
-  const [isProfileValidated, setIsProfileValidated] = useState<boolean | null>(null);
-
+  const { user, initializing, isProfileValidated } = useAuth();
   // Stores the current folder path (segments) and the navigation tool (router).
   const segments = useSegments();
   const router = useRouter();
 
-  // Auth Listener, Watches for login or logout events.
+  
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-
-      // User not logged in
-      if (!u) {
-        setIsProfileValidated(false);
-        setInitializing(false);
-      } 
-      // User logged in but email not verified
-      else if (u.emailVerified === false) {
-        setInitializing(false);
-      }
-    });
-    return unsubscribe;
-  }, []);
-
-  // Deep Link Listener: Catches the Firebase email link when the app opens.
-  useEffect(() => {
+  /**
+   ** Deep Link Listener: Catches the Firebase email link when the app opens.
+   * 
+   * @param event - The incoming linking event containing the URL.
+   * 
+   * ** Outcome: 
+   * Parses the URL mode (verifyEmail or resetPassword) and executes the corresponding action.
+   */
     const handleDeepLink = async (event: Linking.EventType | { url: string }) => {
       const { url } = event;
       if (!url) return;
@@ -56,7 +37,6 @@ export default function RootLayout() {
       const parsedUrl = Linking.parse(url);
 
       // Checks if the incoming link is the Firebase action route.
-      // Note: Expo parses paths without the leading slash.
       if (parsedUrl.path === "__/auth/action") {
         const mode = parsedUrl.queryParams?.mode;
         const oobCode = parsedUrl.queryParams?.oobCode as string;
@@ -67,13 +47,9 @@ export default function RootLayout() {
             // Verifies the code with Firebase.
             await applyActionCode(auth, oobCode);
             
-            // Forces the local user object to refresh its data 
-            // so the Navigation Guard knows the email is verified.
+            // Forces the local user object to refresh its data, to know if email is verifed 
             if (auth.currentUser) {
               await auth.currentUser.reload();
-              // Updates the local state to trigger the layout router.
-              // Spreading the object forces React to register the state change.
-              setUser({ ...auth.currentUser } as FirebaseAuthTypes.User);
               router.replace("/(onboarding)");
             }
           } catch (error: any) {
@@ -103,48 +79,14 @@ export default function RootLayout() {
     };
   }, [router]); // Added router to dependency array as best practice
 
-  // Profile Listener: Watches the Firestore 'users' doc for changes.
+
+  /**
+   ** Navigation Guard: The "Traffic Controller" of user navigation.
+   * ** Outcome: 
+   * Redirects users to Landing, Verify, Onboarding, or Tabs based on their status.
+   */
   useEffect(() => {
-    // Only run if the user exists and is verified.
-    if (!user || !user.emailVerified) return;
-
-    const userRef = doc(db, "users", user.uid);
-    const unsubscribe = onSnapshot(
-      userRef,
-      (snap) => {
-        // Check if the document actually exists in Firestore
-        if (!snap.exists()) {
-          // If it doesn't exist, they definitely aren't validated yet.
-          setIsProfileValidated(false);
-        } else {
-          // If it does exist, check for their selected tags.
-          const hasInterests = !!(snap.data()?.selectedTags?.length > 0);
-          setIsProfileValidated(hasInterests);
-        }
-        
-        // Stop the loading spinner now that we have an answer.
-        setInitializing(false);
-      },
-      // Type the error as generic Error
-      (error: any) => {
-        // 1. Silently ignore permission errors during logout
-        if (error?.code === 'firestore/permission-denied' || error?.message?.includes('permission-denied')) {
-          console.log("Suppressed permission error during logout in Profile Listener.");
-          setInitializing(false);
-          return;
-        }
-
-        // 2. Only log actual errors to the emulator
-        console.error("Profile Listener Error:", error);
-        setInitializing(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user?.uid, user?.emailVerified]);
-
-  // Navigation Guard, The "Traffic Controller" of user nav.
-  useEffect(() => {
+    // Prevent routing while auth or profile data is still being retrieved.
     if (initializing) return;
     if (user?.emailVerified && isProfileValidated === null) return;
 
@@ -179,7 +121,8 @@ export default function RootLayout() {
   }, [user, segments, initializing, isProfileValidated, router]); // Added router to dependency array
 
   // Loading UI
-  if (initializing) {
+  const inAuthGroup = segments[0] === "(auth)";
+  if (initializing || (user?.emailVerified && isProfileValidated === null) || (!user && !initializing && !inAuthGroup)) {
     return (
       <View
         style={{
