@@ -1,7 +1,7 @@
 /**
  **EDIT PROFILE ROUTE**
- * This file handles the logic for the edit profile screen. It fetches the user's 
- * current data from Firestore, pre-fills the edit form, and saves any updated 
+ * This file handles the logic for the edit profile screen. It fetches the user's
+ * current data from Firestore, pre-fills the edit form, and saves any updated
  * profile data (including email and password) back to the database.
  */
 import {
@@ -19,21 +19,15 @@ import {
 } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { useRouter } from "expo-router";
-import { Alert, ActivityIndicator, View, StyleSheet } from "react-native";
-import { updateEmail } from "@react-native-firebase/auth";
-import { doc, getDoc, updateDoc, Timestamp } from "@react-native-firebase/firestore";
-import { auth, db } from "@/services/authService";
-import { EditProfileScreen } from "@/screens/profile/edit-profile-UI";
-import { ProfileFormData } from "@/types/type";
+import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 
 /**
-   * Logic for the edit-profile-screen.
-   *
-   * Outcome:
-   * Fetches the user's current data from Firestore, fills the edit form,
-   * and saves the updated profile data back to Firestore.
-   */
+ * Logic for the edit-profile-screen.
+ *
+ * Outcome:
+ * Fetches the user's current data from Firestore, fills the edit form,
+ * and saves the updated profile data back to Firestore.
+ */
 export default function EditProfileRoute() {
   // Stores the navigation tool in the router var to allow moving between screens.
   const router = useRouter();
@@ -43,14 +37,13 @@ export default function EditProfileRoute() {
 
   // Tracks whether the profile is still being fetched.
   const [loading, setLoading] = useState(true);
-  
+
   // Runs once, when this screen loads to fetch the user's existing profile data.
   useEffect(() => {
     async function loadProfile() {
-      
       // Stores the current user account in the user var.
       const user = auth.currentUser;
-      
+
       // If no user is logged in, changes the loading var to false and stops the function.
       if (!user) {
         setLoading(false);
@@ -96,17 +89,16 @@ export default function EditProfileRoute() {
   }, []);
 
   /**
-     * Handles validating and updating the user's profile.
-     *
-     * Parameters:
-     * data - The user's edited form values 
-     *
-     * Outcome:
-     * Updates Firestore profile fields and optionally updates Auth email/password,
-     * then navigates back to the profile screen.
-     */
+   * Handles validating and updating the user's profile.
+   *
+   * Parameters:
+   * data - The user's edited form values
+   *
+   * Outcome:
+   * Updates Firestore profile fields and optionally updates Auth email/password,
+   * then navigates back to the profile screen.
+   */
   const handleSave = async (data: ProfileFormData) => {
-    
     // Stores the current user account in the user var.
     const user = auth.currentUser;
     if (!user) return;
@@ -114,7 +106,7 @@ export default function EditProfileRoute() {
     try {
       // Stores the document reference for the current user in the userRef var.
       const userRef = doc(db, "users", user.uid);
-      
+
       // Updates the Firebase Auth email if the user changed it in the form.
       if (data.email && data.email !== user.email) {
         await updateEmail(user, data.email);
@@ -129,8 +121,8 @@ export default function EditProfileRoute() {
       const updatePayload = {
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
-        email: data.email.toLowerCase(),
-        updatedAt: Timestamp.now(), 
+        email: data.email?.toLowerCase() || user.email || "",
+        updatedAt: Timestamp.now(),
       };
 
       // Updates the Firestore profile document with the new payload.
@@ -141,8 +133,11 @@ export default function EditProfileRoute() {
       router.back();
     } catch (error: any) {
       // Handles the specific Firebase error where a user must re-log to change an email.
-      if (error.code === 'auth/requires-recent-login') {
-        Alert.alert("Security Check", "Please log out and back in to change your email.");
+      if (error.code === "auth/requires-recent-login") {
+        Alert.alert(
+          "Security Check",
+          "Please log out and back in to change your email.",
+        );
       } else {
         console.error("Save Error:", error);
         Alert.alert("Save Failed", "Please ensure the email is valid.");
