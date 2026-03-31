@@ -27,12 +27,16 @@ interface DiscoveryProps {
   options: { key: string; label: string }[];
   title?: string;
 
+  // Future props for access filtering
+  accessFilter: string;
+  onSelectAccessFilter: (filter: string) => void;
+
   // Future props for sorting
   sortOption: string;
   onSelectSort: (sort: string) => void;
 }
 
-export const DiscoveryScreen: React.FC<DiscoveryProps> = ({
+export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
   filteredEvents,
   loading,
   bookmarkedIds,
@@ -45,6 +49,8 @@ export const DiscoveryScreen: React.FC<DiscoveryProps> = ({
   title = "GMA Discovery",
   sortOption,
   onSelectSort,
+  accessFilter,
+  onSelectAccessFilter,
 }) => {
   const [sortModalVisible, setSortModalVisible] = useState(false);
 
@@ -154,23 +160,64 @@ export const DiscoveryScreen: React.FC<DiscoveryProps> = ({
                 key={option.key}
                 style={[
                   styles.sortOptionRow,
-                  sortOption === option.key && styles.sortOptionRowActive,
+                  ((option.key === "free_only" && accessFilter === "free") ||
+                    (option.key === "subscriber_only" &&
+                      accessFilter === "subscriber") ||
+                    (option.key === "default" &&
+                      sortOption === "default" &&
+                      accessFilter === "all") ||
+                    (option.key !== "free_only" &&
+                      option.key !== "subscriber_only" &&
+                      option.key !== "default" &&
+                      sortOption === option.key)) &&
+                    styles.sortOptionRowActive,
                 ]}
                 onPress={() => {
-                  onSelectSort(option.key);
+                  if (option.key === "free_only") {
+                    onSelectAccessFilter("free");
+                    onSelectSort("default");
+                  } else if (option.key === "subscriber_only") {
+                    onSelectAccessFilter("subscriber");
+                    onSelectSort("default");
+                  } else if (option.key === "default") {
+                    onSelectAccessFilter("all");
+                    onSelectSort("default");
+                  } else {
+                    onSelectAccessFilter("all");
+                    onSelectSort(option.key);
+                  }
                   setSortModalVisible(false);
                 }}
               >
                 <Text
                   style={[
                     styles.sortOptionText,
-                    sortOption === option.key && styles.sortOptionTextActive,
+                    ((option.key === "free_only" && accessFilter === "free") ||
+                      (option.key === "subscriber_only" &&
+                        accessFilter === "subscriber") ||
+                      (option.key === "default" &&
+                        sortOption === "default" &&
+                        accessFilter === "all") ||
+                      (option.key !== "free_only" &&
+                        option.key !== "subscriber_only" &&
+                        option.key !== "default" &&
+                        sortOption === option.key)) &&
+                      styles.sortOptionTextActive,
                   ]}
                 >
                   {option.label}
                 </Text>
 
-                {sortOption === option.key && (
+                {((option.key === "free_only" && accessFilter === "free") ||
+                  (option.key === "subscriber_only" &&
+                    accessFilter === "subscriber") ||
+                  (option.key === "default" &&
+                    sortOption === "default" &&
+                    accessFilter === "all") ||
+                  (option.key !== "free_only" &&
+                    option.key !== "subscriber_only" &&
+                    option.key !== "default" &&
+                    sortOption === option.key)) && (
                   <Ionicons name="checkmark" size={20} color={colors.primary} />
                 )}
               </Pressable>
