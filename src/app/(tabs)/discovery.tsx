@@ -1,7 +1,7 @@
 /**
  **DISCOVERY ROUTE**
- * This file handles the logic for the event discovery screen. 
- * It manages fetching all events, filtering them by category or access, 
+ * This file handles the logic for the event discovery screen.
+ * It manages fetching all events, filtering them by category or access,
  * sorting the results, and toggling user bookmarks.
  */
 import {
@@ -18,7 +18,7 @@ import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
-import { DiscoveryScreen as DiscoveryScreenUI } from "@/screens/discovery/discovery-screen";
+import { DiscoveryScreenUI } from "@/screens/discovery/discovery-screen";
 import { auth, db } from "@/services/authService";
 import { EventDoc } from "@/types/type";
 
@@ -71,9 +71,14 @@ export default function DiscoveryScreen() {
       } catch (e: any) {
         // Checks if the error is a permission-denied error (usually caused by the user logging out).
         // Silently returns to prevent a crash or alert as the app navigates to the login screen.
-        if (e?.code === 'firestore/permission-denied' || e?.message?.includes('permission-denied')) {
-          console.log("Suppressed permission error during logout in Discovery.");
-          return; 
+        if (
+          e?.code === "firestore/permission-denied" ||
+          e?.message?.includes("permission-denied")
+        ) {
+          console.log(
+            "Suppressed permission error during logout in Discovery.",
+          );
+          return;
         }
 
         // If it is a genuine fetching error, displays an alert to the user.
@@ -84,7 +89,7 @@ export default function DiscoveryScreen() {
         // setLoading function changes value of loading var to false as data is no longer being fetched.
         if (mounted) setLoading(false);
       }
-    }; 
+    };
 
     fetchData();
     return () => {
@@ -105,8 +110,8 @@ export default function DiscoveryScreen() {
       // Checks if the event matches the selected access filter.
       const matchesAccess =
         accessFilter === "all" ||
-        (accessFilter === "free" && event.type === "free") ||
-        (accessFilter === "subscriber" && event.type !== "free");
+        (accessFilter === "free" && event.type.toLowerCase() === "free") ||
+        (accessFilter === "subscriber" && event.type.toLowerCase() !== "free");
 
       return matchesCategory && matchesAccess;
     });
@@ -132,18 +137,17 @@ export default function DiscoveryScreen() {
 
   /**
    * Saves or removes an event from the user's bookmark sub collection.
-   * 
+   *
    * Parameters:
    * event - The specific event data to be bookmarked or removed.
    *
    * Outcome:
    * Updates the bookmarkedIds var and synchronizes the change with Firestore.
    */
-    const handleBookmark = async (event: EventDoc) => {
-    
-      // Stores the user's UID from FirebaseAuth in the uid var.
-      const uid = auth.currentUser?.uid;
-    
+  const handleBookmark = async (event: EventDoc) => {
+    // Stores the user's UID from FirebaseAuth in the uid var.
+    const uid = auth.currentUser?.uid;
+
     // Stops the function and alerts the user if they are not logged in.
     if (!uid) return Alert.alert("Sign In", "Please log in to save events.");
 
@@ -195,7 +199,7 @@ export default function DiscoveryScreen() {
       onRsvp={(item: EventDoc) => {
         router.push({
           pathname: "/event/booking",
-          params: { eventId: item.id }
+          params: { eventId: item.id },
         } as any);
       }}
       category={category}
@@ -203,6 +207,8 @@ export default function DiscoveryScreen() {
       options={CATEGORY_OPTIONS}
       sortOption={sortOption}
       onSelectSort={(sort: string) => setSortOption(sort)}
+      accessFilter={accessFilter}
+      onSelectAccessFilter={(filter: string) => setAccessFilter(filter)}
     />
   );
 }
