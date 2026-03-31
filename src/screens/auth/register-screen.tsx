@@ -91,48 +91,49 @@ export function RegisterScreen({
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      {/* Vignette overlay fills the entire screen and is positioned absolutely */}
+      <View style={styles.vignetteWrapper} pointerEvents="none">
+        <Svg width="100%" height="100%" viewBox="0 0 412 917">
+          <Defs>
+            <RadialGradient id="vignette" cx="50%" cy="38%" rx="75%" ry="55%">
+              <Stop offset="0%" stopColor="#000000" stopOpacity="0.00" />
+              <Stop offset="45%" stopColor="#000000" stopOpacity="0.05" />
+              <Stop offset="75%" stopColor="#5E0A3D" stopOpacity="0.22" />
+              <Stop offset="100%" stopColor="#4A0830" stopOpacity="0.45" />
+            </RadialGradient>
+          </Defs>
+
+          <Rect width="412" height="917" fill="url(#vignette)" />
+        </Svg>
+      </View>
+
+      {/* Logo */}
+      <View style={styles.logoContainer}>
+        <Image
+          source={require("../../../assets/images/gma-in-app-white-logo.png")}
+          style={styles.logo}
+          resizeMode="contain"
+        />
+      </View>
+
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.formScrollContent}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Vignette overlay fills the entire screen and is positioned absolutely */}
-        <View style={styles.vignetteWrapper} pointerEvents="none">
-          <Svg width="100%" height="100%" viewBox="0 0 412 917">
-            <Defs>
-              <RadialGradient id="vignette" cx="50%" cy="38%" rx="75%" ry="55%">
-                <Stop offset="0%" stopColor="#000000" stopOpacity="0.00" />
-                <Stop offset="45%" stopColor="#000000" stopOpacity="0.05" />
-                <Stop offset="75%" stopColor="#5E0A3D" stopOpacity="0.22" />
-                <Stop offset="100%" stopColor="#4A0830" stopOpacity="0.45" />
-              </RadialGradient>
-            </Defs>
-
-            <Rect width="412" height="917" fill="url(#vignette)" />
-          </Svg>
-        </View>
-
-        {/* Logo */}
-        <View style={styles.logoContainer}>
-          <Image
-            source={require("../../../assets/images/gma-in-app-white-logo.png")}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        </View>
-
         {/* Registration Form */}
         <View style={styles.registerBox}>
           <TextInput
             style={styles.input}
             placeholder="First Name"
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.darkGrey}
             value={firstName}
             onChangeText={setFirstName}
           />
           <TextInput
             style={styles.input}
             placeholder="Last Name"
-            placeholderTextColor="#999"
+            placeholderTextColor={colors.darkGrey}
             value={lastName}
             onChangeText={setLastName}
           />
@@ -144,7 +145,7 @@ export function RegisterScreen({
           >
             <Text
               style={{
-                color: dateOfBirth ? "#000" : "#999",
+                color: dateOfBirth ? colors.saveBtnTextColor : colors.darkGrey,
                 fontSize: 14,
               }}
             >
@@ -199,6 +200,7 @@ export function RegisterScreen({
           <TextInput
             style={styles.input}
             placeholder="Email"
+            placeholderTextColor={colors.darkGrey}
             keyboardType="email-address"
             value={email}
             onChangeText={setEmail}
@@ -207,6 +209,7 @@ export function RegisterScreen({
           <TextInput
             style={styles.input}
             placeholder="Password"
+            placeholderTextColor={colors.darkGrey}
             secureTextEntry
             value={password}
             onChangeText={setPassword}
@@ -265,25 +268,26 @@ const styles = StyleSheet.create({
   },
 
   logoContainer: {
-    marginBottom: 40,
+    position: "absolute",
+    top: 70,
+    left: 0,
+    right: 0,
     alignItems: "center",
-    transform: [{ translateY: -40 }],
+    zIndex: 2,
   },
 
   logo: {
     width: 200,
     height: 120,
-    padding: 0,
-    margin: 0,
-    transform: [{ translateY: 20 }],
   },
 
-  scrollContent: {
+  formScrollContent: {
     flexGrow: 1,
     alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 40,
+    justifyContent: "flex-start",
     paddingHorizontal: 24,
+    paddingTop: 220,
+    paddingBottom: 40,
   },
 
   registerBox: {
@@ -296,13 +300,13 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
     alignItems: "center",
     elevation: 5,
-    transform: [{ translateY: -20 }],
+    marginBottom: 30,
   },
 
   title: {
     fontSize: 32,
     fontWeight: "800",
-    color: "#ffffff",
+    color: colors.textOnPrimary,
     marginBottom: 32,
     textAlign: "center",
   },
