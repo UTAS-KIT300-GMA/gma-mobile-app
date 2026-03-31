@@ -24,7 +24,7 @@ export default function LandingScreen() {
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.subtitle}>Connect - Grow - Thrive</Text>
+        {/* <Text style={styles.subtitle}>Connect - Grow - Thrive</Text> */}
       </View>
       {/* Footer with navigation buttons */}
       <View style={styles.footer}>
@@ -67,14 +67,14 @@ const styles = StyleSheet.create({
   },
 
   logo: {
-    width: 200,
+    width: 180,
     height: 120,
     padding: 0,
     margin: 0,
   },
 
   subtitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "700",
     color: colors.saveBtnTextColor,
     textAlign: "center",
@@ -92,35 +92,35 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: colors.primary,
     width: "80%",
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
   },
 
   primaryButtonText: {
     color: colors.textOnPrimary,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
   },
 
   secondaryButton: {
     backgroundColor: colors.textOnPrimary,
     width: "80%",
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
   },
 
   secondaryButtonText: {
     color: colors.primary,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
   },
 
   forgotPasswordText: {
     marginTop: 8,
     color: colors.saveBtnTextColor,
-    fontSize: 15,
+    fontSize: 14,
     textAlign: "center",
     textDecorationLine: "underline",
   },

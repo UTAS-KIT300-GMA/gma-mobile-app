@@ -57,14 +57,13 @@ export function ProfileSetupScreen({ onSave, saving, userName = "User" }: Props)
   };
 
   return (
-    <ScrollView 
-      style={styles.container} 
-      contentContainerStyle={styles.contentContainer}
-    >
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
+      
       <View style={styles.box}>
-        {/* --- HEADER: We keep YOUR Avatar Logic here --- */}
+        {/* HEADER: User Avatar and Name display */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarCircle}>
+            {/* Logic: Get the first letter of the name, fallback to 'U' if empty */}
             <Text style={styles.avatarInitials}>
               {(userName || "U").charAt(0).toUpperCase()}
             </Text>

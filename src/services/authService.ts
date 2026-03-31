@@ -6,11 +6,10 @@
  */
 import { useEffect } from "react";
 import {
-  confirmPasswordReset,
-  createUserWithEmailAndPassword,
-  FirebaseAuthTypes,
   getAuth,
   onAuthStateChanged,
+  FirebaseAuthTypes,
+  signOut,
   reload,
   sendPasswordResetEmail,
   verifyPasswordResetCode,

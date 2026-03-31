@@ -19,7 +19,13 @@ import {
 } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
+import { Alert, ActivityIndicator, View, StyleSheet } from "react-native";
+import { updateEmail } from "@react-native-firebase/auth";
+import { doc, getDoc, updateDoc, Timestamp } from "@react-native-firebase/firestore";
+import { auth, db } from "@/services/authService";
+import { EditProfileScreen } from "@/screens/profile/edit-profile-UI";
+import { ProfileFormData } from "@/types/type";
 
 /**
    * Logic for the edit-profile-screen.
@@ -121,11 +127,10 @@ export default function EditProfileRoute() {
 
       // Stores the structured profile data to be saved in the updatePayload var.
       const updatePayload = {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        gender: data.gender,
-        email: data.email || "",
-        updatedAt: Timestamp.now(),
+        firstName: data.firstName.trim(),
+        lastName: data.lastName.trim(),
+        email: data.email.toLowerCase(),
+        updatedAt: Timestamp.now(), 
       };
 
       // Updates the Firestore profile document with the new payload.
@@ -135,8 +140,13 @@ export default function EditProfileRoute() {
       Alert.alert("Success", "Profile updated!");
       router.back();
     } catch (error: any) {
-      console.error("Save Error:", error);
-      Alert.alert("Save Failed", error?.message || "Could not update profile.");
+      // Handles the specific Firebase error where a user must re-log to change an email.
+      if (error.code === 'auth/requires-recent-login') {
+        Alert.alert("Security Check", "Please log out and back in to change your email.");
+      } else {
+        console.error("Save Error:", error);
+        Alert.alert("Save Failed", "Please ensure the email is valid.");
+      }
     }
   };
 
