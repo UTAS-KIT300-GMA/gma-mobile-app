@@ -33,10 +33,7 @@ export default function ResetPasswordRoute() {
   const [isSuccess, setIsSuccess] = useState(false);                 // Stores true/false value, to track if password was changed successfully.
 
   /**
-  ** Checks if the reset link from the email is still valid.
-  * 
-  ** Outcome: 
-  * Retrieves the user's email if the link works, otherwise it shows an error.
+  * @summary Retrieves the user's email if the link works, otherwise it shows an error.
   */
   useEffect(() => {
   
@@ -53,14 +50,9 @@ export default function ResetPasswordRoute() {
   }, [oobCode]);
 
   /**
-   ** Saves the new password the user typed in.
-   *
-   ** Parameters:
-   * @param newPass - the new password entered
-   * @param confirmPass - the second time the password was entered
-   * 
-   ** Outcome: 
-   *Updates the password in the database and shows a success or error message.
+   * @summary Updates the password in the database and shows a success or error message.
+   * @param newPass The new password entered.
+   * @param confirmPass The second time the password was entered.
    */
   const handleSave = async (newPass: string, confirmPass: string, manualCode?: string) => {
     
@@ -92,30 +84,21 @@ export default function ResetPasswordRoute() {
     }
   };
 
-  const triggerModal = (msg: string, success: boolean) => {
   /**
-   **  Sets up the message popup details.
-   *
-   ** Parameters:
-   * msg - the text to show the user
-   * success - if the task worked or not
-   * 
-   ** Outcome: 
-   * Fills the popup with the message and makes it visible.
+   *@summary Fills the popup with the message and makes it visible.
+   *@param msg The text to show the user.
+   *@param success If the task worked or not.
    */
+  const triggerModal = (msg: string, success: boolean) => {
     setModalMessage(msg);
     setIsSuccess(success);
     setModalVisible(true);
   };
 
-  const handleCloseModal = () => {
   /**
-  ** Closes the message popup.
-  *
-  ** Outcome: 
-  * Hides the popup and, if the password was saved, 
-  * sends the user back to the login screen.
+  * @summary Hides the popup and, if the password was saved, sends the user back to the login screen.
   */ 
+  const handleCloseModal = () => {
     setModalVisible(false);
     if (isSuccess) {
       router.replace("/login" as any);

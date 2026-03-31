@@ -13,14 +13,11 @@ import { auth, db } from "@/services/authService"
 import { EventDoc } from "@/types/type";
 import { SavedEventsUI } from "@/screens/profile/saved-events-UI";
 
-export default function SavedEventsRoute() {
-  /**
-   * Displays a user's bookmarked events (saved events) from Firestore and automactically
-   * updates the UI when an user deletes or adds bookmark.
-   * 
-   * Outcome:
-   * User can see their bookmarked events and also be able to update them.
+/**
+   * @summary Displays a user's bookmarked events (saved events) from Firestore and automactically updates the UI when an user deletes or adds bookmark.
    */
+export default function SavedEventsRoute() {
+  
   const router = useRouter();
   // Stores the array of all available events from the database in the allEvents var.
   const [allEvents, setAllEvents] = useState<EventDoc[]>([]);

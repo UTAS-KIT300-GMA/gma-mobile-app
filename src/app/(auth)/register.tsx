@@ -12,19 +12,9 @@ import { getFriendlyError, RegisterData, registerUser } from "@/services/authSer
 import { RegisterScreen } from "@/screens/auth/register-screen";
 
 /**
- * Sets up the logic for the signup screen.
- * * Outcome: 
- * Prepares the account creation process and navigation, then 
- * shows the registration screen UI to the user.
- */
-export default function RegisterRoute() {
-/**
-* Is the logic for the register-screen
-*
-* Outcome:
-* Validates user input, creates a FirebaseAuth account, creates a profile collection on Firestore,
-* and navigates to the verification screen if successful.
+* @summary Validates user input, creates a FirebaseAuth account, creates a profile collection on Firestore, and navigates to the verification screen if successful.
 */
+export default function RegisterRoute() {
 
   const router = useRouter();                    // Stores the navigation tool to allow moving between screens.
   const [loading, setLoading] = useState(false); // Stores true/false value to track if app is trying to register user.
@@ -34,17 +24,14 @@ export default function RegisterRoute() {
     return value instanceof Date && !isNaN(value.getTime());
   };
 
-  
-  const validateRegister = (email: string,password: string,profile: RegisterData,) => {
   /**
-   * Checks if the user has inputted all required details for to register an account
-   *
-   * Parameters:
-   * email - User's inputted email
-   * password - User's inputted password
-   * profile - The users profie (firstname,lastname,gender,dateofbirth)
+   * @summary Checks if the user has inputted all required details for to register an account
+   * @param email User's inputted email
+   * @param password User's inputted password
+   * @param profile The users profie (firstname,lastname,gender,dateofbirth)
    */
-
+  const validateRegister = (email: string,password: string,profile: RegisterData,) => {
+  
     // Checks if any required details for account are empty.
     if (
       !email ||
@@ -92,19 +79,14 @@ export default function RegisterRoute() {
     return null;
   };;
   
-  const handleRegister = async (email: string,password: string,profile: RegisterData, ) => {
   /**
-   * Starts the registration process by validating data and calling Firebase.
-   *
-   * Parameters:
-   * email - User's inputted email
-   * password - User's inputted password
-   * profile - The users profile (firstname,lastname,gender,dateofbrith)
-   *
-   * Outcome:
-   * User account is created and directed to verification screen,
-   * otherwise display an error due to validation of data failing.
+   * @summary User account is created and directed to verification screen, otherwise display an error due to validation of data failing.
+   * @param email User's inputted email.
+   * @param password User's inputted password.
+   * @param profile The users profile (firstname,lastname,gender,dateofbrith).
    */
+  const handleRegister = async (email: string,password: string,profile: RegisterData, ) => {
+  
   
     const error = validateRegister(email, password, profile); // Stores result of the validation check.
 

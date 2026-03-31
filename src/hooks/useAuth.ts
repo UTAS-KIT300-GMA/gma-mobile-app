@@ -7,12 +7,10 @@
 import { onAuthStateChanged,FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { useEffect, useState } from "react";
 import { auth,doc,getDoc,db } from "@/services/authService";
+import { Unsubscribe } from "@react-native-firebase/firestore";
 
 /**
- ** Custom hook to track the user's login and verification status.
- ** Outcome: 
- * Monitors Firebase Auth and provides the user's identity and 
- * verification state to the App Layout for navigation guarding.
+ * @summary Monitors Firebase Auth and provides the user's identity and verification state to the App Layout for navigation guarding.
  */
 export function useAuth() {
 
@@ -22,12 +20,7 @@ export function useAuth() {
 
   useEffect(() => {
   /**
-  ** Logic: Monitors the user's authentication state and updates the identity status.
-  * 
-  ** Outcome: 
-  * Synchronizes the app's internal user state with Firebase Auth and 
-  * ensures the loading spinner only stops once both Auth and
-  * Profile data are fully retrieved.
+  * @summary Synchronizes the app's internal user state with Firebase Auth and ensures the loading spinner stops once both Auth & Profile are retrieved.
   */
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       

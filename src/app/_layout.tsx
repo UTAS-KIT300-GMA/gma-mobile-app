@@ -23,12 +23,8 @@ export default function RootLayout() {
   
   useEffect(() => {
   /**
-   ** Deep Link Listener: Catches the Firebase email link when the app opens.
-   * 
+   * @summary Parses the URL mode (verifyEmail or resetPassword) and executes the corresponding action.
    * @param event - The incoming linking event containing the URL.
-   * 
-   * ** Outcome: 
-   * Parses the URL mode (verifyEmail or resetPassword) and executes the corresponding action.
    */
     const handleDeepLink = async (event: Linking.EventType | { url: string }) => {
       const { url } = event;
@@ -77,13 +73,11 @@ export default function RootLayout() {
     return () => {
       subscription.remove();
     };
-  }, [router]); // Added router to dependency array as best practice
+  }, [router]); 
 
 
   /**
-   ** Navigation Guard: The "Traffic Controller" of user navigation.
-   * ** Outcome: 
-   * Redirects users to Landing, Verify, Onboarding, or Tabs based on their status.
+   *@summary Redirects users to Landing, Verify, Onboarding, or Tabs based on their status.
    */
   useEffect(() => {
     // Prevent routing while auth or profile data is still being retrieved.
@@ -118,7 +112,7 @@ export default function RootLayout() {
         router.replace("/(tabs)"); 
       }
     }
-  }, [user, segments, initializing, isProfileValidated, router]); // Added router to dependency array
+  }, [user, segments, initializing, isProfileValidated, router]); 
 
   // Loading UI
   const inAuthGroup = segments[0] === "(auth)";

@@ -7,26 +7,18 @@
 import { useState } from "react";
 import { sendPasswordReset, getFriendlyError } from "@/services/authService";
 
-export function useForgotPassword() {
 /**
- ** A logic hook for managing the password recovery request.
- * 
- ** Outcome: 
- * Provides a unified interface for email validation, loading states, 
- * and Firebase communication to trigger reset emails independently of the UI.
+ * @summary Provides a unified interface for email validation, loading states, and Firebase communication to trigger reset emails independently of the UI.
  */
+export function useForgotPassword() {
+
   const [loading, setLoading] = useState(false);   // Stores true/false value to track the email sending status.
   
-  const handleSendReset = async (email: string) => {
   /**
-  ** Validates the email and triggers the reset flow.
-  *
-  ** Parameters:
-  *email - The string address provided by the user.
-  * 
-  ** Outcome:
-  * Requests a reset link from Firebase and manages the internal loading state.
+  * @summary Requests a reset link from Firebase and manages the internal loading state.
+  * @param email - The string address provided by the user.
   */
+  const handleSendReset = async (email: string) => {
     
     // Checks if the email var is empty or missing an '@' symbol.
     if (!email || !email.includes("@")) {

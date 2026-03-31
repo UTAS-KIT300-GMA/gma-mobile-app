@@ -59,14 +59,9 @@ export interface RegisterData {
 }
 
 /**
- ** Logs in user with their email and password, also checks if email is verified.
- *
- * * Parameters:
- * email - user's inputted email.
- * pass  - user's inputted password.
- *
- ** Outcome:
- *Returns the refreshed user profile and true/false value indicating verification status.
+ * @summary Logs in user with their email and password, also checks if email is verified.
+ * @param email User's inputted email.
+ * @param pass  User's inputted password.
  */
 export async function loginUser(email: string, pass: string) {
   // Signs the user in via Firebase Auth
@@ -81,22 +76,19 @@ export async function loginUser(email: string, pass: string) {
 }
 
 /**
- ** Registers user in Firebase Auth and Firestore.
- *
- ** Parameters:
- * email - user's email
- * password - user's password
- * profile - user's profile data
- *
- ** Outcome:
- * Creates Auth account,Firestore user profile and Sends email verification link.
+ *@summary Creates Auth account,Firestore user profile and Sends email verification link.
+ * @param email - user's email
+ * @param password - user's password
+ * @param profile - user's profile data
 
  */
 export async function registerUser(
   email: string,
   password: string,
   profile: RegisterData,
-) {
+) 
+
+{
   const { user } = await createUserWithEmailAndPassword(auth, email, password); // Creates users login credentials in Firebase Auth
 
   // Creates "users" collection with Firebase UID as doc ID
@@ -185,13 +177,8 @@ export async function signInWithGoogleIdToken(idToken: string) {
 }
 
 /**
- ** Updates the user's email address in both Firebase Auth and Firestore.
- *
- ** Parameters:
- * newEmail - The user's new email address.
- *
- ** Outcome:
- * Updates Firebase Auth and Firestore with user's new email address.
+ *@summary Updates Firebase Auth and Firestore with user's new email address.
+ *@param newEmail The user's new email address.
  */
 export async function updateUserEmail(newEmail: string) {
   const user = auth.currentUser;
@@ -209,10 +196,7 @@ export async function updateUserEmail(newEmail: string) {
 }
 
 /**
- ** Sends a new email verification link to the logged in user.
- *
- ** Outcome:
- *A verification email is delivered to the user's email and opens the app directly.
+ *@summary A verification email is delivered to the user's email and opens the app directly.
  */
 export async function resendVerificationEmail() {
   const user = auth.currentUser;
@@ -223,13 +207,8 @@ export async function resendVerificationEmail() {
 }
 
 /**
- ** Sends a password reset email to the user.
- *
- ** Parameters:
- * email - User's email address
- *
- ** Outcome:
- *The user receives a password reset link.
+ *@summary Sends a password reset email to the user.
+ *@param email User's email address.
  */
 export async function sendPasswordReset(email: string) {
   // Just send the default password reset email
@@ -237,37 +216,24 @@ export async function sendPasswordReset(email: string) {
 }
 
 /**
- ** Verifies a password reset code (oobCode) from the email link.
- *
- ** Parameters:
- *oobCode - The unique code from the password reset email.
- *
- ** Outcome:
- * Returns the email address associated with the code if valid.
+ *@summary Verifies a password reset code (oobCode) from the email link.
+ *@param oobCode - The unique code from the password reset email.
  */
 export async function getPasswordResetEmail(oobCode: string) {
   return await verifyPasswordResetCode(auth, oobCode);
 }
 
 /**
- ** Resets the user's password using the oobCode from the reset link.
- *
- ** Parameters:
- * oobCode - The unique code from the password reset email.
- * newPass - The new password entered by the user.
- *
- ** Outcome:
- * Updates the user's password in Firebase Auth.
+ *@summary Resets the user's password using the oobCode from the reset link.
+ *@param oobCode The unique code from the password reset email.
+ *@param newPass The new password entered by the user.
  */
 export async function resetPasswordWithCode(oobCode: string, newPass: string) {
   return await confirmPasswordReset(auth, oobCode, newPass);
 }
 
 /**
- ** Refreshes the user's data from Firebase.
- *
- ** Outcome:
- *Returns the latest user profile data from Firebase, or null if user not logged in.
+ *@summary Returns the latest user profile data from Firebase
  */
 export async function reloadUser() {
   const user = auth.currentUser;
@@ -277,36 +243,23 @@ export async function reloadUser() {
 }
 
 /**
- ** Ends user's active session in app.
- *
- ** Outcome:
- * User is logged out of the app.
+ ** @summaryEnds user's active session in app.
  */
 export async function logoutUser() {
   await signOut(auth);
 }
 
 /**
- ** Converts technical Firebase error codes into readable messages for the user.
- *
- ** Parameters:
- * e - The raw error caught from a Firebase function.
- *
- ** Outcome:
- * Returns a clean, user-friendly string mapped from the ERROR_MESSAGES list.
+ * @summary Converts technical Firebase error codes into readable messages for the user.
+ * @parame The raw error caught from a Firebase function.
  */
 export function getFriendlyError(e: any): string {
   return ERROR_MESSAGES[e?.code] ?? e?.message ?? "Something went wrong.";
 }
 
 /**
- ** listens for changes in the user's login status.
- *
- ** Parameters:
- * callback - A function that runs whenever the user logs in or out
- *
- ** Outcome:
- * The app stays in sync with the user's authentication state across different screens.
+ * @summary listens for changes in the user's login status.
+ * @param callback A function that runs whenever the user logs in or out.
  */
 export function useAuthState(
   callback: (user: FirebaseAuthTypes.User | null) => void,

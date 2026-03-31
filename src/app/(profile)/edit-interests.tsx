@@ -12,10 +12,7 @@ import { useState, useCallback } from "react";
 import { Alert, ActivityIndicator, View } from "react-native";
 
   /**
-   * Logic for the edit interests sub-screen within the profile.
-   * * Outcome:
-   * Updates the user's selected interests in Firestore and 
-   * returns them to the previous profile screen.
+   * @summary Updates the user's selected interests in Firestore and returns them to the previous profile screen.
    */
 export default function EditInterestsRoute() {
 
@@ -88,12 +85,8 @@ export default function EditInterestsRoute() {
   );
 
   /**
-     * Handles the process of updating tags for an existing profile.
-     * * Parameters:
-     * selectedTags - An array var storing the interests tags selected by the user.
-     * * Outcome: 
-     * Updates the users selected tags to their profile via firestore,
-     * otherwise error is displayed if user is not logged in etc.  
+     * @summary Updates the users selected tags to their profile via firestore,
+     * @param selectedTags An array var storing the interests tags selected by the user.
      */
   // Stores the function instructions in the handleUpdate var.
   const handleUpdate = async (selectedTags: InterestKey[]) => {

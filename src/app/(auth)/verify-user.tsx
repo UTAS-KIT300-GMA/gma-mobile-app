@@ -9,24 +9,19 @@ import { Alert } from "react-native";
 import { auth, resendVerificationEmail, logoutUser, getFriendlyError } from "@/services/authService";
 import { VerifyUI } from "@/screens/auth/verify-user-screen"; // Adjust this import to match your folder structure
 
-export default function VerifyUserRoute() {
 /**
-* Logic for the verify user UI.
-* 
-** Outcome:
-* Manages the user's email display and verification resends.
-* Handles logout sessions to safely exit the verification flow.
-* Holds user until their email is confirmed.
+* @summary Manages the user's email display and verification resends. Handles logout sessions to safely exit the verification flow. Holds user until their email is confirmed.
 */
+export default function VerifyUserRoute() {
+
   const [loading, setLoading] = useState(false);                     // Stores true/false value to track network requests.
   const userEmail = auth.currentUser?.email ?? "your email address"; // Safely extracts the user's email to pass to the UI.
   
-  const handleResend = async () => {
-  /** Handles resending the verification email.
-  * 
-  ** Outcome:
-  * Triggers the Firebase function to send a new email and shows a success alert.
+   /** 
+  * @summary Triggers the Firebase function to send a new email and shows a success alert.
   */
+  const handleResend = async () => {
+ 
     setLoading(true); // Shows the loading spinner for the resend process.
     
     // Sends the verification link and notifies user of result.
@@ -41,13 +36,11 @@ export default function VerifyUserRoute() {
     }
   };
 
-  const handleLogout = async () => {
-  /** * Handles logging the user out.
-   *
-   **Outcome:
-   *Ends the Firebase session. The Layout will 
-   *detect the state change and automatically boot the user back to landing screen.
+  /** 
+   *@summary Ends the Firebase session. The Layout will detect the state change and automatically boot the user back to landing screen.
    */
+  const handleLogout = async () => {
+  
     setLoading(true); // Shows the loading spinner for the logout process.
     
     try {

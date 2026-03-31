@@ -22,11 +22,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 
 /**
- * Logic for the edit-profile-screen.
- *
- * Outcome:
- * Fetches the user's current data from Firestore, fills the edit form,
- * and saves the updated profile data back to Firestore.
+ * @summary Fetches the user's current data from Firestore, fills the edit form, and saves the updated profile data back to Firestore.
  */
 export default function EditProfileRoute() {
   // Stores the navigation tool in the router var to allow moving between screens.
@@ -89,14 +85,8 @@ export default function EditProfileRoute() {
   }, []);
 
   /**
-   * Handles validating and updating the user's profile.
-   *
-   * Parameters:
-   * data - The user's edited form values
-   *
-   * Outcome:
-   * Updates Firestore profile fields and optionally updates Auth email/password,
-   * then navigates back to the profile screen.
+   * @summary Updates Firestore profile fields and optionally updates Auth email/password,
+   * @param data The user's edited form values.
    */
   const handleSave = async (data: ProfileFormData) => {
     // Stores the current user account in the user var.

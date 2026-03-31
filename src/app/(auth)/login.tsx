@@ -51,10 +51,8 @@ type GoogleSignInUser = {
 };
 
 /**
- * Sets up the logic for the login screen.
- * * Outcome:
- * Prepares the login process and navigation, then shows the
- * login screen UI to the user.
+ * @summary Sets up the logic for the login screen.
+ * @description Prepares the login process and navigation, then shows the login screen UI to the user.
  */
 export default function LoginRoute() {
   const router = useRouter(); // Stores the navigation tool  to allow moving between screens.
@@ -110,15 +108,9 @@ export default function LoginRoute() {
   };
 
   /**
-   *  Handles the login button and checks if the user is verified.
-   *
-   ** Parameters:
-   * email - The email the user typed in.
-   * password - The password the user typed in.
-   *
-   ** Outcome:
-   * Signs the user in. If they haven't verified their email, it
-   * shows a popup with options to resend the link or check their status.
+   * @summary Signs the user in. If they haven't verified their email, it shows a popup with options to resend the link or check their status.
+   * @param email The email the user typed in.
+   * @param password The password the user typed in.
    */
   const handleLogin = async (email: string, password: string) => {
     if (loading) return; // Prevent multiple simultaneous login attempts

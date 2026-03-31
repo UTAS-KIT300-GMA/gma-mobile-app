@@ -11,25 +11,18 @@ import { useRouter } from "expo-router";
 import { useState, useEffect } from "react"; 
 import { Alert } from "react-native";
 
-export default function ProfileSetupRoute() {
 /**
-** Logic for the profile setup (onboarding) screen.
-* 
-** Outcome:
-*Saves the user's selected interests to Firestore and marks
-*their onboarding as complete. The rootlayout will automatically
-*detect this update and route the user to the main tabs.
+*@summary Saves the user's selected interests to Firestore and marks their onboarding as complete. The rootlayout will automatically detect this update and route the user to the main tabs.
 */
+export default function ProfileSetupRoute() {
+
   const router = useRouter();                        // Stores the navigation tool  to allow moving between the screens.
   const [saving, setSaving] = useState(false);       // Stores true/false value  to track if the interests are being saved to the database.
   const [userName, setUserName] = useState("User");  // Stores the user's name from Firestore to display in UI.
 
   useEffect(() => {
   /**
-   * Fetch User Data
-   * 
-   ** Outcome:
-   *Looks into the 'users' collection using the UID to get the name saved during registration.
+   @summary Looks into the 'users' collection using the UID to get the name saved during registration.
    */
     const fetchName = async () => {
       
@@ -65,16 +58,11 @@ export default function ProfileSetupRoute() {
     fetchName();
   }, []);
 
-  const handleSave = async (selectedTags: InterestKey[]) => {
-  /** * Saves the user's selected interests and finishes onboarding.
-   * 
-   **Parameters:
-   *selectedTags - an array of the interests the user clicked on.
-   *
-   ** Outcome:
-   * Updates the user's database file with their new tags and marks 
-   * their profile as "complete."
+  /**
+   * @summary Updates the user's database file with their new tags and marks their profile as "complete."
+   * @param selectedTags An array of the interests the user clicked on.
    */
+  const handleSave = async (selectedTags: InterestKey[]) => {
     
     if (saving) return; // If value is true, the function stops to prevent double-writes.
 

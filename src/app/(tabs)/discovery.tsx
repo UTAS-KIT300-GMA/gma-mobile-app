@@ -136,13 +136,8 @@ export default function DiscoveryScreen() {
   }, [filteredEvents, sortOption]);
 
   /**
-   * Saves or removes an event from the user's bookmark sub collection.
-   *
-   * Parameters:
-   * event - The specific event data to be bookmarked or removed.
-   *
-   * Outcome:
-   * Updates the bookmarkedIds var and synchronizes the change with Firestore.
+   * @summary Saves or removes an event from the user's bookmark sub collection.
+   * @param event The specific event data to be bookmarked or removed.
    */
   const handleBookmark = async (event: EventDoc) => {
     // Stores the user's UID from FirebaseAuth in the uid var.

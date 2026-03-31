@@ -9,25 +9,22 @@ import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert } from "react-native";
 
-export default function ForgotPassword() {
-  /**
-   * * Sets up the logic for the forgot password UI.
-   * * * Outcome:
-   * * Prepares the loading status and the navigation tools, then shows
-   * * the forgot-password-UI to the user.
+/**
+   * @summary Sets up the logic for the forgot password UI.
+   * @description Prepares the loading status and the navigation tools, then shows the forgot-password-UI to the user.
    * */
-
+export default function ForgotPassword() {
+  
   const [loading, setLoading] = useState(false); // Stores true/false value to track if the Firebase reset request is loading.
   const router = useRouter(); // Stores the navigation tool to allow moving between screens.
-  const handleSendReset = async (email: string) => {
-    /**
-     * Checks the user's email and sends the password reset link.
-     * * Parameters:
-     * email - The email address the user typed in.
-     * * Outcome:
-     * Sends the reset email and shows a success message. Once the user clicks
-     * "OK," it takes them back to the login screen.
+  
+  /**
+     * @summary Checks the user's email and sends the password reset link.
+     * @param email The email address the user typed in.
+     * @description Sends the reset email and shows a success message. Once the user clicks "OK," it takes them back to the login screen.
      */
+  const handleSendReset = async (email: string) => {
+  
 
     // Checks if email exists or if it does not include a "@".
     if (!email || !email.includes("@")) {

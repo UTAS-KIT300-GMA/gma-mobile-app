@@ -14,13 +14,11 @@ interface UserProfile {
   email: string;
 }
 
-export default function ProfileRoute() {
-  /**
-   * Logic for the profile-screen
-   * * Outcome:
-   * Fetches the user's name from Firestore to display it on profile screen.
-   * Using useFocusEffect ensures the data refreshes whenever the user returns to this screen.
+/**
+   * @summary Fetches the user's name from Firestore to display it on profile screen.
    */
+export default function ProfileRoute() {
+  
 
   // Stores the navigation object from Expo Router in router var to allow moving between the (profile) screens.
   const router = useRouter();
