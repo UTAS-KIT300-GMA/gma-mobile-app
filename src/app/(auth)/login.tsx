@@ -73,8 +73,8 @@ export default function LoginRoute() {
     if (loading) return;
     if (!webClientId) {
       Alert.alert(
-          "Google Sign-In misconfigured",
-          "Set expo.extra.googleWebClientId in app.json (Web client ID from Firebase).",
+        "Google Sign-In misconfigured",
+        "Set expo.extra.googleWebClientId in app.json (Web client ID from Firebase).",
       );
       return;
     }
@@ -88,7 +88,7 @@ export default function LoginRoute() {
       const idToken = getGoogleIdToken(signInResult);
       if (!idToken) {
         throw new Error(
-            "Google Sign-In did not return an idToken. Check Web client ID configuration.",
+          "Google Sign-In did not return an idToken. Check Web client ID configuration.",
         );
       }
 
@@ -100,7 +100,9 @@ export default function LoginRoute() {
       // RootLayout navigates to (tabs) or (onboarding) from auth + Firestore state.
     } catch (error: unknown) {
       const message =
-          error instanceof Error ? error.message : String(error ?? "Unknown error");
+        error instanceof Error
+          ? error.message
+          : String(error ?? "Unknown error");
       Alert.alert("Google Error", message);
     } finally {
       setLoading(false);
@@ -125,7 +127,10 @@ export default function LoginRoute() {
 
     // Validate inputs
     if (!cleanEmail || !password) {
-      Alert.alert("Error", "Please enter email and password.");
+      Alert.alert(
+        "Missing Information",
+        "Please enter both email and password.",
+      );
       return;
     }
 
@@ -138,31 +143,34 @@ export default function LoginRoute() {
       // Email is not verified
       if (!verified) {
         Alert.alert(
-            "Verify Email",
-            "Your email isn't verified yet. Check your inbox!",
-            [
-              {
-                text: "Resend Email",
-                onPress: async () => {
-                  try {
-                    // Sends a new verification email using authService
-                    await resendVerificationEmail();
-                    Alert.alert("Sent", "Verification email resent.");
-                  } catch (e) {
-                    Alert.alert("Error", getFriendlyError(e));
-                  }
-                },
+          "Verify Email",
+          "Please verify your email before logging in. Check your inbox for the verification link.",
+          [
+            {
+              text: "Resend Email",
+              onPress: async () => {
+                try {
+                  // Sends a new verification email using authService
+                  await resendVerificationEmail();
+                  Alert.alert("Email Sent", "Verification email resent.");
+                } catch (e) {
+                  Alert.alert("Something went wrong", getFriendlyError(e));
+                }
               },
-              {
-                text: "Check Status",
-                onPress: () => router.push("/verify-user" as any),
-              },
-            ],
+            },
+            {
+              text: "Check Status",
+              onPress: () => router.push("/verify-user" as any),
+            },
+          ],
         );
       }
       // Handles login errors
     } catch (e) {
-      Alert.alert("Login Error", getFriendlyError(e));
+      Alert.alert(
+        "Login Failed",
+        "Invalid email or password. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -170,12 +178,12 @@ export default function LoginRoute() {
 
   // Passes login logic,current state and navigation handlers to the UI screen.
   return (
-      <LoginScreen
-          onLogin={handleLogin}
-          onGoogleLogin={handleGoogleLogin}
-          onRegisterPress={() => router.push("/register" as any)}
-          onForgotPress={() => router.push("/forgot-password" as any)}
-          loading={loading}
-      />
+    <LoginScreen
+      onLogin={handleLogin}
+      onGoogleLogin={handleGoogleLogin}
+      onRegisterPress={() => router.push("/register" as any)}
+      onForgotPress={() => router.push("/forgot-password" as any)}
+      loading={loading}
+    />
   );
 }

@@ -52,12 +52,11 @@ export function ResetPasswordScreen({
         </Svg>
       </View>
 
+      <Text style={styles.title}>Reset Password</Text>
       <View style={styles.box}>
         {checkingCode ? (
           <ActivityIndicator style={{ marginBottom: 10 }} />
-        ) : resetEmail ? (
-          <Text style={styles.helperText}>Resetting for: {resetEmail}</Text>
-        ) : (
+        ) :(
           !oobCode && (
             <TextInput
               style={styles.input}
@@ -66,21 +65,21 @@ export function ResetPasswordScreen({
             />
           )
         )}
+        <View style={styles.fieldGroup}>
+          <TextInput
+            style={styles.input}
+            placeholder="New password"
+            secureTextEntry
+            onChangeText={setNewPassword}
+          />
 
-        <TextInput
-          style={styles.input}
-          placeholder="New password"
-          secureTextEntry
-          onChangeText={setNewPassword}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Confirm password"
-          secureTextEntry
-          onChangeText={setConfirmNewPassword}
-        />
-
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm password"
+            secureTextEntry
+            onChangeText={setConfirmNewPassword}
+          />
+        </View>
         <TouchableOpacity
           style={styles.saveButton}
           onPress={() => onSave(newPassword, confirmNewPassword, codeInput)}
@@ -114,9 +113,11 @@ export function ResetPasswordScreen({
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
-    backgroundColor: colors.primary,
+    alignItems: "center",
     justifyContent: "center",
-    padding: 24,
+    backgroundColor: colors.primary,
+    paddingHorizontal: 24,
+    paddingTop: 40,
   },
   // Vignette overlay fills the entire screen and is positioned absolutely
   vignetteWrapper: {
@@ -124,45 +125,59 @@ const styles = StyleSheet.create({
   },
 
   box: {
+    width: 300,
+    height: "auto",
     backgroundColor: colors.background,
-    borderRadius: 12,
-    padding: 24,
+    alignSelf: "center",
+    paddingHorizontal: 20,
+    borderRadius: 14,
+    paddingVertical: 32,
+    marginTop: 28,
+    marginBottom: 50,
+    gap: 12,
   },
 
   title: {
-    fontSize: 32,
-    fontWeight: "700",
+    fontSize: 30,
+    fontWeight: "600",
     color: colors.textOnPrimary,
     textAlign: "center",
-    marginBottom: 20,
+    marginBottom: 40,
+  },
+
+  fieldGroup: {
+    marginBottom: 10,
+    gap: 25,
   },
 
   input: {
     backgroundColor: colors.textOnPrimary,
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    elevation: 2,
+    height: 50,
   },
 
   saveButton: {
     backgroundColor: colors.primary,
     padding: 14,
-    borderRadius: 8,
+    borderRadius: 10,
+    marginTop: 12,
     alignItems: "center",
   },
   buttonText: {
     color: colors.textOnPrimary,
     fontWeight: "600",
-  },
-  helperText: {
-    color: colors.textOnPrimary,
-    textAlign: "center",
-    marginBottom: 10,
+    fontSize: 16,
   },
   footerLink: {
     color: colors.saveBtnTextColor,
+    textDecorationLine: "underline",
     textAlign: "center",
-    marginTop: 15,
+    marginTop: 8,
+    fontSize: 14,
   },
 
   modalOverlay: {
@@ -172,27 +187,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    backgroundColor: "#fff",
-    padding: 20,
+    backgroundColor: colors.textOnPrimary,
+    padding: 32,
     borderRadius: 12,
-    width: "80%",
+    width: "75%",
     alignItems: "center",
   },
 
   modalMessage: {
     textAlign: "center",
-    marginBottom: 15,
+    fontSize: 16,
+    marginBottom: 16,
   },
 
   modalButton: {
-    backgroundColor: "#a64d79",
+    backgroundColor: colors.primary,
     padding: 10,
-    borderRadius: 8,
+    marginTop: 8,
+    borderRadius: 10,
     width: "100%",
     alignItems: "center",
   },
 
   modalButtonText: {
-    color: "#fff",
+    color: colors.textOnPrimary,
   },
 });
