@@ -6,17 +6,20 @@
  */
 import { LoginScreen } from "@/screens/auth/login-screen";
 import {
+  ensureFacebookUserFirestoreProfile,
   ensureGoogleUserFirestoreProfile,
   getFriendlyError,
   loginUser,
   resendVerificationEmail,
+  signInWithFacebookAccessToken,
   signInWithGoogleIdToken,
 } from "@/services/authService";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { AccessToken, LoginManager } from "react-native-fbsdk-next";
 import Constants from "expo-constants";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
+import {Alert} from "react-native";
 
 const webClientId = Constants.expoConfig?.extra?.googleWebClientId;
 
@@ -66,6 +69,64 @@ export default function LoginRoute() {
       });
     }
   }, []);
+
+  const handleFacebookLogin = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const loginResult = await LoginManager.logInWithPermissions([
+        "public_profile",
+        "email",
+      ]);
+
+      if (loginResult.isCancelled) {
+        return;
+      }
+
+      const accessTokenData = await AccessToken.getCurrentAccessToken();
+      const accessToken = accessTokenData?.accessToken?.toString();
+      console.log("accessToken", accessToken);
+      if (!accessToken) {
+        throw new Error("Facebook sign-in did not return an access token.");
+      }
+
+      await signInWithFacebookAccessToken(accessToken);
+
+      // Optional profile fetch for firstName/lastName/photo in users/{uid}
+      let facebookProfile: any | undefined;
+      try {
+        const profileResponse = await fetch(
+          `https://graph.facebook.com/me?fields=id,first_name,last_name,name,picture.width(512).height(512),email&access_token=${accessToken}`,
+        );
+        if (profileResponse.ok) {
+          facebookProfile = await profileResponse.json();
+          const id = facebookProfile?.id;
+          const hasPicture = !!facebookProfile?.picture?.data?.url;
+
+          // Fallback: build a direct avatar URL if Graph fields response is missing.
+          if (id && !hasPicture) {
+            facebookProfile.picture = {
+              data: {
+                url: `https://graph.facebook.com/${id}/picture?height=512&width=512&access_token=${accessToken}`,
+              },
+            };
+          }
+        }
+      } catch {
+        // Non-blocking: we can still create profile from Firebase user displayName/photoURL.
+      }
+
+      await ensureFacebookUserFirestoreProfile(facebookProfile);
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : String(error ?? "Unknown error");
+      Alert.alert("Facebook Error", message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     if (loading) return;
@@ -173,6 +234,7 @@ export default function LoginRoute() {
     <LoginScreen
       onLogin={handleLogin}
       onGoogleLogin={handleGoogleLogin}
+      onFacebookLogin={handleFacebookLogin}
       onRegisterPress={() => router.push("/register" as any)}
       onForgotPress={() => router.push("/forgot-password" as any)}
       loading={loading}

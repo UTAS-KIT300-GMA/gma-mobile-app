@@ -12,6 +12,7 @@
     },
     "android": {
       "package": "com.gma.connect",
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/gma-app-logo.png",
         "backgroundColor": "#FBF0E4"
@@ -41,7 +42,8 @@
       "expo-router",
       "@react-native-firebase/auth",
       "expo-splash-screen",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "react-native-fbsdk-next"
     ],
     "experiments": {
       "typedRoutes": true
