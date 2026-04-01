@@ -21,6 +21,7 @@ navigating to the registration screen, and resetting the password.
 interface Props {
   onLogin: (email: string, pass: string) => void;
   onGoogleLogin: () => void;
+  onFacebookLogin: () => void;
   loading: boolean;
   onRegisterPress: () => void;
   onForgotPress: () => void;
@@ -28,7 +29,7 @@ interface Props {
 
 export const LoginScreen = ({
   onLogin,
-  onGoogleLogin,
+  onGoogleLogin, onFacebookLogin,
   loading,
   onRegisterPress,
   onForgotPress,
@@ -114,11 +115,24 @@ export const LoginScreen = ({
           disabled={loading}
         >
           <Image
-            source={require("../../../assets/images/google-icon.png")}
+            source={require("../../../assets/images/google-icon.jpg")}
             style={styles.googleIcon}
             resizeMode="contain"
           />
           <Text style={styles.googleButtonText}>Sign in with Google</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+            onPress={onFacebookLogin}
+            style={[styles.socialButton, styles.facebookButton]}
+            disabled={loading}
+        >
+          <Image
+              source={require("../../../assets/images/facebook-icon.png")}
+              style={styles.socialIcon}
+              resizeMode="contain"
+          />
+          <Text style={styles.facebookButtonText}>Sign in with Facebook</Text>
         </TouchableOpacity>
       </View>
 
@@ -224,14 +238,44 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  googleButton: {
-    backgroundColor: colors.textOnPrimary,
+  socialButton: {
     padding: 15,
     borderRadius: 10,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
+    marginTop: 10, // Space between Google and Facebook
+  },
+  googleButton: {
+    backgroundColor: colors.textOnPrimary,
+    borderWidth: 1,
+    borderColor: colors.lightGrey,
+    padding: 15,
+    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  facebookButton: {
+    backgroundColor: "#1877F2",
+  },
+  socialIcon: {
+    width: 30,
+    height: 30,
+    position: "absolute",
+    left: 15,
+  },
+  socialButtonText: {
+    color: colors.darkGrey,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  facebookButtonText: {
+    color: "white",
+    fontWeight: "700",
+    fontSize: 16,
   },
   googleIcon: {
     width: 20,

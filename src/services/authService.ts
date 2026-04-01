@@ -9,6 +9,7 @@ import {
   confirmPasswordReset,
   createUserWithEmailAndPassword,
   deleteUser,
+  FacebookAuthProvider,
   FirebaseAuthTypes,
   getAuth,
   GoogleAuthProvider,
@@ -123,6 +124,17 @@ export type GoogleSignInProfile = {
   photo?: string | null;
 };
 
+export type FacebookSignInProfile = {
+  first_name?: string | null;
+  last_name?: string | null;
+  name?: string | null;
+  picture?: {
+    data?: {
+      url?: string | null;
+    };
+  };
+};
+
 /**
  * After Firebase Auth sign-in with Google, ensure `users/{uid}` exists with the same
  * core fields as email/password registration. Does not overwrite an existing profile.
@@ -167,11 +179,73 @@ export async function ensureGoogleUserFirestoreProfile(
   });
 }
 
+export async function ensureFacebookUserFirestoreProfile(
+  facebookUser?: FacebookSignInProfile,
+): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) throw new Error("No signed-in user");
+
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  const email = (user.email ?? "").toLowerCase();
+  let firstName = (facebookUser?.first_name ?? "").trim();
+  let lastName = (facebookUser?.last_name ?? "").trim();
+
+  if (!firstName && !lastName) {
+    const display = (user.displayName ?? facebookUser?.name ?? "").trim();
+    if (display) {
+      const parts = display.split(/\s+/);
+      firstName = parts[0] ?? "User";
+      lastName = parts.slice(1).join(" ");
+    }
+  }
+  if (!firstName) firstName = "User";
+
+  const photo =
+    user.photoURL ??
+    facebookUser?.picture?.data?.url ??
+    null;
+
+  if (!snap.exists()) {
+    // First Facebook sign-in for this uid: create profile once.
+    await setDoc(userRef, {
+      email,
+      firstName,
+      lastName,
+      role: "general",
+      selectedTags: [],
+      onboardingComplete: false,
+      createdAt: serverTimestamp(),
+      ...(photo ? { photoURL: photo } : {}),
+      authProvider: "facebook",
+    });
+    return;
+  }
+
+  // Subsequent sign-ins: update only selected fields, no new docs.
+  await setDoc(
+    userRef,
+    {
+      ...(photo ? { photoURL: photo } : {}),
+      authProvider: "facebook",
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
 /**
  * Sign into Firebase Auth with a Google ID token (from @react-native-google-signin).
  */
 export async function signInWithGoogleIdToken(idToken: string) {
   const credential = GoogleAuthProvider.credential(idToken);
+  await signInWithCredential(auth, credential);
+  await reload(auth.currentUser!);
+}
+
+export async function signInWithFacebookAccessToken(accessToken: string) {
+  const credential = FacebookAuthProvider.credential(accessToken);
   await signInWithCredential(auth, credential);
   await reload(auth.currentUser!);
 }
