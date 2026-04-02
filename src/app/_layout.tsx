@@ -8,19 +8,34 @@
 import { auth, applyActionCode } from "@/services/authService";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
-import React, { useEffect } from "react";
-import { ActivityIndicator, View, Alert} from "react-native";
+import React, { useEffect, useState, useMemo } from "react";
+import { ActivityIndicator, View, Alert } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 
-
 export default function RootLayout() {
   const { user, initializing, isProfileValidated } = useAuth();
-  // Stores the current folder path (segments) and the navigation tool (router).
-  const segments = useSegments();
+  
+  
+  const [isHandlingLink, setIsHandlingLink] = useState(false);
+  const [initialLinkChecked, setInitialLinkChecked] = useState(false);
+  
+  const segments = useSegments() as string[];
   const router = useRouter();
 
-  
+  /**
+   * @summary Derived route information used to determine if the router is in sync with Auth state.
+   */
+  const routeInfo = useMemo(() => ({
+    inAuthGroup: segments.includes("(auth)"),
+    inOnboardingGroup: segments.includes("(onboarding)"),
+    isOnVerifyScreen: segments.includes("verify-user"),
+    isResetPassword: segments.includes("reset-password"),
+    isOnInvalidPath: segments.some(seg => seg.includes("__")), // Detects Firebase internal paths
+    segmentKey: segments.join("/"),
+  }), [segments]);
+
+  // --- EFFECT 1: DEEP LINK CONTROLLER ---
   useEffect(() => {
   /**
    * @summary Parses the URL mode (verifyEmail or resetPassword) and executes the corresponding action.
@@ -34,37 +49,41 @@ export default function RootLayout() {
 
       // Checks if the incoming link is the Firebase action route.
       if (parsedUrl.path === "__/auth/action") {
-        const mode = parsedUrl.queryParams?.mode;
-        const oobCode = parsedUrl.queryParams?.oobCode as string;
-
-        // Handles the Email Verification flow.
-        if (mode === "verifyEmail" && oobCode) {
-          try {
-            // Verifies the code with Firebase.
-            await applyActionCode(auth, oobCode);
-            
-            // Forces the local user object to refresh its data, to know if email is verifed 
-            if (auth.currentUser) {
-              await auth.currentUser.reload();
-              router.replace("/(onboarding)");
-            }
-          } catch (error: any) {
-            console.error("Email verification failed:", error);
-            Alert.alert("Verification Error", error.message);
-          }
-        }
+        setIsHandlingLink(true); // 🛑 LOCK UI: Prevents navigation race conditions
         
-        // Handles the Password Reset flow.
-        else if (mode === "resetPassword" && oobCode) {
-          // Routes the user to the reset password screen, passing the code.
-          router.replace(`/(auth)/reset-password?oobCode=${oobCode}`);
+        try {
+          const { mode, oobCode } = parsedUrl.queryParams ?? {};
+
+          // Handles the Email Verification flow.
+          if (mode === "verifyEmail" && typeof oobCode === "string") {
+              await applyActionCode(auth, oobCode);
+              
+              if (auth.currentUser) {
+                // Forces the local user object to refresh its verified status.
+                // The useAuth hook (using onIdTokenChanged) will detect this and update state.
+                await auth.currentUser.reload();
+                Alert.alert("Success", "Your email has been verified!"); 
+              }
+          } 
+          
+          // Handles the Password Reset flow.
+          else if (mode === "resetPassword" && typeof oobCode === "string") {
+            // Routes the user to the reset password screen, passing the code.
+            router.replace(`/(auth)/reset-password?oobCode=${oobCode}`);
+          }
+        } catch (error: any) {
+          console.error("Deep Link Processing failed:", error);
+          Alert.alert("Verification Error", error.message);
+        } finally {
+          setIsHandlingLink(false); 
         }
       }
     };
 
     // Catches the deep link if the app was completely closed (cold start).
-    Linking.getInitialURL().then((url) => {
-      if (url) handleDeepLink({ url });
+    Linking.getInitialURL().then(async (url) => {
+      if (url) await handleDeepLink({ url });
+      setInitialLinkChecked(true); // 🔹 Mark cold start check as complete.
     });
 
     // Catches the deep link if the app is already open in the background.
@@ -75,48 +94,76 @@ export default function RootLayout() {
     };
   }, [router]); 
 
-
+  // --- EFFECT 2: THE NAVIGATION GUARD (Traffic Controller) ---
   /**
    *@summary Redirects users to Landing, Verify, Onboarding, or Tabs based on their status.
    */
   useEffect(() => {
-    // Prevent routing while auth or profile data is still being retrieved.
-    if (initializing) return;
-    if (user?.emailVerified && isProfileValidated === null) return;
+    // Prevent routing while auth, deep links, or initialization is in progress.
+    if (initializing || !initialLinkChecked || isHandlingLink) return;
 
-    const inAuthGroup = segments[0] === "(auth)";
-    const inOnboardingGroup = segments[0] === "(onboarding)";
-    const isOnVerifyScreen = segments[1] === "verify-user";
+    // Prevent routing while profile data is still being retrieved from Firestore.
+    if (user && isProfileValidated === null) return;
 
-    // Unauthenticated 
+    // CASE A: Unauthenticated 
     if (!user) {
-      if (!inAuthGroup) router.replace("/(auth)/landing"); 
+      if (!routeInfo.inAuthGroup && !routeInfo.isResetPassword) {
+        router.replace("/(auth)/landing"); 
+      }
       return;
     }
 
-    // Unverified 
+    // CASE B: Unverified email
     if (!user.emailVerified) {
-      if (!isOnVerifyScreen) router.replace("/(auth)/verify-user"); 
+      if (!routeInfo.isOnVerifyScreen) {
+        router.replace("/(auth)/verify-user"); 
+      }
       return;
     }
 
-    // Authenticated but not onboarded 
+    // CASE C: Authenticated but not onboarded 
     if (isProfileValidated === false) {
-      if (!inOnboardingGroup) router.replace("/(onboarding)"); 
+      if (!routeInfo.inOnboardingGroup) {
+        router.replace("/(onboarding)"); 
+      }
       return;
     }
 
-    // Fully onboarded users 
+    // CASE D: Fully onboarded users 
     if (isProfileValidated === true) {
-      if (inAuthGroup || inOnboardingGroup || isOnVerifyScreen) {
+      if (routeInfo.inAuthGroup || routeInfo.inOnboardingGroup || routeInfo.isOnVerifyScreen) {
         router.replace("/(tabs)"); 
       }
     }
-  }, [user, segments, initializing, isProfileValidated, router]); 
+  }, [user, initializing, isProfileValidated, isHandlingLink, initialLinkChecked, routeInfo, router]); 
 
-  // Loading UI
-  const inAuthGroup = segments[0] === "(auth)";
-  if (initializing || (user?.emailVerified && isProfileValidated === null) || (!user && !initializing && !inAuthGroup)) {
+  // --- THE GATEKEEPER: THE FLICKER KILLER ---
+  /**
+   * @summary Determines if the router is physically in the correct location based on current Auth state.
+   * This prevents the "1-frame flash" of the wrong screen during a redirect.
+   */
+  const isRoutingReady = 
+    !routeInfo.isOnInvalidPath &&
+    (
+      (!user && routeInfo.inAuthGroup) || 
+      (user && !user.emailVerified && routeInfo.isOnVerifyScreen) ||
+      (user && user.emailVerified && isProfileValidated === false && routeInfo.inOnboardingGroup) ||
+      (user && user.emailVerified && isProfileValidated === true && !routeInfo.inAuthGroup && !routeInfo.inOnboardingGroup)
+    );
+
+  // Loading UI Logic
+  /**
+   * @summary Determines if the application is in a loading state. 
+   * Blocks UI if initializing, handling a link, waiting for Firestore, or if the router hasn't landed yet.
+   */
+  const isLoading = 
+    initializing || 
+    !initialLinkChecked || 
+    isHandlingLink || 
+    !isRoutingReady || 
+    (user && isProfileValidated === null);
+
+  if (isLoading) {
     return (
       <View
         style={{
@@ -130,5 +177,7 @@ export default function RootLayout() {
       </View>
     );
   }
-return <Stack screenOptions={{ headerShown: false }} />;
+
+  // Once loading is complete and routing is confirmed, render the actual navigation stack.
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

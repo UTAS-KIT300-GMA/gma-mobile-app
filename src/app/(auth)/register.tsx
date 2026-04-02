@@ -98,14 +98,8 @@ export default function RegisterRoute() {
 
     setLoading(true);
     try {
-      
-      
       await registerUser(email, password, profile);
-
-      Alert.alert("Account Created", "Check your inbox for the verification email!", [
-        { text: "Continue", onPress: () => router.replace("/verify-user") },
-      ]);
-
+      router.replace("/(auth)/verify-user");
     } catch (e) {
       Alert.alert("Registration Error", getFriendlyError(e));
     } finally {
