@@ -17,6 +17,12 @@
         "foregroundImage": "./assets/images/gma-app-logo.png",
         "backgroundColor": "#FBF0E4"
       },
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_LOCATION"
+      ],
       "googleServicesFile": "./google-services.json",
       "intentFilters": [
         {
