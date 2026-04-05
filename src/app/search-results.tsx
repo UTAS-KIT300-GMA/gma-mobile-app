@@ -10,6 +10,7 @@ import {
 	query,
 	serverTimestamp,
 	setDoc,
+  where,
 } from "@react-native-firebase/firestore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -64,20 +65,26 @@ export default function SearchResultsLogic() {
     const fetchData = async () => {
       setLoading(true);
       // Fetches all events from Firestore and the user's bookmarks,
-      // then updates state.
+      
       try {
-        const eventsSnap = await getDocs(query(collection(db, "events")));
+      // We MUST filter by 'approved' to match our Security Rules
+    const eventsQuery = query(
+      collection(db, "events"), 
+      where("approvalStatus", "==", "approved") 
+    );
 
-        const rows: EventDoc[] = eventsSnap.docs.map(
-          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
-            ...(d.data() as Omit<EventDoc, "id">),
-            id: d.id,
-          }),
-        );
+    const eventsSnap = await getDocs(eventsQuery);
 
-        if (mounted) {
-          setEvents(rows);
-        }
+    const rows: EventDoc[] = eventsSnap.docs.map(
+      (d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
+        ...(d.data() as Omit<EventDoc, "id">),
+        id: d.id,
+      }),
+    );
+
+    if (mounted) {
+      setEvents(rows);
+    }
 
         const uid = auth.currentUser?.uid;
 
