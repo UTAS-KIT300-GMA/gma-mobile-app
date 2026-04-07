@@ -30,7 +30,6 @@ export function EventCard({
   showBookmark?: boolean;
   bookmarked?: boolean;
 }) {
-  console.log("EventCard", event.dateTime);
   return (
     <View style={styles.card}>
       <Pressable
@@ -100,7 +99,7 @@ RSVP button, or bookmark button are pressed.
 const styles = StyleSheet.create({
   card: {
     borderRadius: 15,
-    width: 380,
+    width: "100%",
     alignSelf: "center",
     overflow: "hidden", // Ensures the image and content are clipped to the card's rounded corners
     backgroundColor: colors.textOnPrimary,

@@ -36,7 +36,7 @@ export default function EventDetailScreen() {
           const data = eventSnap.data();
 
           // Logs the fetched event data for debugging purposes.
-          console.log("Fetched event data:", data);
+          console.log("Fetched event data:", data?.location);
 
           // Determines the event type based on ticket prices. If both member and non-member prices are 0, it's a free event; otherwise, it's paid.
           const memberPrice = data?.ticketPrices?.member ?? 0;

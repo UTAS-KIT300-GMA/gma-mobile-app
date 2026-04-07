@@ -8,6 +8,7 @@ export type EventDoc = {
   description: string;
   category: Category;
   address: string;
+  location: FirebaseFirestoreTypes.GeoPoint;
   image: string; // URL string
   type: "free" | "paid";
   
