@@ -142,7 +142,6 @@ export default function LoginRoute() {
     try {
       await GoogleSignin.hasPlayServices();
       const signInResult = await GoogleSignin.signIn();
-      console.log(signInResult);
 
       const idToken = getGoogleIdToken(signInResult);
       if (!idToken) {
