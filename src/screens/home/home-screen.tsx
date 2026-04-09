@@ -1,7 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
-import { EventDoc } from "@/types/type";
+import { EVENT_CATEGORIES, EventDoc } from "@/types/type";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 import React, { useState, useEffect, useMemo } from "react";
+import {useAuthUser} from "@/context/UserContext.tsx";
 
 type HomeUIProps = {
   events: EventDoc[];
@@ -23,6 +24,7 @@ type HomeUIProps = {
 export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [userCoords, setUserCoords] = useState<{latitude: number, longitude: number} | null>(null);
+  const { userDoc } = useAuthUser();
 
   /**
    * Calculates the distance between two points in kilometers
@@ -75,32 +77,75 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
     })();
   }, []);
 
+  const normalize = (v: string) => v.trim().toLowerCase();
+
+  const getParentCategoryFromTagName = (
+    tagName: string,
+  ): EventDoc["category"] | null => {
+    const needle = normalize(tagName);
+    for (const group of EVENT_CATEGORIES) {
+      if (group.items.some((item) => normalize(item.name) === needle)) {
+        const name = normalize(group.category);
+        if (name === "connect") return "connect";
+        if (name === "grow") return "growth";
+        if (name === "thrive") return "thrive";
+        return null;
+      }
+    }
+    return null;
+  };
+
   // useMemo prevents re-sorting on every render unless events or coords change
   const processedEvents = useMemo(() => {
     let list = [...events];
 
-    if (userCoords) {
-      return list.sort((a, b) => {
-        if (!a.location || !b.location) return 0;
-
-        const distA = calculateHaversineDistance(
-            userCoords.latitude,
-            userCoords.longitude,
-            a.location.latitude,
-            a.location.longitude
-        );
-        const distB = calculateHaversineDistance(
-            userCoords.latitude,
-            userCoords.longitude,
-            b.location.latitude,
-            b.location.longitude
-        );
-
-        return distA - distB;
-      });
+    const selectedTags = userDoc?.selectedTags ?? [];
+    const preferred = new Set<EventDoc["category"]>();
+    for (const tagName of selectedTags) {
+      const parent = getParentCategoryFromTagName(tagName);
+      if (parent) preferred.add(parent);
     }
-    return list;
-  }, [events, userCoords]);
+    console.log("preferred", preferred)
+
+    const getInterestScore = (e: EventDoc) => {
+      if (!preferred.size) return 0;
+      if (e.category === "all") return 0;
+      return preferred.has(e.category) ? 1 : 0;
+    };
+
+    const getDistanceKm = (e: EventDoc) => {
+      if (!userCoords || !e.location) return Number.POSITIVE_INFINITY;
+      return calculateHaversineDistance(
+        userCoords.latitude,
+        userCoords.longitude,
+        e.location.latitude,
+        e.location.longitude,
+      );
+    };
+
+    const getEventTimeMs = (e: EventDoc) => {
+      const dt: any = e.dateTime as any;
+      if (!dt?.toDate) return Number.POSITIVE_INFINITY;
+      return dt.toDate().getTime();
+    };
+
+    return list.sort((a, b) => {
+      // 1) Interests (highest priority)
+      const interestA = getInterestScore(a);
+      const interestB = getInterestScore(b);
+      if (interestA !== interestB) return interestB - interestA;
+
+      // 2) Distance (closer first)
+      const distA = getDistanceKm(a);
+      const distB = getDistanceKm(b);
+      if (distA !== distB) return distA - distB;
+
+      // 3) Time (soonest first)
+      const timeA = getEventTimeMs(a);
+      const timeB = getEventTimeMs(b);
+      return timeA - timeB;
+    });
+  }, [events, userCoords, userDoc?.selectedTags]);
 
   // Navigation Handlers
   const handleProfilePress = () => router.push("/(profile)" as any);
