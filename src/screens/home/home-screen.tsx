@@ -98,52 +98,68 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   // useMemo prevents re-sorting on every render unless events or coords change
   const processedEvents = useMemo(() => {
     let list = [...events];
-
     const selectedTags = userDoc?.selectedTags ?? [];
-    const preferred = new Set<EventDoc["category"]>();
-    for (const tagName of selectedTags) {
-      const parent = getParentCategoryFromTagName(tagName);
-      if (parent) preferred.add(parent);
-    }
-    console.log("preferred", preferred)
 
-    const getInterestScore = (e: EventDoc) => {
-      if (!preferred.size) return 0;
+    // --- 1. RANK CATEGORIES BASED ON SELECTION COUNT ---
+    const categoryCounts: Record<EventDoc["category"], number> = {
+      all: 0,
+      connect: 0,
+      growth: 0,
+      thrive: 0,
+    };
+
+    selectedTags.forEach((tagName) => {
+      const parent = getParentCategoryFromTagName(tagName);
+      if (parent) {
+        categoryCounts[parent] += 1;
+      }
+    });
+
+    // Create a weight map: highest count gets highest weight
+    // Example: if Thrive has 5 tags and Connect has 2, Thrive = 2, Connect = 1, Growth = 0
+    const sortedPreferences = Object.entries(categoryCounts)
+        .filter(([cat]) => cat !== "all")
+        .sort(([, countA], [, countB]) => (countB as number) - (countA as number));
+
+    console.log("sortedPreferences", sortedPreferences);
+    const weights: Record<string, number> = {};
+    sortedPreferences.forEach(([cat], index) => {
+      // Top category gets weight 3, second gets 2, third gets 1
+      weights[cat] = sortedPreferences.length - index;
+    });
+
+    // --- 2. HELPER FUNCTIONS FOR SORTING ---
+    const getCategoryWeight = (e: EventDoc) => {
       if (e.category === "all") return 0;
-      return preferred.has(e.category) ? 1 : 0;
+      return weights[e.category] || 0;
     };
 
     const getDistanceKm = (e: EventDoc) => {
       if (!userCoords || !e.location) return Number.POSITIVE_INFINITY;
       return calculateHaversineDistance(
-        userCoords.latitude,
-        userCoords.longitude,
-        e.location.latitude,
-        e.location.longitude,
+          userCoords.latitude,
+          userCoords.longitude,
+          e.location.latitude,
+          e.location.longitude
       );
     };
 
-    const getEventTimeMs = (e: EventDoc) => {
-      const dt: any = e.dateTime as any;
-      if (!dt?.toDate) return Number.POSITIVE_INFINITY;
-      return dt.toDate().getTime();
-    };
-
+    // --- 3. FINAL SORTING ---
     return list.sort((a, b) => {
-      // 1) Interests (highest priority)
-      const interestA = getInterestScore(a);
-      const interestB = getInterestScore(b);
-      if (interestA !== interestB) return interestB - interestA;
+      // Priority 1: Category Ranking (Highest weighted category first)
+      const weightA = getCategoryWeight(a);
+      const weightB = getCategoryWeight(b);
+      if (weightA !== weightB) return weightB - weightA;
 
-      // 2) Distance (closer first)
+      // Priority 2: Distance (Closer first)
       const distA = getDistanceKm(a);
       const distB = getDistanceKm(b);
       if (distA !== distB) return distA - distB;
 
-      // 3) Time (soonest first)
-      const timeA = getEventTimeMs(a);
-      const timeB = getEventTimeMs(b);
-      return timeA - timeB;
+      // Priority 3: Time (Soonest first)
+      const dtA = (a.dateTime as any)?.toDate?.()?.getTime() || 0;
+      const dtB = (b.dateTime as any)?.toDate?.()?.getTime() || 0;
+      return dtA - dtB;
     });
   }, [events, userCoords, userDoc?.selectedTags]);
 
