@@ -2,6 +2,21 @@ import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
 export type Category = "all" | "connect" | "growth" | "thrive";
 
+export type UserDoc = {
+  email: string;
+  firstName: string;
+  lastName: string;
+  gender: "male" | "female" | "other" | null;
+  dateOfBirth: FirebaseFirestoreTypes.Timestamp | null;
+  role: string;
+  selectedTags: string[];
+  onboardingComplete: boolean;
+  createdAt: FirebaseFirestoreTypes.FieldValue | FirebaseFirestoreTypes.Timestamp | null;
+  // Optional fields used by social providers
+  photoURL?: string;
+  authProvider?: "google" | "facebook" | "password" | string;
+};
+
 export type EventDoc = {
   id: string;
   title: string;
@@ -75,3 +90,68 @@ export type InterestKey =
     { key: "Cycling & Riding", label: "Cycling & Riding" },
     { key: "Healthy Eating", label: "Healthy Eating" },
   ];
+
+export const EVENT_CATEGORIES = [
+  {
+    category: "Connect",
+    focus: "Social & Cultural",
+    items: [
+      { id: 1, name: "Social Networking" },
+      { id: 2, name: "Cultural & Community Events" },
+      { id: 3, name: "Creative Arts & Crafts" },
+      { id: 4, name: "Games, Trivia & Bingo" },
+      { id: 5, name: "Food & Cooking" },
+      { id: 6, name: "Music & Karaoke" },
+      { id: 7, name: "Book Club" },
+      { id: 8, name: "Theatre & Movies" }
+    ]
+  },
+  {
+    category: "Grow",
+    focus: "Professional & Skills",
+    items: [
+      { id: 9, name: "Professional Networking" },
+      { id: 10, name: "Career Development & Info" },
+      { id: 11, name: "Workshops & Skill Share" },
+      { id: 12, name: "Mentoring & Coaching" },
+      { id: 13, name: "Financial Literacy & Investing" },
+      { id: 14, name: "Real Estate & Home Ownership" },
+      { id: 15, name: "Public Speaking & Communication" },
+      { id: 16, name: "Entrepreneurship" }
+    ]
+  },
+  {
+    category: "Thrive",
+    focus: "Health & Wellness",
+    items: [
+      { id: 17, name: "Running & Walking" },
+      { id: 18, name: "Hiking & Outdoor Adventure" },
+      { id: 19, name: "Yoga & Pilates" },
+      { id: 20, name: "Gym & Fitness" },
+      { id: 21, name: "Team Sports" },
+      { id: 22, name: "Wellness & Retreats" },
+      { id: 23, name: "Climbing & Extreme Sports" },
+      { id: 24, name: "Cycling & Riding" },
+      { id: 25, name: "Healthy Eating" }
+    ]
+  }
+] as const;
+
+// Extracts the individual item shape
+export type EventItem = {
+  id: number;
+  name: string;
+};
+
+// Extracts the Category names: "Connect" | "Grow" | "Thrive"
+export type CategoryName = (typeof EVENT_CATEGORIES)[number]["category"];
+
+// Extracts the Focus strings: "Social & Cultural" | etc.
+export type CategoryFocus = (typeof EVENT_CATEGORIES)[number]["focus"];
+
+// Defines the structure for a single top-level category object
+export type EventCategoryGroup = {
+  readonly category: CategoryName;
+  readonly focus: CategoryFocus;
+  readonly items: readonly EventItem[];
+};

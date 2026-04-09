@@ -1,7 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
-import { EventDoc } from "@/types/type";
+import { EVENT_CATEGORIES, EventDoc } from "@/types/type";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 import React, { useState, useEffect, useMemo } from "react";
+import {useAuthUser} from "@/context/UserContext.tsx";
 
 type HomeUIProps = {
   events: EventDoc[];
@@ -23,6 +24,7 @@ type HomeUIProps = {
 export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [userCoords, setUserCoords] = useState<{latitude: number, longitude: number} | null>(null);
+  const { userDoc } = useAuthUser();
 
   /**
    * Calculates the distance between two points in kilometers
@@ -75,32 +77,91 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
     })();
   }, []);
 
+  const normalize = (v: string) => v.trim().toLowerCase();
+
+  const getParentCategoryFromTagName = (
+    tagName: string,
+  ): EventDoc["category"] | null => {
+    const needle = normalize(tagName);
+    for (const group of EVENT_CATEGORIES) {
+      if (group.items.some((item) => normalize(item.name) === needle)) {
+        const name = normalize(group.category);
+        if (name === "connect") return "connect";
+        if (name === "grow") return "growth";
+        if (name === "thrive") return "thrive";
+        return null;
+      }
+    }
+    return null;
+  };
+
   // useMemo prevents re-sorting on every render unless events or coords change
   const processedEvents = useMemo(() => {
     let list = [...events];
+    const selectedTags = userDoc?.selectedTags ?? [];
 
-    if (userCoords) {
-      return list.sort((a, b) => {
-        if (!a.location || !b.location) return 0;
+    // --- 1. RANK CATEGORIES BASED ON SELECTION COUNT ---
+    const categoryCounts: Record<EventDoc["category"], number> = {
+      all: 0,
+      connect: 0,
+      growth: 0,
+      thrive: 0,
+    };
 
-        const distA = calculateHaversineDistance(
-            userCoords.latitude,
-            userCoords.longitude,
-            a.location.latitude,
-            a.location.longitude
-        );
-        const distB = calculateHaversineDistance(
-            userCoords.latitude,
-            userCoords.longitude,
-            b.location.latitude,
-            b.location.longitude
-        );
+    selectedTags.forEach((tagName) => {
+      const parent = getParentCategoryFromTagName(tagName);
+      if (parent) {
+        categoryCounts[parent] += 1;
+      }
+    });
 
-        return distA - distB;
-      });
-    }
-    return list;
-  }, [events, userCoords]);
+    // Create a weight map: highest count gets highest weight
+    // Example: if Thrive has 5 tags and Connect has 2, Thrive = 2, Connect = 1, Growth = 0
+    const sortedPreferences = Object.entries(categoryCounts)
+        .filter(([cat]) => cat !== "all")
+        .sort(([, countA], [, countB]) => (countB as number) - (countA as number));
+
+    console.log("sortedPreferences", sortedPreferences);
+    const weights: Record<string, number> = {};
+    sortedPreferences.forEach(([cat], index) => {
+      // Top category gets weight 3, second gets 2, third gets 1
+      weights[cat] = sortedPreferences.length - index;
+    });
+
+    // --- 2. HELPER FUNCTIONS FOR SORTING ---
+    const getCategoryWeight = (e: EventDoc) => {
+      if (e.category === "all") return 0;
+      return weights[e.category] || 0;
+    };
+
+    const getDistanceKm = (e: EventDoc) => {
+      if (!userCoords || !e.location) return Number.POSITIVE_INFINITY;
+      return calculateHaversineDistance(
+          userCoords.latitude,
+          userCoords.longitude,
+          e.location.latitude,
+          e.location.longitude
+      );
+    };
+
+    // --- 3. FINAL SORTING ---
+    return list.sort((a, b) => {
+      // Priority 1: Category Ranking (Highest weighted category first)
+      const weightA = getCategoryWeight(a);
+      const weightB = getCategoryWeight(b);
+      if (weightA !== weightB) return weightB - weightA;
+
+      // Priority 2: Distance (Closer first)
+      const distA = getDistanceKm(a);
+      const distB = getDistanceKm(b);
+      if (distA !== distB) return distA - distB;
+
+      // Priority 3: Time (Soonest first)
+      const dtA = (a.dateTime as any)?.toDate?.()?.getTime() || 0;
+      const dtB = (b.dateTime as any)?.toDate?.()?.getTime() || 0;
+      return dtA - dtB;
+    });
+  }, [events, userCoords, userDoc?.selectedTags]);
 
   // Navigation Handlers
   const handleProfilePress = () => router.push("/(profile)" as any);

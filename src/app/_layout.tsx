@@ -12,6 +12,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, View, Alert } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
+import {UserProvider} from "@/context/UserContext.tsx";
 
 export default function RootLayout() {
   const { user, initializing, isProfileValidated } = useAuth();
@@ -179,5 +180,9 @@ export default function RootLayout() {
   }
 
   // Once loading is complete and routing is confirmed, render the actual navigation stack.
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+      <UserProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </UserProvider>
+  )
 }
