@@ -1,7 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
-import { EVENT_CATEGORIES, EventDoc } from "@/types/type";
+import { EventDoc } from "@/types/type";
 import { router } from "expo-router";
 import {
   ActivityIndicator,
@@ -9,11 +9,13 @@ import {
   StyleSheet,
   Text,
   View,
+  AppState
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
 import React, { useState, useEffect, useMemo } from "react";
-import {useAuthUser} from "@/context/UserContext.tsx";
+import { useAuthUser } from "@/context/UserContext.tsx";
+import { calculateHaversineDistance, getParentCategoryFromTagName} from "@/components/utils";
 
 type HomeUIProps = {
   events: EventDoc[];
@@ -26,29 +28,10 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   const [userCoords, setUserCoords] = useState<{latitude: number, longitude: number} | null>(null);
   const { userDoc } = useAuthUser();
 
-  /**
-   * Calculates the distance between two points in kilometers
-   */
-  function calculateHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-    const R = 6371; // Earth's radius in kilometers
-    const dLat = (lat2 - lat1) * (Math.PI / 180);
-    const dLon = (lon2 - lon1) * (Math.PI / 180);
-
-    const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * (Math.PI / 180)) *
-        Math.cos(lat2 * (Math.PI / 180)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c; // Distance in km
-  }
-
   useEffect(() => {
-    (async () => {
+    // Define the check function inside so it can be reused
+    const checkLocationStatus = async () => {
       try {
-        // Check if the device-wide Location master switch is ON
         const enabled = await Location.hasServicesEnabledAsync();
         if (!enabled) {
           setErrorMsg('Please enable location services on your device.');
@@ -61,39 +44,39 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
           return;
         }
 
+        // If we got here, everything is good
         let loc = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Highest,
-          });
+          accuracy: Location.Accuracy.Balanced, // Balanced is usually enough and faster
+        });
 
+        console.log("User location: ", loc.coords.latitude, loc.coords.longitude);
         setUserCoords({
           latitude: loc.coords.latitude,
           longitude: loc.coords.longitude
         });
-        setErrorMsg(null); // Clear any previous errors
+        setErrorMsg(null);
       } catch (err) {
-        console.error(err);
         setErrorMsg('Could not fetch location.');
       }
-    })();
-  }, []);
+    };
 
-  const normalize = (v: string) => v.trim().toLowerCase();
+    // 1. Run immediately on mount
+    checkLocationStatus();
 
-  const getParentCategoryFromTagName = (
-    tagName: string,
-  ): EventDoc["category"] | null => {
-    const needle = normalize(tagName);
-    for (const group of EVENT_CATEGORIES) {
-      if (group.items.some((item) => normalize(item.name) === needle)) {
-        const name = normalize(group.category);
-        if (name === "connect") return "connect";
-        if (name === "grow") return "growth";
-        if (name === "thrive") return "thrive";
-        return null;
+    // 2. Listen for the app coming back from the background
+    const subscription = AppState.addEventListener("change", (nextAppState) => {
+      if (nextAppState === "active") {
+        // Give the OS a tiny moment to update its internal status
+        setTimeout(() => {
+          checkLocationStatus();
+        }, 500);
       }
-    }
-    return null;
-  };
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // useMemo prevents re-sorting on every render unless events or coords change
   const processedEvents = useMemo(() => {
