@@ -45,6 +45,11 @@ export default function ProfileUI({
       label: "Notifications setting",
       path: "(profile)/notifications-settings-logic",
     },
+    {
+    id: "membership",
+    label: "My membership",
+    path: "/(profile)/membership",
+    },
     { id: "saved", label: "Saved events", path: "/saved-events" },
   ];
 
