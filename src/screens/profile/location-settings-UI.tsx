@@ -21,20 +21,34 @@ export default function LocationSettingsScreen() {
   const [loading, setLoading] = useState(true);
 
   // Function to check actual device permission status
-  const checkPermission = async () => {
-    const { status } = await Location.getForegroundPermissionsAsync();
-    setIsLocationEnabled(status === "granted");
-    setLoading(false);
+  const checkLocationStatus = async () => {
+    try {
+      // Check if the physical GPS toggle is ON
+      const isProviderEnabled = await Location.hasServicesEnabledAsync();
+
+      // Check if the App has permission to use that GPS
+      const { status } = await Location.getForegroundPermissionsAsync();
+
+      // The toggle should only be "ON" if both are true
+      setIsLocationEnabled(isProviderEnabled && status === "granted");
+    } catch (error) {
+      console.error("Error checking location status:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Check permission on mount
   useEffect(() => {
-    checkPermission();
+    checkLocationStatus();
 
-    // Re-check when the user comes back from the phone's settings app
     const subscription = AppState.addEventListener("change", (nextAppState) => {
       if (nextAppState === "active") {
-        checkPermission();
+        setLoading(true);
+        // Small timeout ensures the OS has updated the internal state
+        setTimeout(() => {
+          checkLocationStatus();
+        }, 500);
       }
     });
 
@@ -80,8 +94,8 @@ export default function LocationSettingsScreen() {
 
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>
-              To protect your privacy, you must manage location permissions
-              directly within your device's system settings.
+              {"To protect your privacy, you must manage location permissions\n" +
+                  "directly within your device's system settings."}
             </Text>
           </View>
         </ScrollView>
