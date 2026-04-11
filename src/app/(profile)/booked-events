@@ -11,7 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import { auth, db } from "@/services/authService"
 import { EventDoc } from "@/types/type";
-import { bookedEventsUI } from "@/screens/profile/saved-events-UI";
+import { BookedEventsUI } from "@/screens/profile/booked-events-UI";
 
 /**
    * @summary Displays a user's booked events from Firestore and automactically updates the UI when an user deletes or adds a booking.
@@ -106,3 +106,4 @@ export default function BookedEventsRoute() {
     />
   );
 }
+
