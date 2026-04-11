@@ -56,6 +56,12 @@ export default function ProfileUI({
     path: "/(profile)/membership",
     },
     { id: "saved", label: "Saved events", path: "/saved-events" },
+    {
+    id: "booking",
+    label: "My bookings",
+    path: "/(profile)/booked-events",
+    },
+    { id: "saved", label: "Saved events", path: "/saved-events" },
   ];
 
   return (
