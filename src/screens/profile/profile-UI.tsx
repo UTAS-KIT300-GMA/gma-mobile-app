@@ -57,6 +57,7 @@ export default function ProfileUI({
     },
     { id: "saved", label: "Saved events", path: "/saved-events" },
     {
+      //button to booked tickets page
     id: "booking",
     label: "My bookings",
     path: "/(profile)/booked-events",
