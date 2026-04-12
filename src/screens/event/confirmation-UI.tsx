@@ -49,18 +49,18 @@ export const BookingConfirmedUI = ({
         <View style={styles.detailRow}>
           <Text style={styles.detailRowText}>Ticket Type:</Text>
           <Text style={styles.detailRowText}>{details.ticketType}</Text>
-         {details.type === "event" ? "Ticket Type:" : "Plan Type:"}
+          <Text style={styles.detailRowText}>{details.type === "event" ? "Ticket Type:" : "Plan Type:"}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailRowText}>Number of Ticket:</Text>
           <Text style={styles.detailRowText}>{details.ticketCount}</Text>
-        {details.type === "event" ? "Number of Ticket:" : "Membership Count:"}
+          <Text style={styles.detailRowText}>{details.type === "event" ? "Number of Ticket:" : "Membership Count:"}</Text>
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailRowText}>Booking ID:</Text>
           <Text style={styles.detailRowText}>{details.bookingId}</Text>
-        
-         {details.type === "event" ? "Booking ID:" : "Membership ID:"}</View>
+          <Text style={styles.detailRowText}>{details.type === "event" ? "Booking ID:" : "Membership ID:"}</Text>
+        </View>
         <View style={[styles.detailRow, { marginTop: 10 }]}>
           <Text style={styles.detailRowText}>Total Cost:</Text>
           <Text style={styles.detailRowText}>{details.totalCost}</Text>
