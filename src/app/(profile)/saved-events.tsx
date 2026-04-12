@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  deleteDoc, 
-  query, 
-  FirebaseFirestoreTypes 
+import {
+  collection,
+  doc,
+  getDocs,
+  deleteDoc,
+  query,
+  FirebaseFirestoreTypes, setDoc, serverTimestamp
 } from "@react-native-firebase/firestore";
-import { useRouter } from "expo-router";
+import {useRouter} from "expo-router";
 import { auth, db } from "@/services/authService"
 import { EventDoc } from "@/types/type";
 import { SavedEventsUI } from "@/screens/profile/saved-events-UI";
@@ -70,22 +70,42 @@ export default function SavedEventsRoute() {
   
   // Stores function instructions handleRemoveBookmark var.
   const handleRemoveBookmark = async (event: EventDoc) => {
+    // Stores the user's UID from FirebaseAuth in the uid var.
     const uid = auth.currentUser?.uid;
-    if (!uid) return;
 
-    // Removes the doc ID from bookmarks collection for an instant UI update.
-    setBookmarkedIds(prev => {
+    // Stops the function and alerts the user if they are not logged in.
+    if (!uid) return Alert.alert("Sign In", "Please log in to save events.");
+
+    // Checks the bookmarkedIds var to see if the event is already bookmarked.
+    const isBookmarked = !!bookmarkedIds[event.id];
+
+    // Stores the specific Firestore path for the bookmark in the bookmarkRef var.
+    const bookmarkRef = doc(db, "users", uid, "bookmarks", event.id);
+
+    // Updates the UI state immediately for a faster user experience.
+    setBookmarkedIds((prev) => {
       const next = { ...prev };
-      delete next[event.id];
+      isBookmarked ? delete next[event.id] : (next[event.id] = true);
       return next;
     });
 
     try {
-      await deleteDoc(doc(db, "users", uid, "bookmarks", event.id));
+      // Deletes the document if it was already saved, otherwise creates a new one.
+      if (isBookmarked) await deleteDoc(bookmarkRef);
+      else
+        await setDoc(bookmarkRef, {
+          eventId: event.id,
+          title: event.title ?? "Unknown",
+          savedAt: serverTimestamp(),
+        });
     } catch (e) {
-      
-      setBookmarkedIds(prev => ({ ...prev, [event.id]: true }));
-      Alert.alert("Error", "Could not remove bookmark.");
+      // Reverts the UI state if the Firestore operation fails.
+      setBookmarkedIds((prev) => {
+        const next = { ...prev };
+        isBookmarked ? (next[event.id] = true) : delete next[event.id];
+        return next;
+      });
+      Alert.alert("Error", "Could not update bookmark.");
     }
   };
 
@@ -96,9 +116,19 @@ export default function SavedEventsRoute() {
       events={bookmarkedEvents}
       loading={loading}
       onBack={() => router.back()}
-      onPressCard={(item) => router.push(`/event/${item.id}` as any)}
+      onPressCard={(item) => router.push({
+        pathname: "/event/event-details",
+        params: {
+          id: item.id,
+        },
+      } as any)}
       onRemoveBookmark={handleRemoveBookmark}
-      onRsvp={(item) => router.push(`/event/${item.id}/book` as any)}
+      onRsvp={(item) =>
+        router.push({
+          pathname: "/event/booking",
+          params: { eventId: item.id },
+        } as any)
+      }
     />
   );
 }
