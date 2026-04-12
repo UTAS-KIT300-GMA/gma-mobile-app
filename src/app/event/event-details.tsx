@@ -88,7 +88,8 @@ export default function EventDetailScreen() {
     } catch (e) {
       // If the database fails, roll back the local isBookmarked store to its original state.
       setIsBookmarked(wasBookmarked);
-      Alert.alert("Error", "Could not update bookmark.");
+      console.error(e)
+      Alert.alert("Error", "Could not update bookmark.", );
     }
   };
 
@@ -105,19 +106,15 @@ export default function EventDetailScreen() {
       return;
     }
 
+
     if (event.type !== "free") {
       Alert.alert(
-        "Subscribers Only",
-        "This event is available to subscribed members only.",
+          "Subscribers Only",
+          "This event is available to subscribed members only.",
       );
       return;
     }
-
-    router.push({
-      pathname: "/event/booking",
-      params: { eventId: event.id },
-    } as any);
-  };
+  }
 
   return (
     <EventDetailUI

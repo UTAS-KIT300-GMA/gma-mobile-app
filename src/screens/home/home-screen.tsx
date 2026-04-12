@@ -57,6 +57,7 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
         setErrorMsg(null);
       } catch (err) {
         setErrorMsg('Could not fetch location.');
+        console.error(err);
       }
     };
 
@@ -192,15 +193,6 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
                   }
 
                   renderItem={({ item }) => {
-                    const distance = userCoords && item.location
-                        ? calculateHaversineDistance(
-                        userCoords.latitude,
-                        userCoords.longitude,
-                        item.location.latitude,
-                        item.location.longitude
-                    ).toFixed(1) + " km"
-                        : "";
-
                     return (
                         <EventCard
                             event={item}
@@ -215,8 +207,6 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
                                 pathname: "/event/event-details",
                                 params: {
                                   id: item.id,
-                                  title: item.title,
-                                  // ... other params
                                 },
                               } as any);
                             }}

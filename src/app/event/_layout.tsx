@@ -1,5 +1,5 @@
-import { Stack } from 'expo-router';
 import { useTheme } from '@/theme/ThemeProvider';
+import { Stack } from 'expo-router';
 
 export default function EventLayout() {
   // Stores the active color palette and style settings in the theme var
@@ -36,6 +36,17 @@ export default function EventLayout() {
         name="booking"
         options={{ title: 'Booking', headerLeft: () => null, headerShown: false }}
     />
+
+    <Stack.Screen
+  name="payment"
+  options={{
+    title: "Payment",
+    headerStyle: { backgroundColor: "#FFFFFF" },
+    headerTintColor: theme.primary,
+    headerTitleStyle: { fontWeight: "bold" },
+    headerShadowVisible: false,
+  }}
+/>
     </Stack>
   );
 }
