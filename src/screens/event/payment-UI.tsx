@@ -18,7 +18,7 @@ const BORDER = "#E7D6DE";
 const TEXT_DARK = "#4A1F36";
 const MUTED = "#8A7A83";
 
-import { PaymentMethod } from "@/types/type";
+import { PaymentMethod } from "@/types/payment";
 
 interface PaymentUIProps {
   type: string;

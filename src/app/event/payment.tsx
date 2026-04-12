@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Alert } from "react-native";
 
-import { PaymentMethod } from "@/types/type";
+import { PaymentMethod } from "@/types/payment";
 
 export default function PaymentScreen() {
   const router = useRouter();
