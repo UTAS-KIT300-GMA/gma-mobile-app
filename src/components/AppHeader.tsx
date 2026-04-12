@@ -169,9 +169,9 @@ export function AppHeader({
 const styles = StyleSheet.create({
   // Main header layout for home screen and main subscreens without back button
   mainContainer: {
-    height: 84,
+    height: 90,
     paddingHorizontal: 16,
-    paddingTop: 5,
+    paddingTop: 16,
     backgroundColor: colors.textOnPrimary,
     flexDirection: "row",
     alignItems: "center",
@@ -204,9 +204,9 @@ const styles = StyleSheet.create({
 
   // Back header layout for subscreens with back button and optional check icons for actions like marking notifications as read or clearing notifications
   backContainer: {
-    height: 84,
+    height: 90,
     paddingHorizontal: 16,
-    paddingTop: 5,
+    paddingTop: 16,
     backgroundColor: colors.textOnPrimary,
     flexDirection: "row",
     alignItems: "center",
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 999,
-    zIndex: 2,
+    zIndex: 3,
   },
 
   backTitle: {
@@ -232,6 +232,7 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
+    zIndex: 1,
     textAlignVertical: "center",
     color: colors.primary,
     fontSize: 28,
