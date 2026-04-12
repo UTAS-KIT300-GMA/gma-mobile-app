@@ -1,0 +1,35 @@
+name: Scheduled User Cleanup
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Midnight daily
+  workflow_dispatch:
+    inputs:
+      run_as_test:
+        description: 'Delete all unverified users immediately?'
+        type: boolean
+        default: false
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  prune-ghost-accounts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Install Dependencies
+        run: npm install firebase-admin typescript tsx @types/node
+
+      - name: Execute Prune
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          TEST_MODE: ${{ github.event.inputs.run_as_test }}
+        run: npx tsx scripts/prune-users.ts

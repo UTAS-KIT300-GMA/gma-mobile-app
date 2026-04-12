@@ -46,6 +46,11 @@ export default function ProfileUI({
       path: "(profile)/notifications-settings-logic",
     },
     {
+      id: "location",
+      label: "Location setting",
+      path: "(profile)/location-settings-logic",
+    },
+    {
     id: "membership",
     label: "My membership",
     path: "/(profile)/membership",
