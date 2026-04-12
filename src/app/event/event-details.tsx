@@ -106,11 +106,13 @@ export default function EventDetailScreen() {
     }
 
   
-    router.push({
-      pathname: "/event/booking",
-      params: { eventId: event.id },
-    } as any);
-  };
+      if (event.type !== "free") {
+      Alert.alert(
+        "Subscribers Only",
+        "This event is available to subscribed members only.",
+      );
+      return;
+    }
 
   return (
     <EventDetailUI
@@ -122,4 +124,5 @@ export default function EventDetailScreen() {
       onBook={handleBook}
     />
   );
+}
 }

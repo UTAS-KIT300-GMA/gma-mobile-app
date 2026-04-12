@@ -81,21 +81,11 @@ export default function BookingRoute() {
 
     // Blocks paid/subscriber-only events for now.
     if (!isFreeEvent) {
-  return router.push({
-    pathname: "/event/payment",
-    params: {
-      type: "event",
-      title: event.title,
-      price: String(totalPrice),
-      image: event.image || "",
-      time: event.dateTime ? formatDateTime(event.dateTime) : "Time TBD",
-      location: event.address || "Location TBD",
-      ticketCount: String(tickets),
-      ticketType: "Paid Event",
-      eventId: event.id,
-    },
-  } as any);
-}
+  return Alert.alert(
+        "Subscribers Only",
+        "This event is available to subscribed members only.",
+      );
+    }
 
     // Disables button actions during save.
     setProcessing(true);
