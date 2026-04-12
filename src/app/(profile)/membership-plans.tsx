@@ -3,28 +3,37 @@ import { colors } from "@/theme/ThemeProvider";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-    Alert,
-    Pressable,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  Alert,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 export default function MembershipPlansScreen() {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<"free" | "premium">("premium");
 
-  const handleSubscribe = () => {
-    if (selectedPlan === "premium") {
-      Alert.alert("Payment", "Go to payment screen (placeholder)");
-    } else {
-      Alert.alert("Plan Updated", "You are now on the Free plan");
-      router.back();
-    }
-  };
-
+const handleSubscribe = () => {
+  if (selectedPlan === "premium") {
+    router.push({
+      pathname: "/event/payment",
+      params: {
+        type: "membership",
+        title: "Premium Plan",
+        price: "9.99",
+        ticketType: "Membership",
+        benefits:
+          "Early access to selected events|Event discounts|Priority booking|Exclusive content",
+      },
+    } as any);
+  } else {
+    Alert.alert("Plan Updated", "You are now on the Free plan");
+    router.back();
+  }
+};
   return (
     <SafeAreaView style={styles.safe}>
       <AppHeader

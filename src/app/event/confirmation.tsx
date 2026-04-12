@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 // Path: @/ alias points to src/
-import { BookingConfirmedUI } from "@/screens/event/confirmation-UI"
+import { BookingConfirmedUI } from "@/screens/event/confirmation-UI";
 
 export default function BookingConfirmedRoute() {
   const router = useRouter();
@@ -14,11 +14,17 @@ export default function BookingConfirmedRoute() {
     time: (params.time as string) || "Time TBD",
     location: (params.location as string) || "Location TBD",
     bookingId: (params.bookingId as string) || "N/A",
-    totalCost: (params.totalPrice as string) || "$0.00",
+   totalCost:
+  (params.totalCost as string) ||
+  (params.totalPrice as string) ||
+  (params.price
+    ? `$${Number(params.price).toFixed(2)}`
+    : "$0.00"),
     image: (params.image as string) || "",
     ticketCount: (params.ticketCount as string) || "1",
     ticketType: (params.ticketType as string) || "Free Event",
     eventId: (params.eventId as string) || "",
+    type: (params.type as string) || "event",
   };
 
   return (

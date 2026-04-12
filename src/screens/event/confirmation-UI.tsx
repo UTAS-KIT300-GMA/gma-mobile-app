@@ -22,7 +22,9 @@ export const BookingConfirmedUI = ({
 
     <View style={styles.content}>
       <Ionicons name="checkmark-circle" size={100} color="#4CAF50" />
-      <Text style={styles.statusText}>Booking Confirmed</Text>
+    <Text style={styles.statusText}>
+  {details.type === "event" ? "Booking Confirmed" : "Membership Activated"}
+</Text>
 
       <View style={styles.card}>
         <ImageBackground source={{ uri: details.image }} style={styles.image}>
@@ -47,15 +49,18 @@ export const BookingConfirmedUI = ({
         <View style={styles.detailRow}>
           <Text style={styles.detailRowText}>Ticket Type:</Text>
           <Text style={styles.detailRowText}>{details.ticketType}</Text>
+         {details.type === "event" ? "Ticket Type:" : "Plan Type:"}
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailRowText}>Number of Ticket:</Text>
           <Text style={styles.detailRowText}>{details.ticketCount}</Text>
+        {details.type === "event" ? "Number of Ticket:" : "Membership Count:"}
         </View>
         <View style={styles.detailRow}>
           <Text style={styles.detailRowText}>Booking ID:</Text>
           <Text style={styles.detailRowText}>{details.bookingId}</Text>
-        </View>
+        
+         {details.type === "event" ? "Booking ID:" : "Membership ID:"}</View>
         <View style={[styles.detailRow, { marginTop: 10 }]}>
           <Text style={styles.detailRowText}>Total Cost:</Text>
           <Text style={styles.detailRowText}>{details.totalCost}</Text>
@@ -63,10 +68,10 @@ export const BookingConfirmedUI = ({
       </View>
 
       <TouchableOpacity style={styles.mainBtn} onPress={onGoToBookings}>
-        <Text style={styles.mainBtnText}>My bookings</Text>
+        <Text style={styles.mainBtnText}> {details.type === "event" ? "My bookings" : "My membership"}</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.secBtn} onPress={onViewDetails}>
-        <Text style={styles.secBtnText}>Event details</Text>
+        <Text style={styles.secBtnText}> {details.type === "event" ? "Event details" : "Membership details"}</Text>
       </TouchableOpacity>
     </View>
   </SafeAreaView>

@@ -105,14 +105,7 @@ export default function EventDetailScreen() {
       return;
     }
 
-    if (event.type !== "free") {
-      Alert.alert(
-        "Subscribers Only",
-        "This event is available to subscribed members only.",
-      );
-      return;
-    }
-
+  
     router.push({
       pathname: "/event/booking",
       params: { eventId: event.id },

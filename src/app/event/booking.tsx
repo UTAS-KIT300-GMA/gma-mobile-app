@@ -1,11 +1,11 @@
 import { formatDateTime } from "@/components/utils";
-import { colors } from "@/theme/ThemeProvider";
-import React, { useEffect, useState } from "react";
-import { Alert, ActivityIndicator, View } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { doc, getDoc, collection, addDoc, serverTimestamp } from "@react-native-firebase/firestore";
-import { auth, db } from "@/services/authService";
 import { BookingScreenUI } from "@/screens/event/booking-UI";
+import { auth, db } from "@/services/authService";
+import { colors } from "@/theme/ThemeProvider";
+import { addDoc, collection, doc, getDoc, serverTimestamp } from "@react-native-firebase/firestore";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, View } from "react-native";
 
 export default function BookingRoute() {
   const router = useRouter();
@@ -81,11 +81,21 @@ export default function BookingRoute() {
 
     // Blocks paid/subscriber-only events for now.
     if (!isFreeEvent) {
-      return Alert.alert(
-        "Subscribers Only",
-        "This event is available to subscribed members only.",
-      );
-    }
+  return router.push({
+    pathname: "/event/payment",
+    params: {
+      type: "event",
+      title: event.title,
+      price: String(totalPrice),
+      image: event.image || "",
+      time: event.dateTime ? formatDateTime(event.dateTime) : "Time TBD",
+      location: event.address || "Location TBD",
+      ticketCount: String(tickets),
+      ticketType: "Paid Event",
+      eventId: event.id,
+    },
+  } as any);
+}
 
     // Disables button actions during save.
     setProcessing(true);
@@ -150,4 +160,6 @@ export default function BookingRoute() {
       onConfirm={handleConfirmBooking}
     />
   );
+
+  
 }
