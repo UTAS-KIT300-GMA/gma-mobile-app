@@ -2,11 +2,12 @@ import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
-    Pressable,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  LayoutChangeEvent,
+  Pressable,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 interface Props {
@@ -19,41 +20,41 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
   const [position, setPosition] = useState(0);
   const [duration, setDuration] = useState(0);
   const [rate, setRate] = useState(1);
+  const [trackWidth, setTrackWidth] = useState(1);
 
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasValidVideo = Boolean(videoUrl?.trim());
 
-  const player = useVideoPlayer(videoUrl, (player) => {
+  const player = useVideoPlayer(hasValidVideo ? videoUrl : null, (player) => {
     player.loop = false;
     player.timeUpdateEventInterval = 0.25;
+    player.playbackRate = 1;
+
+    // One-click autoplay:
+    // as soon as the player is created for the mounted view, start playback
+    try {
+      player.play();
+    } catch (error) {
+      console.log("Initial play attempt failed:", error);
+    }
   });
 
-  useEffect(() => {
-    const playingSub = player.addListener("playingChange", ({ isPlaying }) => {
-      setIsPlaying(isPlaying);
-    });
+  const clearHideTimer = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  };
 
-    const timeSub = player.addListener("timeUpdate", (payload) => {
-      setPosition(payload.currentTime ?? 0);
-      setDuration(payload.duration ?? 0);
-    });
+  const resetHideTimer = () => {
+    clearHideTimer();
 
-    const statusSub = player.addListener(
-      "statusChange",
-      ({ status, error }) => {
-        if (status === "error") {
-          console.error("Video playback error:", error);
-        }
-      },
-    );
-
-    return () => {
-      playingSub.remove();
-      timeSub.remove();
-      statusSub.remove();
-    };
-  }, [player]);
-
-  const remaining = Math.max(duration - position, 0);
+    hideTimer.current = setTimeout(() => {
+      if (isPlaying) {
+        setShowControls(false);
+      }
+    }, 2500);
+  };
 
   const formatTime = (seconds: number) => {
     const totalSeconds = Math.max(0, Math.floor(seconds));
@@ -64,53 +65,97 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
     if (hrs > 0) {
       return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(
         2,
-        "0",
+        "0"
       )}`;
     }
 
     return `${mins}:${String(secs).padStart(2, "0")}`;
   };
 
-  const resetHideTimer = () => {
-    if (hideTimer.current) {
-      clearTimeout(hideTimer.current);
-    }
+  useEffect(() => {
+    if (!player) return;
 
-    hideTimer.current = setTimeout(() => {
-      if (isPlaying) {
-        setShowControls(false);
+    const playingSub = player.addListener("playingChange", ({ isPlaying }) => {
+      setIsPlaying(isPlaying);
+    });
+
+    const timeSub = player.addListener("timeUpdate", (payload) => {
+      setPosition(payload.currentTime ?? 0);
+      setDuration(player.duration ?? 0);
+    });
+
+    const statusSub = player.addListener("statusChange", ({ status, error }) => {
+      if (status === "error") {
+        console.error("Video playback error:", error);
       }
-    }, 2500);
-  };
+
+      // Backup autoplay in case the first play call happens a little early
+      if (status === "readyToPlay") {
+        try {
+          player.play();
+        } catch (playError) {
+          console.log("Ready-to-play autoplay failed:", playError);
+        }
+      }
+
+      if (status === "idle") {
+        setIsPlaying(false);
+      }
+    });
+
+    return () => {
+      playingSub.remove();
+      timeSub.remove();
+      statusSub.remove();
+    };
+  }, [player]);
 
   useEffect(() => {
-    if (showControls) {
+    setPosition(0);
+    setDuration(0);
+    setIsPlaying(false);
+    setShowControls(true);
+    setRate(1);
+  }, [videoUrl]);
+
+  useEffect(() => {
+    if (showControls && hasValidVideo) {
       resetHideTimer();
     }
 
     return () => {
-      if (hideTimer.current) {
-        clearTimeout(hideTimer.current);
-      }
+      clearHideTimer();
     };
-  }, [showControls, isPlaying]);
+  }, [showControls, isPlaying, hasValidVideo]);
+
+  useEffect(() => {
+    return () => {
+      clearHideTimer();
+    };
+  }, []);
 
   const togglePlayPause = () => {
+    if (!player || !hasValidVideo) return;
+
     if (isPlaying) {
       player.pause();
+      clearHideTimer();
     } else {
       player.play();
+      resetHideTimer();
     }
 
     setShowControls(true);
-    resetHideTimer();
   };
 
   const seekBy = (seconds: number) => {
+    if (!player || !hasValidVideo) return;
+
     const next = Math.max(
       0,
-      Math.min(position + seconds, duration || position + seconds),
+      Math.min(position + seconds, duration || position + seconds)
     );
+
     player.currentTime = next;
     setPosition(next);
     setShowControls(true);
@@ -118,9 +163,12 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
   };
 
   const cycleRate = () => {
+    if (!player || !hasValidVideo) return;
+
     const rates = [1, 1.25, 1.5, 2];
     const currentIndex = rates.indexOf(rate);
     const nextRate = rates[(currentIndex + 1) % rates.length];
+
     player.playbackRate = nextRate;
     setRate(nextRate);
     setShowControls(true);
@@ -133,7 +181,8 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
   }, [position, duration]);
 
   const handleSeekFromBar = (ratio: number) => {
-    if (!duration || duration <= 0) return;
+    if (!player || !hasValidVideo || !duration || duration <= 0) return;
+
     const nextTime = Math.max(0, Math.min(duration * ratio, duration));
     player.currentTime = nextTime;
     setPosition(nextTime);
@@ -141,12 +190,31 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
     resetHideTimer();
   };
 
+  const handleTrackLayout = (event: LayoutChangeEvent) => {
+    setTrackWidth(event.nativeEvent.layout.width);
+  };
+
+  if (!hasValidVideo) {
+    return (
+      <View style={[styles.wrapper, styles.emptyWrapper]}>
+        <Ionicons name="videocam-off-outline" size={36} color="#fff" />
+        <Text style={styles.emptyText}>No video available</Text>
+      </View>
+    );
+  }
+
   return (
     <Pressable
       style={styles.wrapper}
       onPress={() => {
-        setShowControls((prev) => !prev);
-        resetHideTimer();
+        const nextVisible = !showControls;
+        setShowControls(nextVisible);
+
+        if (nextVisible && isPlaying) {
+          resetHideTimer();
+        } else {
+          clearHideTimer();
+        }
       }}
     >
       <VideoView
@@ -198,9 +266,10 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
           <View style={styles.bottomBlock}>
             <Pressable
               style={styles.progressTrack}
+              onLayout={handleTrackLayout}
               onPress={(event) => {
                 const { locationX } = event.nativeEvent;
-                const ratio = locationX / 300;
+                const ratio = Math.max(0, Math.min(locationX / trackWidth, 1));
                 handleSeekFromBar(ratio);
               }}
             >
@@ -214,7 +283,9 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
 
             <View style={styles.timeRow}>
               <Text style={styles.timeText}>{formatTime(position)}</Text>
-              <Text style={styles.timeText}>-{formatTime(remaining)}</Text>
+              <Text style={styles.timeText}>
+                -{formatTime(Math.max(duration - position, 0))}
+              </Text>
             </View>
           </View>
         </View>
@@ -231,6 +302,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     justifyContent: "center",
     overflow: "hidden",
+  },
+  emptyWrapper: {
+    alignItems: "center",
+    gap: 10,
+  },
+  emptyText: {
+    color: "#fff",
+    fontSize: 14,
   },
   videoSurface: {
     width: "100%",

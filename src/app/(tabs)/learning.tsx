@@ -1,78 +1,68 @@
-import {
-  collection,
-  getDocs,
-  limit,
-  query,
-  FirebaseFirestoreTypes,
-} from "@react-native-firebase/firestore";
+import firestore from "@react-native-firebase/firestore";
 import { useEffect, useState } from "react";
 import { Alert } from "react-native";
-import { db } from "@/services/authService";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
 
-export interface LearningEvent {
+export interface LearningVideo {
   id: string;
   title: string;
   duration: string;
   thumbnailUrl: string;
   isBookmarked: boolean;
-  description?: string;
-  videoUrl?: string;
-  accessType?: "free" | "subscriber";
+  description: string;
+  videoUrl: string;
+  accessType: "free" | "subscriber";
 }
 
+type MembershipStatus = "free" | "subscriber";
+
 export default function LearningRoute() {
-  const [events, setEvents] = useState<LearningEvent[]>([]);
+  const [events, setEvents] = useState<LearningVideo[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Replace later with real user membership data
+  const [membershipStatus] = useState<MembershipStatus>("free");
+
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchVideos = async () => {
       try {
-        const eventsRef = collection(db, "events");
-        const q = query(eventsRef, limit(5));
+        const snap = await firestore()
+          .collection("learningVideos")
+          .limit(20)
+          .get();
 
-        const snap: FirebaseFirestoreTypes.QuerySnapshot = await getDocs(q);
+        const data: LearningVideo[] = snap.docs.map((doc) => {
+          const raw = doc.data();
 
-        const data: LearningEvent[] = snap.docs.map(
-          (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
-            const raw = doc.data();
-
-            return {
-              id: doc.id,
-              title:
-                typeof raw.title === "string" ? raw.title : "Untitled content",
-              duration:
-                typeof raw.duration === "string"
-                  ? raw.duration
-                  : "Duration unavailable",
-              thumbnailUrl:
-                typeof raw.thumbnailUrl === "string" ? raw.thumbnailUrl : "",
-              isBookmarked:
-                typeof raw.isBookmarked === "boolean"
-                  ? raw.isBookmarked
-                  : false,
-              description:
-                typeof raw.description === "string"
-                  ? raw.description
-                  : "No description available yet.",
-              videoUrl:
-                typeof raw.videoUrl === "string" ? raw.videoUrl : "",
-              accessType:
-                raw.accessType === "subscriber" ? "subscriber" : "free",
-            };
-          }
-        );
+          return {
+            id: doc.id,
+            title: typeof raw.title === "string" ? raw.title : "No title",
+            duration: typeof raw.duration === "string" ? raw.duration : "0:00",
+            thumbnailUrl:
+              typeof raw.thumbnailUrl === "string" ? raw.thumbnailUrl : "",
+            description:
+              typeof raw.description === "string" ? raw.description : "",
+            videoUrl: typeof raw.videoUrl === "string" ? raw.videoUrl : "",
+            accessType:
+              raw.accessType === "subscriber" ? "subscriber" : "free",
+            isBookmarked: false,
+          };
+        });
 
         setEvents(data);
-      } catch (e) {
-        console.error("Firestore Fetch Error:", e);
+      } catch (error: any) {
+        console.log("Learning fetch error:", error);
+        Alert.alert(
+          "Error",
+          "Unable to load learning videos right now. Please try again later."
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchEvents();
+    fetchVideos();
   }, []);
 
   const handleBookmarkPress = (id: string) => {
@@ -85,11 +75,16 @@ export default function LearningRoute() {
     );
   };
 
-  const handleCardPress = (item: LearningEvent) => {
-    if (item.accessType === "subscriber") {
+  const canAccessVideo = (item: LearningVideo) => {
+    if (item.accessType === "free") return true;
+    return membershipStatus === "subscriber";
+  };
+
+  const handleCardPress = (item: LearningVideo) => {
+    if (!canAccessVideo(item)) {
       Alert.alert(
         "Subscribers Only",
-        "This event is available to subscribed members only."
+        "This course is available to subscribed members only."
       );
       return;
     }
