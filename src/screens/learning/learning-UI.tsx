@@ -40,7 +40,7 @@ export const LearningScreenUI: React.FC<Props> = ({
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <AppHeader title="GMA Connect" />
+      <AppHeader title="GMA Learning" />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Recommended Learning</Text>

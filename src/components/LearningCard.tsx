@@ -3,11 +3,11 @@ import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import {
-    ImageBackground,
-    Pressable,
-    StyleSheet,
-    Text,
-    View,
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 
 const FALLBACK_THUMBNAIL =
@@ -36,10 +36,7 @@ export function LearningCard({
           imageStyle={styles.imageInner}
         >
           <LinearGradient
-            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.65)"]}
-            locations={[0, 0.65, 0.85]}
-            start={{ x: 0.3, y: 0 }}
-            end={{ x: 0.3, y: 1 }}
+            colors={["transparent", "rgba(0,0,0,0.8)"]}
             style={styles.imageOverlay}
           />
 
