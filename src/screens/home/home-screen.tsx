@@ -4,18 +4,17 @@ import { colors } from "@/theme/ThemeProvider";
 import { EventDoc } from "@/types/type";
 import { router } from "expo-router";
 import {
-  ActivityIndicator,
+  ActivityIndicator, AppState,
   FlatList,
   StyleSheet,
   Text,
   View,
-  AppState
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from 'expo-location';
-import React, { useState, useEffect, useMemo } from "react";
+import React, {useState, useEffect, useMemo, useCallback, useRef} from "react";
 import { useAuthUser } from "@/context/UserContext.tsx";
-import { calculateHaversineDistance, getParentCategoryFromTagName} from "@/components/utils";
+import { calculateHaversineDistance, getParentCategoryFromTagName } from "@/components/utils";
 
 type HomeUIProps = {
   events: EventDoc[];
@@ -23,140 +22,129 @@ type HomeUIProps = {
   onRefresh: () => void;
 };
 
+const fetchLocationOnDemand = async () => {
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') return { error: 'Permission denied.', coords: { latitude: -42.8821, longitude: 147.3272 } };
+
+    const lastKnown = await Location.getLastKnownPositionAsync();
+    if (lastKnown) return { error: null, coords: lastKnown.coords };
+
+    const current = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+    });
+
+    return { error: null, coords: current.coords };
+  } catch (err) {
+    // If it fails, check if services are actually enabled
+    const enabled = await Location.hasServicesEnabledAsync();
+    console.log("Are location services enabled?", enabled);
+
+    return { error: !enabled ? 'Location services off' : null, coords: { latitude: -42.8821, longitude: 147.3272 } };
+  }
+};
+
 export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [userCoords, setUserCoords] = useState<{latitude: number, longitude: number} | null>(null);
+  const [userCoords, setUserCoords] = useState<{ latitude: number, longitude: number }>({
+    latitude: -42.8821,
+    longitude: 147.3272,
+  });
   const { userDoc } = useAuthUser();
+  const lastFetchTime = useRef(0);
+  console.log("userCoords", userCoords);
 
-  useEffect(() => {
-    // Define the check function inside so it can be reused
-    const checkLocationStatus = async () => {
-      try {
-        const enabled = await Location.hasServicesEnabledAsync();
-        if (!enabled) {
-          setErrorMsg('Please enable location services on your device.');
-          return;
+  // 1. Stable Location Updater
+  const updateLocation = useCallback(async () => {
+    const now = Date.now();
+    // Throttle: Don't run more than once every 3 seconds to prevent loops
+    if (now - lastFetchTime.current < 3000) return;
+    lastFetchTime.current = now;
+
+    const result = await fetchLocationOnDemand();
+
+    if (result.coords) {
+      setUserCoords((prev) => {
+        // Strict primitive check to stop the render loop
+        if (prev?.latitude === result.coords.latitude && prev?.longitude === result.coords.longitude) {
+          return prev;
         }
-
-        let { status } = await Location.requestForegroundPermissionsAsync();
-        if (status !== 'granted') {
-          setErrorMsg('Location permission denied.');
-          return;
-        }
-
-        // If we got here, everything is good
-        let loc = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced, // Balanced is usually enough and faster
-        });
-
-        console.log("User location: ", loc.coords.latitude, loc.coords.longitude);
-        setUserCoords({
-          latitude: loc.coords.latitude,
-          longitude: loc.coords.longitude
-        });
-        setErrorMsg(null);
-      } catch (err) {
-        setErrorMsg('Could not fetch location.');
-        console.error(err);
-      }
-    };
-
-    // 1. Run immediately on mount
-    checkLocationStatus();
-
-    // 2. Listen for the app coming back from the background
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "active") {
-        // Give the OS a tiny moment to update its internal status
-        setTimeout(() => {
-          checkLocationStatus();
-        }, 500);
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
+        return { latitude: result.coords.latitude, longitude: result.coords.longitude };
+      });
+    }
+    setErrorMsg(result.error);
   }, []);
 
-  // useMemo prevents re-sorting on every render unless events or coords change
-  const processedEvents = useMemo(() => {
-    let list = [...events];
-    const selectedTags = userDoc?.selectedTags ?? [];
+  // 2. Lifecycle Management (Mount & AppState only)
+  useEffect(() => {
+    updateLocation();
 
-    // --- 1. RANK CATEGORIES BASED ON SELECTION COUNT ---
-    const categoryCounts: Record<EventDoc["category"], number> = {
-      all: 0,
-      connect: 0,
-      growth: 0,
-      thrive: 0,
-    };
-
-    selectedTags.forEach((tagName) => {
-      const parent = getParentCategoryFromTagName(tagName);
-      if (parent) {
-        categoryCounts[parent] += 1;
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        updateLocation();
       }
     });
 
-    // Create a weight map: highest count gets highest weight
-    // Example: if Thrive has 5 tags and Connect has 2, Thrive = 2, Connect = 1, Growth = 0
-    const sortedPreferences = Object.entries(categoryCounts)
-        .filter(([cat]) => cat !== "all")
-        .sort(([, countA], [, countB]) => (countB as number) - (countA as number));
+    return () => subscription.remove();
+  }, [updateLocation]);
+
+  // 3. Process Events (Optimized dependencies)
+  const processedEvents = useMemo(() => {
+    if (!events || events.length === 0) return [];
+
+    // 1. Prepare Interests
+    const weights: Record<string, number> = { connect: 0, growth: 0, thrive: 0 };
+    const tags = userDoc?.selectedTags ?? [];
+
+    tags.forEach((tag) => {
+      const parent = getParentCategoryFromTagName(tag);
+      if (parent && parent in weights) weights[parent]++;
+    });
+
+    // Sort categories by count to create weights (3, 2, 1)
+    const sortedPreferences = Object.entries(weights).sort(([, a], [, b]) => b - a);
+    const interestMap: Record<string, number> = {};
+    sortedPreferences.forEach(([cat], index) => {
+      interestMap[cat] = sortedPreferences.length - index;
+    });
 
     console.log("sortedPreferences", sortedPreferences);
-    const weights: Record<string, number> = {};
-    sortedPreferences.forEach(([cat], index) => {
-      // Top category gets weight 3, second gets 2, third gets 1
-      weights[cat] = sortedPreferences.length - index;
-    });
 
-    // --- 2. HELPER FUNCTIONS FOR SORTING ---
-    const getCategoryWeight = (e: EventDoc) => {
-      if (e.category === "all") return 0;
-      return weights[e.category] || 0;
-    };
+    // 2. Sort a copy of the list
+    // We use OR (||) to chain priorities: Interests -> Distance -> Time
+    return [...events].sort((a, b) => {
+      // Priority 1: Category Interests
+      const wA = interestMap[a.category] || 0;
+      const wB = interestMap[b.category] || 0;
+      if (wA !== wB) return wB - wA;
 
-    const getDistanceKm = (e: EventDoc) => {
-      if (!userCoords || !e.location) return Number.POSITIVE_INFINITY;
-      return calculateHaversineDistance(
-          userCoords.latitude,
-          userCoords.longitude,
-          e.location.latitude,
-          e.location.longitude
-      );
-    };
-
-    // --- 3. FINAL SORTING ---
-    return list.sort((a, b) => {
-      // Priority 1: Category Ranking (Highest weighted category first)
-      const weightA = getCategoryWeight(a);
-      const weightB = getCategoryWeight(b);
-      if (weightA !== weightB) return weightB - weightA;
-
-      // Priority 2: Distance (Closer first)
-      const distA = getDistanceKm(a);
-      const distB = getDistanceKm(b);
+      // Priority 2: Distance
+      const distA = (userCoords && a.location)
+          ? calculateHaversineDistance(userCoords.latitude, userCoords.longitude, a.location.latitude, a.location.longitude)
+          : Infinity;
+      const distB = (userCoords && b.location)
+          ? calculateHaversineDistance(userCoords.latitude, userCoords.longitude, b.location.latitude, b.location.longitude)
+          : Infinity;
       if (distA !== distB) return distA - distB;
 
-      // Priority 3: Time (Soonest first)
-      const dtA = (a.dateTime as any)?.toDate?.()?.getTime() || 0;
-      const dtB = (b.dateTime as any)?.toDate?.()?.getTime() || 0;
-      return dtA - dtB;
+      // Priority 3: Time
+      const timeA = (a.dateTime as any)?.toDate?.()?.getTime() || 0;
+      const timeB = (b.dateTime as any)?.toDate?.()?.getTime() || 0;
+      return timeA - timeB;
     });
-  }, [events, userCoords, userDoc?.selectedTags]);
 
-  // Navigation Handlers
-  const handleProfilePress = () => router.push("/(profile)" as any);
-  const handleNotificationPress = () => router.push("/notifications" as any);
+  }, [
+    events,
+    userCoords,
+    userDoc?.selectedTags
+  ]);
 
   return (
       <SafeAreaView style={styles.safe}>
         <AppHeader
             title="GMA Connect"
-            onPressProfile={handleProfilePress}
-            onPressNotifications={handleNotificationPress}
+            onPressProfile={() => router.push("/(profile)" as any)}
+            onPressNotifications={() => router.push("/notifications" as any)}
         />
 
         <View style={styles.container}>
@@ -165,7 +153,7 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
             {errorMsg && <Text style={styles.locationError}>{errorMsg}</Text>}
           </View>
 
-          {loading ? (
+          {loading && events.length === 0 ? (
               <View style={styles.center}>
                 <ActivityIndicator color={colors.primary} size="large" />
               </View>
@@ -174,48 +162,22 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
                   data={processedEvents}
                   keyExtractor={(item) => item.id}
                   contentContainerStyle={styles.listContent}
-
-                  // This is where the magic happens:
                   refreshing={loading}
                   onRefresh={onRefresh}
-
-                  // Optional: If the list is empty and still loading, show a spinner at the top
                   ListEmptyComponent={
-                    loading ? (
-                        <View style={styles.center}>
-                          <ActivityIndicator color={colors.primary} size="large" />
-                        </View>
-                    ) : (
-                        <View style={styles.center}>
-                          <Text style={styles.emptyText}>No events found nearby.</Text>
-                        </View>
-                    )
+                    <View style={styles.center}>
+                      <Text style={styles.emptyText}>No events found nearby.</Text>
+                    </View>
                   }
-
-                  renderItem={({ item }) => {
-                    return (
-                        <EventCard
-                            event={item}
-                            onPressRsvp={() => {
-                              router.push({
-                                pathname: "/event/booking",
-                                params: { eventId: item.id },
-                              } as any);
-                            }}
-                            onPressCard={() => {
-                              router.push({
-                                pathname: "/event/event-details",
-                                params: {
-                                  id: item.id,
-                                },
-                              } as any);
-                            }}
-                        />
-                    );
-                  }}
+                  renderItem={({ item }) => (
+                      <EventCard
+                          event={item}
+                          onPressRsvp={() => router.push({ pathname: "/event/booking", params: { eventId: item.id } } as any)}
+                          onPressCard={() => router.push({ pathname: "/event/event-details", params: { id: item.id } } as any)}
+                      />
+                  )}
               />
           )}
-
           <Text style={styles.sectionTitle}>Featured</Text>
           <Text style={styles.sectionTitle}>You might be interested in...</Text>
         </View>
