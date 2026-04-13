@@ -1,11 +1,11 @@
-import { LearningEvent } from "@/app/(tabs)/learning";
+import { LearningVideo } from "@/app/(tabs)/learning";
 import { AppHeader } from "@/components/AppHeader";
+import { LearningCard } from "@/components/LearningCard";
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
-  ImageBackground,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,11 +16,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import VideoPlayer from "./video-player";
 
 interface Props {
-  events: LearningEvent[];
+  events: LearningVideo[];
   loading: boolean;
   expandedId: string | null;
   onBookmarkPress?: (id: string) => void;
-  onCardPress?: (item: LearningEvent) => void;
+  onCardPress?: (item: LearningVideo) => void;
 }
 
 export const LearningScreenUI: React.FC<Props> = ({
@@ -40,119 +40,87 @@ export const LearningScreenUI: React.FC<Props> = ({
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <AppHeader title="GMA Connect" />
+      <AppHeader title="GMA Learning" />
 
       <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Recommended Learning</Text>
 
+        {events.length === 0 && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateText}>
+              No learning videos available yet.
+            </Text>
+          </View>
+        )}
+
         {events.map((item) => {
           const isExpanded = expandedId === item.id;
+          const isSubscriberOnly = item.accessType === "subscriber";
+
+          if (!isExpanded) {
+            return (
+              <LearningCard
+                key={item.id}
+                item={item}
+                onPressCard={() => onCardPress?.(item)}
+                onPressBookmark={() => onBookmarkPress?.(item.id)}
+              />
+            );
+          }
 
           return (
-            <View key={item.id} style={styles.card}>
-              {isExpanded ? (
-                <View style={styles.expandedMediaWrapper}>
-                  <View style={styles.bookmarkExpandedWrap}>
-                    <TouchableOpacity
-                      style={styles.bookmarkIcon}
-                      onPress={() => onBookmarkPress?.(item.id)}
-                    >
-                      <Ionicons
-                        name={
-                          item.isBookmarked ? "bookmark" : "bookmark-outline"
-                        }
-                        size={18}
-                        color="#F2C654"
-                      />
-                    </TouchableOpacity>
-                  </View>
-
-                  <VideoPlayer videoUrl={item.videoUrl || ""} />
-                </View>
-              ) : (
-                <ImageBackground
-                  source={{
-                    uri:
-                      item.thumbnailUrl ||
-                      "https://www.w3schools.com/html/mov_bbb.mp4",
-                  }}
-                  style={styles.thumbnailArea}
-                  imageStyle={styles.cardImage}
+            <View key={item.id} style={styles.expandedCard}>
+              <View style={styles.expandedMediaWrapper}>
+                <TouchableOpacity
+                  style={styles.bookmarkButton}
+                  onPress={() => onBookmarkPress?.(item.id)}
+                  activeOpacity={0.85}
                 >
-                  <View style={styles.overlay}>
-                    <TouchableOpacity
-                      style={styles.bookmarkIcon}
-                      onPress={() => onBookmarkPress?.(item.id)}
-                    >
-                      <Ionicons
-                        name={
-                          item.isBookmarked ? "bookmark" : "bookmark-outline"
-                        }
-                        size={18}
-                        color="#F2C654"
-                      />
-                    </TouchableOpacity>
+                  <Ionicons
+                    name={item.isBookmarked ? "bookmark" : "bookmark-outline"}
+                    size={23}
+                    color={colors.secondary}
+                  />
+                </TouchableOpacity>
 
-                    <TouchableOpacity
-                      style={styles.centerPlayButton}
-                      onPress={() => onCardPress?.(item)}
-                      activeOpacity={0.85}
-                    >
-                      <Ionicons
-                        name="play-circle"
-                        size={64}
-                        color="rgba(255,255,255,0.88)"
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </ImageBackground>
-              )}
+                <VideoPlayer
+                  key={`video-${item.id}`}
+                  videoUrl={item.videoUrl}
+                />
+              </View>
 
               <View style={styles.infoSection}>
-                <View style={styles.infoTextWrap}>
-                  <Text style={styles.title} numberOfLines={isExpanded ? 3 : 2}>
-                    {item.title}
-                  </Text>
+                <Text style={styles.title}>{item.title}</Text>
 
+                <View style={styles.metaRow}>
                   <Text style={styles.duration}>{item.duration}</Text>
 
-                  {isExpanded && (
-                    <Text style={styles.description}>
-                      {item.description || "No description available yet."}
-                    </Text>
-                  )}
-                </View>
-
-                {isExpanded ? (
-                  <TouchableOpacity
-                    style={styles.closeBtn}
-                    onPress={() => onCardPress?.(item)}
-                  >
-                    <Text style={styles.closeBtnText}>Close</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <View
-                    style={[
-                      styles.accessBadge,
-                      item.accessType === "subscriber"
-                        ? styles.subscriberBadge
-                        : styles.freeBadge,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.accessBadgeText,
-                        item.accessType === "subscriber"
-                          ? styles.subscriberBadgeText
-                          : styles.freeBadgeText,
-                      ]}
-                    >
-                      {item.accessType === "subscriber"
-                        ? "Subscribers only"
-                        : "Free"}
+                  <View style={styles.ctaButton}>
+                    {isSubscriberOnly && (
+                      <Ionicons
+                        name="lock-closed"
+                        size={12}
+                        color={colors.saveBtnTextColor}
+                        style={styles.ctaIcon}
+                      />
+                    )}
+                    <Text style={styles.ctaText}>
+                      {isSubscriberOnly ? "Subscribers only" : "Free"}
                     </Text>
                   </View>
-                )}
+                </View>
+
+                <Text style={styles.description}>
+                  {item.description || "No description available yet."}
+                </Text>
+
+                <TouchableOpacity
+                  style={styles.closeBtn}
+                  onPress={() => onCardPress?.(item)}
+                  activeOpacity={0.85}
+                >
+                  <Text style={styles.closeBtnText}>Close</Text>
+                </TouchableOpacity>
               </View>
             </View>
           );
@@ -186,111 +154,105 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingTop: 10,
   },
-  card: {
+  emptyState: {
+    paddingHorizontal: 8,
+    paddingTop: 8,
+  },
+  emptyStateText: {
+    color: "#666",
+    fontSize: 14,
+  },
+  expandedCard: {
     backgroundColor: "#fff",
-    borderRadius: 16,
-    marginBottom: 18,
+    borderRadius: 15,
+    marginBottom: 12,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.textOnPrimary,
     shadowColor: colors.saveBtnTextColor,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.12,
     shadowRadius: 4,
     elevation: 4,
   },
-  thumbnailArea: {
-    height: 210,
-  },
-  cardImage: {
-    borderRadius: 16,
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.22)",
-    padding: 15,
-    justifyContent: "space-between",
-  },
-  centerPlayButton: {
-    alignSelf: "center",
-    justifyContent: "center",
-    alignItems: "center",
-    flex: 1,
-  },
   expandedMediaWrapper: {
     position: "relative",
     backgroundColor: "#000",
   },
-  bookmarkExpandedWrap: {
+  bookmarkButton: {
     position: "absolute",
-    top: 12,
-    right: 12,
-    zIndex: 10,
-  },
-  bookmarkIcon: {
-    alignSelf: "flex-end",
+    right: 10,
+    top: 10,
+    width: 43,
+    height: 39,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: colors.textOnPrimary,
-    padding: 6,
-    borderRadius: 8,
+    zIndex: 3,
   },
   infoSection: {
-    flexDirection: "row",
-    alignItems: "flex-end",
     padding: 14,
-  },
-  infoTextWrap: {
-    flex: 1,
-    paddingRight: 10,
   },
   title: {
     color: colors.saveBtnTextColor,
-    fontSize: 16,
-    fontWeight: "700",
+    fontSize: 18,
+    fontWeight: "800",
+    lineHeight: 24,
+    textAlign: "left",
+  },
+  metaRow: {
+    marginTop: 10,
+    marginBottom: 6,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
   },
   duration: {
     color: "#777",
     fontSize: 12,
-    marginTop: 4,
+    flexShrink: 1,
+  },
+  ctaButton: {
+    backgroundColor: colors.saveBtnColor,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaText: {
+    color: colors.saveBtnTextColor,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+  },
+  ctaIcon: {
+    marginRight: 6,
   },
   description: {
     color: "#444",
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
     marginTop: 10,
-  },
-  accessBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginLeft: 10,
-    alignSelf: "flex-end",
-  },
-  freeBadge: {
-    backgroundColor: "#E8F7EE",
-  },
-  subscriberBadge: {
-    backgroundColor: "#FCE8E8",
-  },
-  accessBadgeText: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  freeBadgeText: {
-    color: "#1D7A46",
-  },
-  subscriberBadgeText: {
-    color: "#B03A3A",
+    textAlign: "justify",
   },
   closeBtn: {
     backgroundColor: colors.saveBtnColor,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
     borderRadius: 8,
-    marginLeft: 10,
-    alignSelf: "flex-end",
+    alignSelf: "flex-start",
+    marginTop: 16,
   },
   closeBtnText: {
-    fontWeight: "700",
+    fontWeight: "800",
     fontSize: 12,
     color: colors.saveBtnTextColor,
+    letterSpacing: 0.4,
   },
   bottomSpacing: {
     height: 24,
