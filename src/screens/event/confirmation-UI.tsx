@@ -115,26 +115,27 @@ export const BookingConfirmedUI = ({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: colors.textOnPrimary,
+    backgroundColor: "#F7F2F5"
   },
  membershipCard: {
-  backgroundColor: "#FFFFFF",
-  width: "95%",
+  backgroundColor: colors.textOnPrimary,
+  width: "100%",
   padding: 20,
   borderRadius: 15,
   marginBottom: 15,
-  elevation: 3, // Android shadow
+  elevation: 2, // Android shadow
   shadowColor: "#000", // iOS shadow
-  shadowOpacity: 0.08,
+  shadowOpacity: 0.05,
   shadowOffset: { width: 0, height: 2 },
   shadowRadius: 6,
+  alignSelf: "center"
 },
 
 membershipTitle: {
   fontSize: 18,
   fontWeight: "700",
   color: colors.saveBtnTextColor,
-  marginBottom: 4,
+  marginBottom: 1,
 },
 
 membershipPrice: {
@@ -201,6 +202,8 @@ membershipBenefit: {
     elevation: 2,
     borderRadius: 15,
     marginBottom: 25,
+    
+    
   },
   detailRow: {
     flexDirection: "row",
