@@ -1,7 +1,10 @@
-import firestore from "@react-native-firebase/firestore";
-import { useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
+import { useEvents } from "@/context/EventsContext";
+import { useBookmarks } from "@/context/BookmarksContext";
+import { useAuth } from "@/hooks/useAuth"; // Assuming you have membership data in useAuth
+import { EventDoc } from "@/types/type";
 
 export interface LearningVideo {
   id: string;
@@ -14,77 +17,57 @@ export interface LearningVideo {
   accessType: "free" | "subscriber";
 }
 
-type MembershipStatus = "free" | "subscriber";
-
 export default function LearningRoute() {
-  const [events, setEvents] = useState<LearningVideo[]>([]);
-  const [loading, setLoading] = useState(true);
+  // 1. Consume Global Contexts
+  const { events: allEvents, isLoading: isEventsLoading } = useEvents();
+  const { bookmarkedIds, toggleBookmark, isLoading: isBookmarksLoading } = useBookmarks();
+  const { user } = useAuth(); // Used for membership check
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Replace later with real user membership data
-  const [membershipStatus] = useState<MembershipStatus>("free");
+  // 2. Logic to determine membership (adjust 'subscriber' logic as per your Firestore user schema)
+  // Update to this when membership feature implemented
+  // const isSubscriber = user?.membership === "subscriber";
+  const isSubscriber = false // Temporary set to False
 
-  useEffect(() => {
-    const fetchVideos = async () => {
+  // 3. Process and Filter Events specifically for the Learning UI
+  const learningVideos = useMemo<LearningVideo[]>(() => {
+    // Note: You might want to filter allEvents by a category like 'learning'
+    // if your EventsContext contains mixed types.
+    return allEvents.map((e: EventDoc & Record<string, any>) => ({
+      id: e.id,
+      title: e.title || "Untitled Content",
+      duration: e.duration || "0:00",
+      thumbnailUrl: e.thumbnailUrl || "",
+      description: e.description || "No description available.",
+      videoUrl: e.videoUrl || "",
+      accessType: e.accessType === "subscriber" ? "subscriber" : "free",
+      // Derive bookmark status from the global BookmarksContext
+      isBookmarked: !!bookmarkedIds[e.id],
+    }));
+  }, [allEvents, bookmarkedIds]);
+
+  // 4. Handle Persistent Bookmarking
+  const handleBookmarkPress = async (id: string) => {
+    const originalEvent = allEvents.find(e => e.id === id);
+    if (originalEvent) {
       try {
-        const snap = await firestore()
-          .collection("learningVideos")
-          .limit(20)
-          .get();
-
-        const data: LearningVideo[] = snap.docs.map((doc) => {
-          const raw = doc.data();
-
-          return {
-            id: doc.id,
-            title: typeof raw.title === "string" ? raw.title : "No title",
-            duration: typeof raw.duration === "string" ? raw.duration : "0:00",
-            thumbnailUrl:
-              typeof raw.thumbnailUrl === "string" ? raw.thumbnailUrl : "",
-            description:
-              typeof raw.description === "string" ? raw.description : "",
-            videoUrl: typeof raw.videoUrl === "string" ? raw.videoUrl : "",
-            accessType:
-              raw.accessType === "subscriber" ? "subscriber" : "free",
-            isBookmarked: false,
-          };
-        });
-
-        setEvents(data);
-      } catch (error: any) {
-        console.log("Learning fetch error:", error);
-        Alert.alert(
-          "Error",
-          "Unable to load learning videos right now. Please try again later."
-        );
-      } finally {
-        setLoading(false);
+        await toggleBookmark(originalEvent);
+      } catch (error) {
+        Alert.alert("Error", "Could not update bookmark.");
       }
-    };
-
-    fetchVideos();
-  }, []);
-
-  const handleBookmarkPress = (id: string) => {
-    setEvents((prevEvents) =>
-      prevEvents.map((item) =>
-        item.id === id
-          ? { ...item, isBookmarked: !item.isBookmarked }
-          : item
-      )
-    );
+    }
   };
 
-  const canAccessVideo = (item: LearningVideo) => {
-    if (item.accessType === "free") return true;
-    return membershipStatus === "subscriber";
-  };
 
+  // 5. Handle Access Control and Expansion
   const handleCardPress = (item: LearningVideo) => {
-    if (!canAccessVideo(item)) {
+    const hasAccess = item.accessType === "free" || isSubscriber;
+
+    if (!hasAccess) {
       Alert.alert(
-        "Subscribers Only",
-        "This course is available to subscribed members only."
+          "Subscribers Only",
+          "This course is available to subscribed members only."
       );
       return;
     }
@@ -93,12 +76,12 @@ export default function LearningRoute() {
   };
 
   return (
-    <LearningScreenUI
-      events={events}
-      loading={loading}
-      expandedId={expandedId}
-      onBookmarkPress={handleBookmarkPress}
-      onCardPress={handleCardPress}
-    />
+      <LearningScreenUI
+          events={learningVideos}
+          loading={isEventsLoading || isBookmarksLoading}
+          expandedId={expandedId}
+          onBookmarkPress={handleBookmarkPress}
+          onCardPress={handleCardPress}
+      />
   );
 }
