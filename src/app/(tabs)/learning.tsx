@@ -1,59 +1,73 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { useEvents } from "@/context/EventsContext";
+import { useBookmarks } from "@/context/BookmarksContext";
+import { useAuth } from "@/hooks/useAuth"; // Assuming you have membership data in useAuth
 import { EventDoc } from "@/types/type";
 
-export interface LearningEvent {
+export interface LearningVideo {
   id: string;
   title: string;
   duration: string;
   thumbnailUrl: string;
   isBookmarked: boolean;
-  description?: string;
-  videoUrl?: string;
-  accessType?: "free" | "subscriber";
+  description: string;
+  videoUrl: string;
+  accessType: "free" | "subscriber";
 }
 
 export default function LearningRoute() {
-  const { events: allEvents, isLoading } = useEvents();
-  const [events, setEvents] = useState<LearningEvent[]>([]);
+  // 1. Consume Global Contexts
+  const { events: allEvents, isLoading: isEventsLoading } = useEvents();
+  const { bookmarkedIds, toggleBookmark, isLoading: isBookmarksLoading } = useBookmarks();
+  const { user } = useAuth(); // Used for membership check
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const derivedEvents = useMemo<LearningEvent[]>(() => {
-    return allEvents.slice(0, 5).map((e: EventDoc & Record<string, any>) => ({
+  // 2. Logic to determine membership (adjust 'subscriber' logic as per your Firestore user schema)
+  // Update to this when membership feature implemented
+  // const isSubscriber = user?.membership === "subscriber";
+  const isSubscriber = false // Temporary set to False
+
+  // 3. Process and Filter Events specifically for the Learning UI
+  const learningVideos = useMemo<LearningVideo[]>(() => {
+    // Note: You might want to filter allEvents by a category like 'learning'
+    // if your EventsContext contains mixed types.
+    return allEvents.map((e: EventDoc & Record<string, any>) => ({
       id: e.id,
-      title: typeof e.title === "string" ? e.title : "Untitled content",
-      duration: typeof e.duration === "string" ? e.duration : "Duration unavailable",
-      thumbnailUrl: typeof e.thumbnailUrl === "string" ? e.thumbnailUrl : "",
-      isBookmarked: typeof e.isBookmarked === "boolean" ? e.isBookmarked : false,
-      description: typeof e.description === "string" ? e.description : "No description available yet.",
-      videoUrl: typeof e.videoUrl === "string" ? e.videoUrl : "",
+      title: e.title || "Untitled Content",
+      duration: e.duration || "0:00",
+      thumbnailUrl: e.thumbnailUrl || "",
+      description: e.description || "No description available.",
+      videoUrl: e.videoUrl || "",
       accessType: e.accessType === "subscriber" ? "subscriber" : "free",
+      // Derive bookmark status from the global BookmarksContext
+      isBookmarked: !!bookmarkedIds[e.id],
     }));
-  }, [allEvents]);
+  }, [allEvents, bookmarkedIds]);
 
-  // Keep local state to preserve bookmark toggles within the session.
-  // When global events load/refresh, sync the base list.
-  useEffect(() => {
-    setEvents(derivedEvents);
-  }, [derivedEvents]);
-
-  const handleBookmarkPress = (id: string) => {
-    setEvents((prevEvents) =>
-      prevEvents.map((item) =>
-        item.id === id
-          ? { ...item, isBookmarked: !item.isBookmarked }
-          : item
-      )
-    );
+  // 4. Handle Persistent Bookmarking
+  const handleBookmarkPress = async (id: string) => {
+    const originalEvent = allEvents.find(e => e.id === id);
+    if (originalEvent) {
+      try {
+        await toggleBookmark(originalEvent);
+      } catch (error) {
+        Alert.alert("Error", "Could not update bookmark.");
+      }
+    }
   };
 
-  const handleCardPress = (item: LearningEvent) => {
-    if (item.accessType === "subscriber") {
+
+  // 5. Handle Access Control and Expansion
+  const handleCardPress = (item: LearningVideo) => {
+    const hasAccess = item.accessType === "free" || isSubscriber;
+
+    if (!hasAccess) {
       Alert.alert(
-        "Subscribers Only",
-        "This event is available to subscribed members only."
+          "Subscribers Only",
+          "This course is available to subscribed members only."
       );
       return;
     }
@@ -62,12 +76,12 @@ export default function LearningRoute() {
   };
 
   return (
-    <LearningScreenUI
-      events={events}
-      loading={isLoading}
-      expandedId={expandedId}
-      onBookmarkPress={handleBookmarkPress}
-      onCardPress={handleCardPress}
-    />
+      <LearningScreenUI
+          events={learningVideos}
+          loading={isEventsLoading || isBookmarksLoading}
+          expandedId={expandedId}
+          onBookmarkPress={handleBookmarkPress}
+          onCardPress={handleCardPress}
+      />
   );
 }
