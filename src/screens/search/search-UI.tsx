@@ -1,10 +1,12 @@
 import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/ThemeProvider";
 import { INTEREST_TAGS, InterestKey } from "@/types/type";
-import { Ionicons } from "@expo/vector-icons";
+import {Ionicons, MaterialCommunityIcons} from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import React from "react";
 import {
+  ActivityIndicator,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -27,6 +29,8 @@ interface SearchScreenUIProps {
   setShowPicker: (show: boolean) => void;
   handleApply: () => void;
   handleReset: () => void;
+  isAiLoading: boolean;
+  onAiSearch: (userQuery: string) => void;
 }
 
 export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
@@ -42,33 +46,52 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
   setShowPicker,
   handleApply,
   handleReset,
+  isAiLoading,
+  onAiSearch,
 }) => {
   const [showInterests, setShowInterests] = React.useState(false);
+
+  // Determine if the query looks like a natural sentence
+  const isLongQuery = query.trim().split(/\s+/).length > 4;
 
   return (
     <SafeAreaView style={styles.safe}>
       <AppHeader title="GMA Search" />
+
+      <Modal transparent visible={isAiLoading}>
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Gemini is analyzing your request...</Text>
+        </View>
+      </Modal>
+
       <ScrollView contentContainerStyle={styles.container}>
-        {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <Pressable onPress={handleApply}>
-            <Ionicons
-              name="search"
-              size={20}
-              color={colors.saveBtnTextColor}
-              style={styles.searchIcon}
+        <View style={[styles.searchBar, isLongQuery && styles.searchBarAiActive]}>
+          <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Try: 'I love Japanese food in Hobart...'"
+              style={styles.searchInput}
+              placeholderTextColor={colors.darkGrey}
+              onSubmitEditing={() => (isLongQuery ? onAiSearch(query) : handleApply())}
+              returnKeyType="search"
+              multiline={false}
+          />
+          <Pressable
+              onPress={() => (isLongQuery ? onAiSearch(query) : handleApply())}
+              style={styles.searchIconButton}
+          >
+            <MaterialCommunityIcons
+                name={(isLongQuery ? "creation" : "magnify") as any}
+                size={24}
+                color={isLongQuery ? "#8A2BE2" : colors.primary}
             />
           </Pressable>
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search events / courses"
-            style={styles.searchInput}
-            placeholderTextColor={colors.saveBtnTextColor}
-            onSubmitEditing={handleApply}
-            returnKeyType="search"
-          />
         </View>
+
+        {isLongQuery && (
+            <Text style={styles.aiHint}>✨ Natural language detected. Tap sparkles to use AI search.</Text>
+        )}
 
         {/* Interest Tags */}
         <Pressable
@@ -177,9 +200,26 @@ const styles = StyleSheet.create({
     backgroundColor: colors.textOnPrimary,
   },
 
-  searchIcon: {
-    marginRight: 8,
+  searchBarAiActive: {
+    borderColor: "#8A2BE2", // Purple for AI
+    backgroundColor: "#FDF5FF",
+    borderWidth: 2,
   },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  searchIconButton: { padding: 4 },
+  aiHint: {
+    fontSize: 12,
+    color: "#8A2BE2",
+    marginTop: 8,
+    marginLeft: 16,
+    fontWeight: "600"
+  },
+  loadingText: { marginTop: 15, fontSize: 16, color: "#8A2BE2", fontWeight: "600" },
 
   searchInput: {
     flex: 1,
