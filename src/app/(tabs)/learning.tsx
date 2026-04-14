@@ -1,14 +1,8 @@
-import {
-  collection,
-  getDocs,
-  limit,
-  query,
-  FirebaseFirestoreTypes,
-} from "@react-native-firebase/firestore";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
-import { db } from "@/services/authService";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
+import { useEvents } from "@/context/EventsContext";
+import { EventDoc } from "@/types/type";
 
 export interface LearningEvent {
   id: string;
@@ -22,58 +16,28 @@ export interface LearningEvent {
 }
 
 export default function LearningRoute() {
+  const { events: allEvents, isLoading } = useEvents();
   const [events, setEvents] = useState<LearningEvent[]>([]);
-  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  const derivedEvents = useMemo<LearningEvent[]>(() => {
+    return allEvents.slice(0, 5).map((e: EventDoc & Record<string, any>) => ({
+      id: e.id,
+      title: typeof e.title === "string" ? e.title : "Untitled content",
+      duration: typeof e.duration === "string" ? e.duration : "Duration unavailable",
+      thumbnailUrl: typeof e.thumbnailUrl === "string" ? e.thumbnailUrl : "",
+      isBookmarked: typeof e.isBookmarked === "boolean" ? e.isBookmarked : false,
+      description: typeof e.description === "string" ? e.description : "No description available yet.",
+      videoUrl: typeof e.videoUrl === "string" ? e.videoUrl : "",
+      accessType: e.accessType === "subscriber" ? "subscriber" : "free",
+    }));
+  }, [allEvents]);
+
+  // Keep local state to preserve bookmark toggles within the session.
+  // When global events load/refresh, sync the base list.
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const eventsRef = collection(db, "events");
-        const q = query(eventsRef, limit(5));
-
-        const snap: FirebaseFirestoreTypes.QuerySnapshot = await getDocs(q);
-
-        const data: LearningEvent[] = snap.docs.map(
-          (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
-            const raw = doc.data();
-
-            return {
-              id: doc.id,
-              title:
-                typeof raw.title === "string" ? raw.title : "Untitled content",
-              duration:
-                typeof raw.duration === "string"
-                  ? raw.duration
-                  : "Duration unavailable",
-              thumbnailUrl:
-                typeof raw.thumbnailUrl === "string" ? raw.thumbnailUrl : "",
-              isBookmarked:
-                typeof raw.isBookmarked === "boolean"
-                  ? raw.isBookmarked
-                  : false,
-              description:
-                typeof raw.description === "string"
-                  ? raw.description
-                  : "No description available yet.",
-              videoUrl:
-                typeof raw.videoUrl === "string" ? raw.videoUrl : "",
-              accessType:
-                raw.accessType === "subscriber" ? "subscriber" : "free",
-            };
-          }
-        );
-
-        setEvents(data);
-      } catch (e) {
-        console.error("Firestore Fetch Error:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchEvents();
-  }, []);
+    setEvents(derivedEvents);
+  }, [derivedEvents]);
 
   const handleBookmarkPress = (id: string) => {
     setEvents((prevEvents) =>
@@ -100,7 +64,7 @@ export default function LearningRoute() {
   return (
     <LearningScreenUI
       events={events}
-      loading={loading}
+      loading={isLoading}
       expandedId={expandedId}
       onBookmarkPress={handleBookmarkPress}
       onCardPress={handleCardPress}
