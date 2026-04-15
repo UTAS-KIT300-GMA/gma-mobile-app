@@ -5,20 +5,19 @@ import React, { useState } from "react";
 import {
   Alert,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MembershipPlansScreen() {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<"free" | "premium">("premium");
 
 const handleSubscribe = () => {
-  if (selectedPlan === "premium") {
-    router.push({
+   router.push({
       pathname: "/event/payment",
       params: {
         type: "membership",
@@ -29,10 +28,6 @@ const handleSubscribe = () => {
           "Early access to selected events|Event discounts|Priority booking|Exclusive content",
       },
     } as any);
-  } else {
-    Alert.alert("Plan Updated", "You are now on the Free plan");
-    router.back();
-  }
 };
   return (
     <SafeAreaView style={styles.safe}>

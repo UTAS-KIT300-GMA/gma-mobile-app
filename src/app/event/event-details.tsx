@@ -101,12 +101,12 @@ export default function EventDetailScreen() {
   // Checks if the event is free and has a valid ID. If so, navigates to the
   // booking screen with the event ID as a parameter.
   const handleBook = () => {
+    
     if (!event?.id) {
       Alert.alert("Error", "Event booking is not available.");
       return;
     }
-
-
+    
     if (event.type !== "free") {
       Alert.alert(
           "Subscribers Only",
@@ -114,6 +114,10 @@ export default function EventDetailScreen() {
       );
       return;
     }
+     router.push({
+      pathname: "/event/booking",
+      params: { eventId: event.id },
+    } as any);
   }
 
   return (
