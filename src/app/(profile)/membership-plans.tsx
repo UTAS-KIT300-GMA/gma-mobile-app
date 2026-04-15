@@ -17,13 +17,17 @@ export default function MembershipPlansScreen() {
   const [selectedPlan, setSelectedPlan] = useState<"free" | "premium">("premium");
 
 const handleSubscribe = () => {
-  if (selectedPlan === "premium") {
-    // TEMP placeholder 
-    Alert.alert("Payment", "Payment flow will be handled separately.");
-  } else {
-    Alert.alert("Plan Updated", "You are now on the Free plan");
-    router.back();
-  }
+   router.push({
+      pathname: "/event/payment",
+      params: {
+        type: "membership",
+        title: "Premium Plan",
+        price: "9.99",
+        ticketType: "Membership",
+        benefits:
+          "Early access to selected events|Event discounts|Priority booking|Exclusive content",
+      },
+    } as any);
 };
   return (
     <SafeAreaView style={styles.safe}>
