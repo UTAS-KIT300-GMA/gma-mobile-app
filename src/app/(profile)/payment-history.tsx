@@ -3,12 +3,12 @@ import { colors } from "@/theme/ThemeProvider";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    View,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const paymentHistory = [
   { id: 1, plan: "GMA Premium Plan", amount: "$10", date: "15/3/26", status: "Successful" },

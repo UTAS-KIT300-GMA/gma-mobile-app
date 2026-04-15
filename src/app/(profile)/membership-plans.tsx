@@ -5,12 +5,12 @@ import React, { useState } from "react";
 import {
   Alert,
   Pressable,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function MembershipPlansScreen() {
   const router = useRouter();
