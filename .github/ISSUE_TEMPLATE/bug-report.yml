@@ -93,6 +93,7 @@ body:
     attributes:
       label: Expected Behavior
       description: What did you expect to happen?
+      placeholder: "e.g., After tapping 'Sign In', I expected to be redirected to the Partner Dashboard."
     validations:
       required: true
 
@@ -101,6 +102,7 @@ body:
     attributes:
       label: Actual Behavior
       description: What actually happened?
+      placeholder: "e.g., The button turned gray, a loading spinner appeared, but then the app froze and crashed to the home screen."
     validations:
       required: true
 
