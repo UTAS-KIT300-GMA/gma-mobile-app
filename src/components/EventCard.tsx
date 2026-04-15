@@ -39,11 +39,8 @@ export function EventCard({
         <ImageBackground source={{ uri: event.image }} style={styles.image}>
           {/* Image overlay */}
           <LinearGradient
-            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.65)"]}
-            locations={[0, 0.65, 0.85, 1]}
-            start={{ x: 0.3, y: 0 }}
-            end={{ x: 0.3, y: 1 }}
-            style={styles.imageOverlay}
+              colors={["transparent", "rgba(0,0,0,0.8)"]}
+              style={styles.imageOverlay}
           />
 
           {/* Bookmark button is conditionally rendered based on the `showBookmark` prop. */}

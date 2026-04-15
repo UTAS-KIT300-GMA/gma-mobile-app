@@ -7,14 +7,13 @@ import {
 	doc,
 	FirebaseFirestoreTypes,
 	getDocs,
-	query,
 	serverTimestamp,
 	setDoc,
-  where,
 } from "@react-native-firebase/firestore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
+import { useEvents } from "@/context/EventsContext";
 
 /*
 This screen retrieves the search parameters from the URL, fetches all events 
@@ -28,20 +27,21 @@ The filtered results are then passed to the DiscoveryScreenUI for display.
 
 export default function SearchResultsLogic() {
   const router = useRouter();
+  const { events: allEvents, isLoading: isEventsLoading, error: eventsError } = useEvents();
 
   const params = useLocalSearchParams<{
     query?: string;
     location?: string;
     date?: string;
     tags?: string;
+    aiIds?: string;
   }>();
 
   // State variables to hold events, bookmark statuses, and loading state.
-  const [events, setEvents] = useState<EventDoc[]>([]);
   const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>(
     {},
   );
-  const [loading, setLoading] = useState(true);
+  const [isBookmarksLoading, setIsBookmarksLoading] = useState(true);
 
   const searchQuery =
     typeof params.query === "string" ? params.query.trim() : "";
@@ -62,30 +62,9 @@ export default function SearchResultsLogic() {
   useEffect(() => {
     let mounted = true;
 
-    const fetchData = async () => {
-      setLoading(true);
-      // Fetches all events from Firestore and the user's bookmarks,
-      
+    const fetchBookmarks = async () => {
+      setIsBookmarksLoading(true);
       try {
-      // We MUST filter by 'approved' to match our Security Rules
-    const eventsQuery = query(
-      collection(db, "events"), 
-      where("approvalStatus", "==", "approved") 
-    );
-
-    const eventsSnap = await getDocs(eventsQuery);
-
-    const rows: EventDoc[] = eventsSnap.docs.map(
-      (d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => ({
-        ...(d.data() as Omit<EventDoc, "id">),
-        id: d.id,
-      }),
-    );
-
-    if (mounted) {
-      setEvents(rows);
-    }
-
         const uid = auth.currentUser?.uid;
 
         if (uid) {
@@ -109,22 +88,44 @@ export default function SearchResultsLogic() {
         Alert.alert("Error", e?.message ?? "Failed to load search results.");
       } finally {
         if (mounted) {
-          setLoading(false);
+          setIsBookmarksLoading(false);
         }
       }
     };
 
-    fetchData();
+    fetchBookmarks();
 
     return () => {
       mounted = false;
     };
   }, []);
 
+  useEffect(() => {
+    if (!eventsError) return;
+    if (
+      eventsError.includes("permission-denied") ||
+      eventsError.includes("firestore/permission-denied")
+    ) {
+      return;
+    }
+    Alert.alert("Error", eventsError);
+  }, [eventsError]);
+
   // Applies client-side filtering to the fetched events based on the
   // search query, location, date, and selected tags.
   const filteredEvents = useMemo(() => {
-    return events.filter((event) => {
+    const aiIdsRaw = typeof params.aiIds === "string" ? params.aiIds.trim() : "";
+    if (aiIdsRaw) {
+      const orderedIds = aiIdsRaw
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const byId = new Map(allEvents.map((e) => [e.id, e]));
+      return orderedIds.map((id) => byId.get(id)).filter(Boolean) as EventDoc[];
+    }
+
+    return allEvents.filter((event) => {
       const eventDate = event.dateTime.toDate();
       // Creates a string representation of the event date in various formats
       // Formats include: "March", "Mar", "2026", "March 2026", "Mar 2026", "25 March 2026"
@@ -190,7 +191,7 @@ export default function SearchResultsLogic() {
 
       return matchesQuery && matchesLocation && matchesDate && matchesTags;
     });
-  }, [events, searchQuery, locationQuery, selectedDate, selectedTags]);
+  }, [allEvents, params.aiIds, searchQuery, locationQuery, selectedDate, selectedTags]);
 
   const handleBookmark = async (event: EventDoc) => {
     const uid = auth.currentUser?.uid;
@@ -240,7 +241,7 @@ export default function SearchResultsLogic() {
   return (
     <SearchResultsScreen
       events={filteredEvents}
-      loading={loading}
+      loading={isEventsLoading || isBookmarksLoading}
       bookmarkedIds={bookmarkedIds}
       onBookmark={handleBookmark}
       onCardPress={(item: EventDoc) => {
