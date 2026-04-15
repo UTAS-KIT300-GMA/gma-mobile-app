@@ -27,11 +27,11 @@ body:
       required: true
 
   - type: input
-    id: version
+    id: commit
     attributes:
-      label: App Version
-      description: What version of the app or web portal were you using? (Type "latest" if unsure)
-      placeholder: "e.g. v1.2.3"
+      label: Last Commit Hash
+      description: Please provide the short commit hash from the last update (run `git rev-parse --short HEAD`).
+      placeholder: "e.g. 7f3a1b2"
     validations:
       required: true
 
