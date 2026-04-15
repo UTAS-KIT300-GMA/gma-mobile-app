@@ -81,59 +81,25 @@ export function AppHeader({
   };
 
   // Back Header Layout for subscreens
-  if (showBack) {
-    return (
-      <View style={styles.backContainer}>
-        <Pressable
-          onPress={handleBackPress}
-          style={styles.backButton}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Go back"
-        >
-          <Ionicons name="chevron-back" size={32} color={colors.primary} />
-        </Pressable>
+ if (showBack) {
+  return (
+    <View style={styles.backContainer}>
+      <Pressable
+        onPress={handleBackPress}
+        style={styles.backButton}
+        hitSlop={10}
+      >
+        <Ionicons name="chevron-back" size={28} color={colors.primary} />
+      </Pressable>
 
-        <Text pointerEvents="none" style={styles.backTitle}>
-          {title}
-        </Text>
-
-        {showCheck ? (
-          <View style={styles.headerActions}>
-            <Pressable
-              style={styles.headerIconButton}
-              hitSlop={10}
-              onPress={handleCheckPrimaryPress}
-              accessibilityRole="button"
-              accessibilityLabel="Primary action"
-            >
-              <Ionicons
-                name="square-outline"
-                size={24}
-                color={colors.primary}
-              />
-            </Pressable>
-
-            <Pressable
-              style={styles.headerIconButton}
-              hitSlop={10}
-              onPress={handleCheckSecondaryPress}
-              accessibilityRole="button"
-              accessibilityLabel="Secondary action"
-            >
-              <Ionicons
-                name="checkmark-done-outline"
-                size={24}
-                color={colors.primary}
-              />
-            </Pressable>
-          </View>
-        ) : (
-          <View style={styles.backRightPlaceholder} />
-        )}
+      <View style={styles.titleWrapper} pointerEvents="none">
+        <Text style={styles.backTitle}>{title}</Text>
       </View>
-    );
-  }
+
+      <View style={styles.backRightPlaceholder} />
+    </View>
+  );
+}
 
   return (
     <View style={styles.mainContainer}>
@@ -180,12 +146,13 @@ const styles = StyleSheet.create({
   },
 
   mainTitle: {
-    color: colors.primary,
-    fontSize: 32,
-    fontWeight: "900",
-    letterSpacing: 0.2,
-    marginLeft: 4,
-  },
+  color: colors.primary,
+  fontSize: 32,
+  fontWeight: "900",
+  letterSpacing: 0.2,
+  marginLeft: 4,
+  marginTop: 4,
+},
 
   actions: {
     flexDirection: "row",
@@ -204,52 +171,37 @@ const styles = StyleSheet.create({
 
   // Back header layout for subscreens with back button and optional check icons for actions like marking notifications as read or clearing notifications
   backContainer: {
-    height: 90,
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    backgroundColor: colors.textOnPrimary,
-    flexDirection: "row",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.lightGrey,
-  },
+  height: 90,
+  paddingHorizontal: 16,
+  paddingTop: 16,
+  backgroundColor: colors.textOnPrimary,
+  flexDirection: "row",
+  alignItems: "center",
+  borderBottomWidth: 1,
+  borderBottomColor: colors.lightGrey,
+},
 
-  backButton: {
-    position: "absolute",
-    left: 16,
-    top: 0,
-    bottom: 0,
-    width: 34,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 999,
-    zIndex: 3,
-  },
-
-  backTitle: {
-    position: "absolute",
-    left: 0,
-    right: 0,
-    top: 0,
-    bottom: 0,
-    zIndex: 1,
-    textAlignVertical: "center",
-    color: colors.primary,
-    fontSize: 28,
-    fontWeight: "900",
-    letterSpacing: 0.2,
-    textAlign: "center",
-    includeFontPadding: false,
-  },
-
-  backRightPlaceholder: {
-    position: "absolute",
-    right: 16,
-    top: 5,
-    width: 34,
-    height: 34,
-  },
-
+ backButton: {
+  width: 40,
+  height: 40,
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 3,
+},
+titleWrapper: {
+  flex: 1,
+  alignItems: "center",
+  justifyContent: "center",
+},
+backTitle: {
+  fontSize: 24,
+  fontWeight: "700",
+  color: colors.primary,
+  textAlign: "center",
+},
+backRightPlaceholder: {
+  width: 40,
+},
   headerActions: {
     position: "absolute",
     right: 16,
