@@ -11,7 +11,7 @@ body:
         **🛑 REQUIRED TITLE FORMAT**
         `[Bug] [Platform] Short description`
         
-        *Example: [Bug] [GMA Connect] Login button not responding on Android 14*
+        *Example: [Bug] [GMA-APP] Login button not responding on Android 14*
 
   - type: dropdown
     id: platform
@@ -19,8 +19,8 @@ body:
       label: Platform
       description: Where did this bug occur?
       options:
-        - GMA Connect (Mobile App)
-        - GMA-WEB (Admin/Partner Portal)
+        - GMA-APP
+        - GMA-WEB 
         - Both (Mobile + Web)
         - Backend / API
     validations:
@@ -107,9 +107,18 @@ body:
   - type: input
     id: os
     attributes:
-      label: Device & Operating System
-      description: What device and OS are you using?
-      placeholder: "e.g. Samsung Galaxy S23 (Android 14), iPhone 15, macOS 14"
+      label: Operating System
+      description: |
+        What operating system are you using?
+        
+        Examples:
+        - Windows 11 (Chrome / Firefox / Brave)
+        - macOS 14 (Safari / Chrome)
+        - Ubuntu 22.04
+        - Android 14 (Samsung Galaxy S23)
+        
+        Note: This project supports Android mobile + web (desktop browsers).
+      placeholder: "e.g. Windows 11, macOS 14, Android 14 (Galaxy S23)"
     validations:
       required: true
 
