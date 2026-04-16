@@ -49,8 +49,15 @@
       "@react-native-firebase/auth",
       "expo-splash-screen",
       "@react-native-google-signin/google-signin",
-      "react-native-fbsdk-next"
-    ],
+      "react-native-fbsdk-next",
+      [
+      "expo-video",
+      {
+        "supportsBackgroundPlayback": true,
+        "supportsPictureInPicture": true
+      }
+    ]
+  ],
     "experiments": {
       "typedRoutes": true
     },
