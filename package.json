@@ -70,5 +70,10 @@
     "firebase-admin": "^10.3.0",
     "typescript": "^5.9.3"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "protobufjs": "^7.2.4",
+    "jsonwebtoken": "^9.0.2",
+    "@grpc/grpc-js": "^1.10.1"
+  }
 }
