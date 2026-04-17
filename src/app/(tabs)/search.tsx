@@ -134,7 +134,6 @@ export default function SearchScreenLogic() {
   }, [model]);
 
   const handleAiSearch = useCallback(async (userQuery: string) => {
-    console.log("handleAiSearch", userQuery);
     setIsAiLoading(true);
     try {
       const top = await onAiSearch(userQuery, allEvents);
