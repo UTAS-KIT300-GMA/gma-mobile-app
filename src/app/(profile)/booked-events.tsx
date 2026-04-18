@@ -1,62 +1,62 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
-import { 
-  collection, 
-  doc, 
-  getDocs, 
-  deleteDoc, 
-  query, 
-  FirebaseFirestoreTypes 
+import {
+  collection,
+  getDocs,
+  query,
+  FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
-import { auth, db } from "@/services/authService"
-import { EventDoc } from "@/types/type";
-import { bookedEventsUI } from "@/screens/profile/saved-events-UI";
+import { auth, db } from "@/services/authService";
+import { EventDoc, Booking } from "@/types/type";
+import { BookedEventsUI } from "@/screens/profile/my-bookings-UI";
 
-/**
-   * @summary Displays a user's booked events from Firestore and automactically updates the UI when an user deletes or adds a booking.
-   * 
-   * booking holds: eventID, eventTitle, eventDate and ticketCount.
-   */
 export default function BookedEventsRoute() {
-  
   const router = useRouter();
-  
-  const [allEvents, setAllEvents] = useState<EventDoc[]>([]);                  // Stores an array of all the available bookings from the database.
-  const [bookingIds, setBookingIds] = useState<Record<string, boolean>>({});  // Stores an object map of the event IDs the user has saved.
-  const [loading, setLoading] = useState<boolean>(true);                     // Stores a boolean to track the background data fetching.
+
+  const [allEvents, setAllEvents] = useState<EventDoc[]>([]);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     let mounted = true;
-    
+
     const fetchData = async () => {
       setLoading(true);
-      
+
       try {
         const uid = auth.currentUser?.uid;
         if (!uid) return;
 
-        // Fetch ALL events from the event collection and store them in eventRows var.
+        // 1. Get ALL events
         const eventsSnap = await getDocs(query(collection(db, "events")));
+
         const eventRows: EventDoc[] = eventsSnap.docs.map(
-          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot): EventDoc => {
-            const data = d.data() as Omit<EventDoc, 'id'>; 
+          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
+            const data = d.data() as Omit<EventDoc, "id">;
             return { ...data, id: d.id };
           }
         );
+
         if (mounted) setAllEvents(eventRows);
 
-        // Fetch the Doc IDs of the events this specific user has bookings for and store in bookingsSnap var.
-        const bookingsSnap = await getDocs(collection(db, "users", uid, "bookings"));
-        const bookingsMap: Record<string, boolean> = {};
-        
-        bookingsSnap.forEach((docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
-          const data = docSnap.data();
-          bookingsMap[data.eventId] = true;
-        });
+        // 2. Get USER bookings 
+        const bookingsSnap = await getDocs(
+          collection(db, "users", uid, "bookings")
+        );
 
-        if (mounted) setBookingIds(bookingsMap);
+        const bookingRows: Booking[] = bookingsSnap.docs.map(
+          (docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
+            const data = docSnap.data() as Omit<Booking, "id">;
 
+            return {
+              id: docSnap.id,
+              ...data,
+            };
+          }
+        );
+
+        if (mounted) setBookings(bookingRows);
       } catch (e: any) {
         Alert.alert("Error", "Failed to load your bookings.");
       } finally {
@@ -65,26 +65,35 @@ export default function BookedEventsRoute() {
     };
 
     fetchData();
-    return () => { mounted = false; 
+    return () => {
+      mounted = false;
     };
   }, []);
 
-  // Stores the resulting filtered array in the bookmarkedEvents var.
+  //  match bookings to events 
   const bookedEvents = useMemo(() => {
-    return allEvents.filter(event => !!bookingIds[event.id]);
-  }, [allEvents, bookingIds]);
-  
-  
+    return bookings
+      .map((b) => {
+        const event = allEvents.find((e) => e.id === b.eventId);
 
-  //not sure if needed will check later
+        if (!event) return null;
+
+        return {
+          ...b,
+          event,
+        };
+      })
+      .filter(Boolean);
+  }, [bookings, allEvents]);
+
   return (
-    // Passes the values of bookmarkedEvents, loading, handleRemoveBoomark
-    // and navigation instructions to the saved events screen.
     <BookedEventsUI
-      events={bookedEvents}
+      events={bookedEvents as any}
       loading={loading}
       onBack={() => router.back()}
-      onPressCard={(item) => router.push(`/event/${item.id}` as any)}
+      onPressCard={(item: any) =>
+        router.push(`/event/${item.eventId}` as any)
+      }
     />
   );
 }
