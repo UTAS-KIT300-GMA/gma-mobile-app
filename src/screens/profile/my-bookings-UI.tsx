@@ -1,7 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
-import { EventDoc } from "@/types/type";
+import { Booking } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -14,10 +14,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 interface BookedEventsUIProps {
-  events: EventDoc[];
+  events: Booking[];
   loading: boolean;
   onBack: () => void;
-  onPressCard: (event: EventDoc) => void;
+  onPressCard: (event: Booking) => void;
 }
 
 export const BookedEventsUI = ({
@@ -28,11 +28,46 @@ export const BookedEventsUI = ({
  
   
 }: BookedEventsUIProps) => {
-  const renderItem = ({ item }: { item: EventDoc }) => (
-    <EventCard
-      event={item}
-      onPressCard={() => onPressCard(item)}
-    />
+  const renderItem = ({ item }: { item: Booking }) => (
+     <View>
+     <EventCard
+  event={{
+    id: item.eventId,
+    title: item.event.title,
+    image: item.event.image,
+    dateTime: item.event.dateTime,
+    address: item.event.address,
+    category: "all",
+    description: "",
+    location: {} as any,
+    type: "free",
+    totalTickets: 0,
+    memberPrice: 0,
+    nonMemberPrice: 0,
+  }}
+  onPressCard={() => onPressCard(item)}
+/>
+
+    <View style={styles.ticketInfo}>
+      <Text style={styles.infoText}>
+        Tickets booked: {item.ticketCount}
+      </Text>
+
+      <Text style={styles.infoText}>
+        Total paid: ${item.totalPaid}
+      </Text>
+
+       <Text style={styles.infoText}>
+        Status: {item.status}
+       </Text>
+
+        <Text style={styles.infoText}>
+           Booked on:{" "}
+          {item.createdAt?.toDate?.()?.toLocaleDateString?.() ||
+           "N/A"}
+        </Text>
+      </View>
+    </View>
   );
 
   return (
@@ -73,6 +108,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 100,
   },
+  ticketInfo: {
+  marginTop: 10,
+  paddingHorizontal: 10,
+},
+infoText: {
+  fontSize: 13,
+  color: "#555",
+  marginTop: 2,
+},
+
   listPadding: { padding: 16 },
   rsvpBtn: {
     backgroundColor: colors.saveBtnColor,

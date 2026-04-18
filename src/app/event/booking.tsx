@@ -101,7 +101,14 @@ export default function BookingRoute() {
         totalPaid: totalPrice,
         status: "confirmed",
         createdAt: serverTimestamp(),
-      });
+        
+        event: {
+          title: event.title,
+          image: event.image,
+          dateTime: event.dateTime,
+          address: event.address,
+        },
+    });
 
       // Uses the router tool to replace the screen with the confirmation screen.
       // Passes the booking details as params to the next screen.
