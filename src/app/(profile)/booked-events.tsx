@@ -92,7 +92,10 @@ export default function BookedEventsRoute() {
       loading={loading}
       onBack={() => router.back()}
       onPressCard={(item: any) =>
-        router.push(`/event/${item.eventId}` as any)
+        router.push({
+          pathname: "/event/event-details",
+          params: { id: item.eventId },
+          } as any)
       }
     />
   );
