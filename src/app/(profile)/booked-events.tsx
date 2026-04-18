@@ -21,19 +21,17 @@ import { bookedEventsUI } from "@/screens/profile/saved-events-UI";
 export default function BookedEventsRoute() {
   
   const router = useRouter();
-  // Stores an array of all the available bookings from the database in the allEvents var.
-  const [allEvents, setAllEvents] = useState<EventDoc[]>([]);
-  // Stores an object map of the event IDs the user has saved in the bookingIds var.
-  const [bookingIds, setBookingIds] = useState<Record<string, boolean>>({});
   
-  // Stores a boolean in the loading var to track the background data fetching.
-  const [loading, setLoading] = useState<boolean>(true);
-//---
+  const [allEvents, setAllEvents] = useState<EventDoc[]>([]);                  // Stores an array of all the available bookings from the database.
+  const [bookingIds, setBookingIds] = useState<Record<string, boolean>>({});  // Stores an object map of the event IDs the user has saved.
+  const [loading, setLoading] = useState<boolean>(true);                     // Stores a boolean to track the background data fetching.
 
   useEffect(() => {
     let mounted = true;
+    
     const fetchData = async () => {
       setLoading(true);
+      
       try {
         const uid = auth.currentUser?.uid;
         if (!uid) return;
@@ -51,10 +49,14 @@ export default function BookedEventsRoute() {
         // Fetch the Doc IDs of the events this specific user has bookings for and store in bookingsSnap var.
         const bookingsSnap = await getDocs(collection(db, "users", uid, "bookings"));
         const bookingsMap: Record<string, boolean> = {};
+        
         bookingsSnap.forEach((docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
-          bookingsMap[docSnap.id] = true;
+          const data = docSnap.data();
+          bookingsMap[data.eventId] = true;
         });
+
         if (mounted) setBookingIds(bookingsMap);
+
       } catch (e: any) {
         Alert.alert("Error", "Failed to load your bookings.");
       } finally {
@@ -63,7 +65,8 @@ export default function BookedEventsRoute() {
     };
 
     fetchData();
-    return () => { mounted = false; };
+    return () => { mounted = false; 
+    };
   }, []);
 
   // Stores the resulting filtered array in the bookmarkedEvents var.
@@ -71,26 +74,7 @@ export default function BookedEventsRoute() {
     return allEvents.filter(event => !!bookingIds[event.id]);
   }, [allEvents, bookingIds]);
   
-  // Stores function instructions handleRemoveBookmark var.
-  const handleRemoveBookmark = async (event: EventDoc) => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) return;
-
-    // Removes the doc ID from bookings collection for an instant UI update.
-    setBookingIds(prev => {
-      const next = { ...prev };
-      delete next[event.id];
-      return next;
-    });
-
-    try {
-      await deleteDoc(doc(db, "users", uid, "bookings", event.id));
-    } catch (e) {
-      
-      setBookingIds(prev => ({ ...prev, [event.id]: true }));
-      Alert.alert("Error", "Could not remove booking.");
-    }
-  };
+  
 
   //not sure if needed will check later
   return (
@@ -101,8 +85,6 @@ export default function BookedEventsRoute() {
       loading={loading}
       onBack={() => router.back()}
       onPressCard={(item) => router.push(`/event/${item.id}` as any)}
-      onRemoveBookmark={handleRemoveBookmark}
-      onRsvp={(item) => router.push(`/event/${item.id}/book` as any)}
     />
   );
 }
