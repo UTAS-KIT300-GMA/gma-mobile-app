@@ -163,3 +163,19 @@ export type PaymentMethod =
   | "apple"
   | "google"
   | "afterpay";
+
+export type Booking = {
+  id: string;
+  eventId: string;
+  ticketCount: number;
+  totalPaid: number;
+  status: string;
+  createdAt: FirebaseFirestoreTypes.Timestamp;
+
+  event: {
+    title: string;
+    image: string;
+    dateTime: FirebaseFirestoreTypes.Timestamp;
+    address: string;
+  };
+};

@@ -37,9 +37,15 @@ export default function ProfileUI({
     {
       id: "payment",
       label: "Manage payment methods",
-      // Updated path to point to your new sub-screen file location
       path: "/(profile)/manage-payment-method", 
     },
+    
+    {
+      id: "bookings",
+      label: "My bookings",
+      path: "/(profile)/booked-events", 
+    },
+
     {
       id: "notifs",
       label: "Notifications setting",
