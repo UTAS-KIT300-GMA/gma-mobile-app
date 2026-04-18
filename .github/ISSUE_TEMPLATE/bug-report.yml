@@ -148,11 +148,18 @@ body:
         - Not sure
 
   - type: textarea
-    id: screenshots
+    id: attachments
     attributes:
-      label: Screenshots or Logs
-      description: Paste logs, stack traces, or drag and drop screenshots/files.
-      render: shell
+      label: Screenshots / Videos / Logs (Optional)
+      description: |
+        📎 Drag and drop files directly into this box.
+        
+        Supported:
+        - Images (PNG, JPG)
+        - Screen recordings
+        - Log files
+        
+        You can also paste images or text logs here.
 
   - type: textarea
     id: additional
