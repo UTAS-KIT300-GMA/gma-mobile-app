@@ -1,7 +1,8 @@
-import { LearningVideo } from "@/app/(tabs)/learning";
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import React, { useMemo } from "react"; // Added useMemo
+import { LearningVideo } from "@/types/type";
 import {
   ImageBackground,
   Pressable,
@@ -9,6 +10,18 @@ import {
   Text,
   View,
 } from "react-native";
+
+// --- Cloudinary Imports ---
+import { Cloudinary } from "@cloudinary/url-gen";
+import { thumbnail } from "@cloudinary/url-gen/actions/resize";
+import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
+
+// Initialize Cloudinary
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: "YOUR_CLOUD_NAME", // Replace with your actual cloud name
+  },
+});
 
 const FALLBACK_THUMBNAIL =
   "https://via.placeholder.com/800x450.png?text=Learning+Video";
@@ -24,6 +37,26 @@ export function LearningCard({
 }) {
   const isSubscriberOnly = item.accessType === "subscriber";
 
+  // 1. Generate optimized Cloudinary thumbnail URL
+  // This uses your publicId to create a perfect 16:9 crop (800x450) 
+  const optimizedThumbnail = useMemo(() => {
+    if (!item.cloudinaryPublicId) return item.thumbnailUrl || FALLBACK_THUMBNAIL;
+
+    return cld
+      .video(item.cloudinaryPublicId)
+      .format("auto")
+      .quality("auto")
+      .resize(
+        thumbnail()
+          .width(800) 
+          .height(450)
+          .gravity(autoGravity())
+      )
+      .toURL()
+      // "so_auto" ensures Cloudinary picks a frame with content instead of a black start screen
+      .replace("/video/upload", "/video/upload/so_auto");
+  }, [item.cloudinaryPublicId, item.thumbnailUrl]);
+
   return (
     <View style={styles.card}>
       <Pressable
@@ -31,7 +64,7 @@ export function LearningCard({
         style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
       >
         <ImageBackground
-          source={{ uri: item.thumbnailUrl || FALLBACK_THUMBNAIL }}
+          source={{ uri: optimizedThumbnail }} // Swapped to use Cloudinary URL
           style={styles.image}
           imageStyle={styles.imageInner}
         >
