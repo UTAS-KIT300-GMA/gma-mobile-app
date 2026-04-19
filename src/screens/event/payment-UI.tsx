@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   Image,
@@ -107,46 +106,17 @@ export function PaymentScreenUI({
   onChangeAfterpayContact,
   onConfirmPayment,
 }: PaymentUIProps) {
-  const cardType = detectCardType(cardNumber);
   const cardLogo = getCardLogo(cardNumber);
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.planTitle}>{title}</Text>
-          <Text style={styles.planPrice}>
-            {type === "membership" ? `$${price}/month` : `$${price}`}
-          </Text>
-          <Text style={styles.planType}>{ticketType}</Text>
-
-          {type === "event" ? (
-            <>
-              {!!time && <Text style={styles.extraText}>{time}</Text>}
-              {!!location && <Text style={styles.extraText}>{location}</Text>}
-              <Text style={styles.extraText}>Tickets: {ticketCount}</Text>
-            </>
-          ) : (
-            <>
-              {benefits
-                .split("|")
-                .filter(Boolean)
-                .map((item, index) => (
-                  <Text key={index} style={styles.extraText}>
-                    {item}
-                  </Text>
-                ))}
-            </>
-          )}
-        </View>
+       
 
         <View style={styles.paymentSection}>
-          <View style={styles.headerWrap}>
-            <Ionicons name="card-outline" size={24} color={BRAND} />
-            <Text style={styles.heading}>Payment Method</Text>
-          </View>
-
+          
           <View style={styles.methodsCard}>
+            <Text style={styles.heading}>Payment Method</Text>
             <TouchableOpacity
               style={[
                 styles.methodRow,
@@ -160,7 +130,28 @@ export function PaymentScreenUI({
                 </View>
                 <Text style={styles.methodText}>Credit / Debit Card</Text>
               </View>
-              <Text style={styles.payBadge}>Visa / MC</Text>
+              <View style={styles.cardLogoContainer}>
+  {cardLogo ? (
+    <Image
+      source={cardLogo}
+      style={styles.cardOptionLogo}
+      resizeMode="contain"
+    />
+  ) : (
+    <>
+      <Image
+        source={require("../../../assets/images/visa.jpg")}
+        style={styles.cardOptionLogo}
+        resizeMode="contain"
+      />
+      <Image
+        source={require("../../../assets/images/mastercard.jpg")}
+        style={styles.cardOptionLogo}
+        resizeMode="contain"
+      />
+    </>
+  )}
+</View>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -226,18 +217,7 @@ export function PaymentScreenUI({
 
           {selectedMethod === "card" && (
             <View style={styles.formCard}>
-              {cardType ? (
-                <View style={styles.cardTypeRow}>
-                  <Text style={styles.cardTypeText}>Detected: {cardType}</Text>
-                  {cardLogo && (
-                    <Image
-                      source={cardLogo}
-                      style={styles.cardBrandLogo}
-                      resizeMode="contain"
-                    />
-                  )}
-                </View>
-              ) : null}
+              <Text style={styles.formTitle}>Card Details</Text>
 
               <TextInput
                 placeholder="Cardholder name"
@@ -292,9 +272,7 @@ export function PaymentScreenUI({
           )}
 
           <TouchableOpacity style={styles.confirmBtn} onPress={onConfirmPayment}>
-            <Text style={styles.confirmBtnText}>
-              {type === "event" ? "Confirm booking" : "Confirm membership"}
-            </Text>
+            <Text style={styles.confirmBtnText}>Continue Payment</Text>
           </TouchableOpacity>
 
           <Text style={styles.secureText}>
@@ -316,53 +294,15 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     paddingBottom: 32,
   },
-  summaryCard: {
-    backgroundColor: "#F8F3F6",
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 18,
-    borderWidth: 1,
-    borderColor: BORDER,
-  },
-  planTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: TEXT_DARK,
-    marginBottom: 4,
-  },
-  planPrice: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: BRAND,
-    marginBottom: 4,
-  },
-  planType: {
-    fontSize: 14,
-    color: MUTED,
-    marginBottom: 2,
-  },
-  extraText: {
-    fontSize: 14,
-    color: MUTED,
-    marginTop: 4,
-  },
   paymentSection: {
     backgroundColor: "transparent",
     borderRadius: 24,
     padding: 0,
   },
-  headerWrap: {
-    backgroundColor: CARD_BG,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
   heading: {
     marginTop: 6,
-    fontSize: 18,
+    fontSize: 20,
+    marginBottom: 12,
     fontWeight: "700",
     color: TEXT_DARK,
   },
@@ -419,29 +359,9 @@ const styles = StyleSheet.create({
     color: TEXT_DARK,
     fontWeight: "500",
   },
-  payBadge: {
-    fontSize: 14,
-    color: TEXT_DARK,
-    fontWeight: "700",
-  },
   paymentMethodLogo: {
     width: 52,
     height: 22,
-  },
-  cardTypeRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  cardTypeText: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: BRAND,
-  },
-  cardBrandLogo: {
-    width: 46,
-    height: 28,
   },
   input: {
     borderWidth: 1,
@@ -480,4 +400,20 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: MUTED,
   },
+  cardLogoContainer: {
+  flexDirection: "row",
+  alignItems: "center",
+},
+
+cardOptionLogo: {
+  width: 40,
+  height: 24,
+  marginLeft: 6,
+},
+formTitle: {
+  fontSize: 20,
+  fontWeight: "700",
+  color: TEXT_DARK,
+  marginBottom: 12,
+},
 });

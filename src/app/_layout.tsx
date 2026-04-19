@@ -13,6 +13,8 @@ import { ActivityIndicator, View, Alert } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import {UserProvider} from "@/context/UserContext.tsx";
+import { EventsProvider } from "@/context/EventsContext";
+import {BookmarksProvider} from "@/context/BookmarksContext.tsx";
 
 export default function RootLayout() {
   const { user, initializing, isProfileValidated } = useAuth();
@@ -182,7 +184,11 @@ export default function RootLayout() {
   // Once loading is complete and routing is confirmed, render the actual navigation stack.
   return (
       <UserProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <EventsProvider>
+          <BookmarksProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+          </BookmarksProvider>
+        </EventsProvider>
       </UserProvider>
   )
 }

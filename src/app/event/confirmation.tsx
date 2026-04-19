@@ -32,7 +32,7 @@ export default function BookingConfirmedRoute() {
     <BookingConfirmedUI
       details={bookingDetails}
       // !!Need to add a booking sub screen for profile!!
-      onGoToBookings={() => router.replace("/profile" as any)}
+      onGoToBookings={() => router.replace("/(profile)/booked-events" as any)}
       // Navigates to the event details screen using the eventId
       // from the bookingDetails.
       onViewDetails={() =>

@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface BookingUIProps {
+export interface BookingUIProps {
   event: any;
   loading: boolean;
   processing: boolean;
