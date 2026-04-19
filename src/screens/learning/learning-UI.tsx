@@ -1,4 +1,4 @@
-import { LearningVideo } from "@/app/(tabs)/learning";
+import { LearningVideo } from "@/types/type";
 import { AppHeader } from "@/components/AppHeader";
 import { LearningCard } from "@/components/LearningCard";
 import { colors } from "@/theme/ThemeProvider";
@@ -47,9 +47,7 @@ export const LearningScreenUI: React.FC<Props> = ({
 
         {events.length === 0 && (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>
-              No learning videos available yet.
-            </Text>
+            <Text style={styles.emptyStateText}>No learning videos available yet.</Text>
           </View>
         )}
 
@@ -83,9 +81,10 @@ export const LearningScreenUI: React.FC<Props> = ({
                   />
                 </TouchableOpacity>
 
+                {/* Updated to pass publicId */}
                 <VideoPlayer
                   key={`video-${item.id}`}
-                  videoUrl={item.videoUrl}
+                  publicId={item.cloudinaryPublicId || ""}
                 />
               </View>
 
@@ -133,128 +132,24 @@ export const LearningScreenUI: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.textOnPrimary,
-  },
-  center: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: colors.textOnPrimary,
-  },
-  container: {
-    paddingHorizontal: 16,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: colors.saveBtnTextColor,
-    marginBottom: 15,
-    paddingHorizontal: 8,
-    paddingTop: 10,
-  },
-  emptyState: {
-    paddingHorizontal: 8,
-    paddingTop: 8,
-  },
-  emptyStateText: {
-    color: "#666",
-    fontSize: 14,
-  },
-  expandedCard: {
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    marginBottom: 12,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.textOnPrimary,
-    shadowColor: colors.saveBtnTextColor,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  expandedMediaWrapper: {
-    position: "relative",
-    backgroundColor: "#000",
-  },
-  bookmarkButton: {
-    position: "absolute",
-    right: 10,
-    top: 10,
-    width: 43,
-    height: 39,
-    borderRadius: 11,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors.textOnPrimary,
-    zIndex: 3,
-  },
-  infoSection: {
-    padding: 14,
-  },
-  title: {
-    color: colors.saveBtnTextColor,
-    fontSize: 18,
-    fontWeight: "800",
-    lineHeight: 24,
-    textAlign: "left",
-  },
-  metaRow: {
-    marginTop: 10,
-    marginBottom: 6,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-  },
-  duration: {
-    color: "#777",
-    fontSize: 12,
-    flexShrink: 1,
-  },
-  ctaButton: {
-    backgroundColor: colors.saveBtnColor,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minHeight: 34,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  ctaText: {
-    color: colors.saveBtnTextColor,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.4,
-  },
-  ctaIcon: {
-    marginRight: 6,
-  },
-  description: {
-    color: "#444",
-    fontSize: 14,
-    lineHeight: 22,
-    marginTop: 10,
-    textAlign: "justify",
-  },
-  closeBtn: {
-    backgroundColor: colors.saveBtnColor,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignSelf: "flex-start",
-    marginTop: 16,
-  },
-  closeBtnText: {
-    fontWeight: "800",
-    fontSize: 12,
-    color: colors.saveBtnTextColor,
-    letterSpacing: 0.4,
-  },
-  bottomSpacing: {
-    height: 24,
-  },
+  safe: { flex: 1, backgroundColor: colors.textOnPrimary },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.textOnPrimary },
+  container: { paddingHorizontal: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: "800", color: colors.saveBtnTextColor, marginBottom: 15, paddingHorizontal: 8, paddingTop: 10 },
+  emptyState: { paddingHorizontal: 8, paddingTop: 8 },
+  emptyStateText: { color: "#666", fontSize: 14 },
+  expandedCard: { backgroundColor: "#fff", borderRadius: 15, marginBottom: 12, overflow: "hidden", borderWidth: 1, borderColor: colors.textOnPrimary, elevation: 4 },
+  expandedMediaWrapper: { position: "relative", backgroundColor: "#000" },
+  bookmarkButton: { position: "absolute", right: 10, top: 10, width: 43, height: 39, borderRadius: 11, alignItems: "center", justifyContent: "center", backgroundColor: colors.textOnPrimary, zIndex: 3 },
+  infoSection: { padding: 14 },
+  title: { color: colors.saveBtnTextColor, fontSize: 18, fontWeight: "800", lineHeight: 24 },
+  metaRow: { marginTop: 10, marginBottom: 6, flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 },
+  duration: { color: "#777", fontSize: 12, flexShrink: 1 },
+  ctaButton: { backgroundColor: colors.saveBtnColor, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, minHeight: 34, flexDirection: "row", alignItems: "center", justifyContent: "center" },
+  ctaText: { color: colors.saveBtnTextColor, fontSize: 12, fontWeight: "800", letterSpacing: 0.4 },
+  ctaIcon: { marginRight: 6 },
+  description: { color: "#444", fontSize: 14, lineHeight: 22, marginTop: 10 },
+  closeBtn: { backgroundColor: colors.saveBtnColor, paddingHorizontal: 14, paddingVertical: 10, borderRadius: 8, alignSelf: "flex-start", marginTop: 16 },
+  closeBtnText: { fontWeight: "800", fontSize: 12, color: colors.saveBtnTextColor, letterSpacing: 0.4 },
+  bottomSpacing: { height: 24 },
 });

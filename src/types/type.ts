@@ -184,11 +184,10 @@ export interface LearningVideo {
   id: string;
   title: string;
   duration: string;
-  thumbnailUrl?: string; 
-  videoUrl?: string;    
- 
+  description?: string; 
+  thumbnailUrl?: string;
+  videoUrl?: string;
   cloudinaryPublicId?: string; 
-  
   accessType: "free" | "subscriber";
   isBookmarked: boolean;
 }
