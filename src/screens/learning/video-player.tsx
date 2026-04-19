@@ -10,11 +10,22 @@ import {
   View,
 } from "react-native";
 
+// --- Cloudinary Integration ---
+import { Cloudinary } from "@cloudinary/url-gen";
+
+// Initialize Cloudinary instance
+// Replace 'YOUR_CLOUD_NAME' with your actual cloud name from the dashboard
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: "YOUR_CLOUD_NAME",
+  },
+});
+
 interface Props {
-  videoUrl: string;
+  publicId: string; // The unique identifier for your video in Cloudinary
 }
 
-const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
+const VideoPlayer: React.FC<Props> = ({ publicId }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [position, setPosition] = useState(0);
@@ -23,22 +34,33 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
   const [trackWidth, setTrackWidth] = useState(1);
 
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasValidVideo = Boolean(videoUrl?.trim());
 
-  const player = useVideoPlayer(hasValidVideo ? videoUrl : null, (player) => {
-    player.loop = false;
-    player.timeUpdateEventInterval = 0.25;
-    player.playbackRate = 1;
+  // 1. Generate optimized URL using the Cloudinary SDK
+  const optimizedUrl = useMemo(() => {
+    if (!publicId?.trim()) return "";
+    return cld
+      .video(publicId)
+      .format("auto")   // Best format (WebM/MP4) for the device
+      .quality("auto")  // Compressed without losing visual quality
+      .toURL();
+  }, [publicId]);
 
-    // One-click autoplay:
-    // as soon as the player is created for the mounted view, start playback
+  const hasValidVideo = Boolean(optimizedUrl);
+
+  // 2. Initialize the Expo Video Player with the Cloudinary URL
+  const player = useVideoPlayer(hasValidVideo ? optimizedUrl : null, (playerInstance) => {
+    playerInstance.loop = false;
+    playerInstance.timeUpdateEventInterval = 0.25;
+    playerInstance.playbackRate = 1;
+
     try {
-      player.play();
+      playerInstance.play();
     } catch (error) {
-      console.log("Initial play attempt failed:", error);
+      console.log("Autoplay failed:", error);
     }
   });
 
+  // --- UI Helpers ---
   const clearHideTimer = () => {
     if (hideTimer.current) {
       clearTimeout(hideTimer.current);
@@ -48,7 +70,6 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
 
   const resetHideTimer = () => {
     clearHideTimer();
-
     hideTimer.current = setTimeout(() => {
       if (isPlaying) {
         setShowControls(false);
@@ -63,15 +84,12 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
     const secs = totalSeconds % 60;
 
     if (hrs > 0) {
-      return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(
-        2,
-        "0"
-      )}`;
+      return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
     }
-
     return `${mins}:${String(secs).padStart(2, "0")}`;
   };
 
+  // --- Listeners & Effects ---
   useEffect(() => {
     if (!player) return;
 
@@ -84,115 +102,45 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
       setDuration(player.duration ?? 0);
     });
 
-    const statusSub = player.addListener("statusChange", ({ status, error }) => {
-      if (status === "error") {
-        console.error("Video playback error:", error);
-      }
-
-      // Backup autoplay in case the first play call happens a little early
-      if (status === "readyToPlay") {
-        try {
-          player.play();
-        } catch (playError) {
-          console.log("Ready-to-play autoplay failed:", playError);
-        }
-      }
-
-      if (status === "idle") {
-        setIsPlaying(false);
-      }
-    });
-
     return () => {
       playingSub.remove();
       timeSub.remove();
-      statusSub.remove();
     };
   }, [player]);
-
-  useEffect(() => {
-    setPosition(0);
-    setDuration(0);
-    setIsPlaying(false);
-    setShowControls(true);
-    setRate(1);
-  }, [videoUrl]);
 
   useEffect(() => {
     if (showControls && hasValidVideo) {
       resetHideTimer();
     }
-
-    return () => {
-      clearHideTimer();
-    };
+    return () => clearHideTimer();
   }, [showControls, isPlaying, hasValidVideo]);
 
-  useEffect(() => {
-    return () => {
-      clearHideTimer();
-    };
-  }, []);
-
+  // --- Interaction Handlers ---
   const togglePlayPause = () => {
     if (!player || !hasValidVideo) return;
-
-    if (isPlaying) {
-      player.pause();
-      clearHideTimer();
-    } else {
-      player.play();
-      resetHideTimer();
-    }
-
+    isPlaying ? player.pause() : player.play();
     setShowControls(true);
   };
 
   const seekBy = (seconds: number) => {
     if (!player || !hasValidVideo) return;
-
-    const next = Math.max(
-      0,
-      Math.min(position + seconds, duration || position + seconds)
-    );
-
+    const next = Math.max(0, Math.min(position + seconds, duration));
     player.currentTime = next;
-    setPosition(next);
     setShowControls(true);
-    resetHideTimer();
   };
 
   const cycleRate = () => {
     if (!player || !hasValidVideo) return;
-
     const rates = [1, 1.25, 1.5, 2];
-    const currentIndex = rates.indexOf(rate);
-    const nextRate = rates[(currentIndex + 1) % rates.length];
-
+    const nextRate = rates[(rates.indexOf(rate) + 1) % rates.length];
     player.playbackRate = nextRate;
     setRate(nextRate);
     setShowControls(true);
-    resetHideTimer();
   };
 
   const progressPercent = useMemo(() => {
-    if (!duration || duration <= 0) return 0;
-    return (position / duration) * 100;
+    return duration > 0 ? (position / duration) * 100 : 0;
   }, [position, duration]);
-
-  const handleSeekFromBar = (ratio: number) => {
-    if (!player || !hasValidVideo || !duration || duration <= 0) return;
-
-    const nextTime = Math.max(0, Math.min(duration * ratio, duration));
-    player.currentTime = nextTime;
-    setPosition(nextTime);
-    setShowControls(true);
-    resetHideTimer();
-  };
-
-  const handleTrackLayout = (event: LayoutChangeEvent) => {
-    setTrackWidth(event.nativeEvent.layout.width);
-  };
 
   if (!hasValidVideo) {
     return (
@@ -204,18 +152,9 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
   }
 
   return (
-    <Pressable
-      style={styles.wrapper}
-      onPress={() => {
-        const nextVisible = !showControls;
-        setShowControls(nextVisible);
-
-        if (nextVisible && isPlaying) {
-          resetHideTimer();
-        } else {
-          clearHideTimer();
-        }
-      }}
+    <Pressable 
+      style={styles.wrapper} 
+      onPress={() => setShowControls(!showControls)}
     >
       <VideoView
         player={player}
@@ -226,34 +165,22 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
 
       {showControls && (
         <View style={styles.overlay}>
+          {/* Top/Middle Section */}
           <View style={styles.middleControls}>
             <TouchableOpacity style={styles.smallControl} onPress={cycleRate}>
               <Text style={styles.controlLabel}>{rate}x</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.smallControl}
-              onPress={() => seekBy(-15)}
-            >
+            <TouchableOpacity style={styles.smallControl} onPress={() => seekBy(-15)}>
               <Ionicons name="play-back-outline" size={34} color="#fff" />
               <Text style={styles.controlLabel}>15</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.mainControl}
-              onPress={togglePlayPause}
-            >
-              <Ionicons
-                name={isPlaying ? "pause" : "play"}
-                size={44}
-                color="#111"
-              />
+            <TouchableOpacity style={styles.mainControl} onPress={togglePlayPause}>
+              <Ionicons name={isPlaying ? "pause" : "play"} size={44} color="#111" />
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.smallControl}
-              onPress={() => seekBy(15)}
-            >
+            <TouchableOpacity style={styles.smallControl} onPress={() => seekBy(15)}>
               <Ionicons name="play-forward-outline" size={34} color="#fff" />
               <Text style={styles.controlLabel}>15</Text>
             </TouchableOpacity>
@@ -263,22 +190,19 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl }) => {
             </TouchableOpacity>
           </View>
 
+          {/* Bottom Progress Section */}
           <View style={styles.bottomBlock}>
             <Pressable
               style={styles.progressTrack}
-              onLayout={handleTrackLayout}
+              onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
               onPress={(event) => {
-                const { locationX } = event.nativeEvent;
-                const ratio = Math.max(0, Math.min(locationX / trackWidth, 1));
-                handleSeekFromBar(ratio);
+                const ratio = Math.max(0, Math.min(event.nativeEvent.locationX / trackWidth, 1));
+                player.currentTime = duration * ratio;
+                setShowControls(true);
               }}
             >
-              <View
-                style={[styles.progressFill, { width: `${progressPercent}%` }]}
-              />
-              <View
-                style={[styles.progressThumb, { left: `${progressPercent}%` }]}
-              />
+              <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+              <View style={[styles.progressThumb, { left: `${progressPercent}%` }]} />
             </Pressable>
 
             <View style={styles.timeRow}>
@@ -318,7 +242,7 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.12)",
+    backgroundColor: "rgba(0,0,0,0.3)", // Slightly darker for better UI visibility
     justifyContent: "space-between",
     paddingHorizontal: 14,
     paddingVertical: 12,
@@ -338,11 +262,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.25)",
     borderRadius: 999,
     position: "relative",
-    overflow: "visible",
   },
   progressFill: {
     height: 6,
-    backgroundColor: "#6D6D6D",
+    backgroundColor: "#fff", // White progress bar looks cleaner
     borderRadius: 999,
   },
   progressThumb: {
@@ -360,7 +283,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   timeText: {
-    color: "#D3D3D3",
+    color: "#fff",
     fontSize: 13,
     minWidth: 58,
   },
@@ -370,16 +293,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   mainControl: {
-    width: 92,
-    height: 92,
-    borderRadius: 46,
+    width: 72, // Slightly smaller for a more refined look
+    height: 72,
+    borderRadius: 36,
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
   },
   controlLabel: {
     color: "#fff",
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
     marginTop: 2,
   },
