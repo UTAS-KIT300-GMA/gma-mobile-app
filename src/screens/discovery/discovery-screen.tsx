@@ -182,8 +182,6 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
                 ]}
                 onPress={() => {
                   if (option.key.startsWith("location_")) {
-                    console.log("isLocationLoading", isLocationLoading)
-                    console.log("isLocationOn", isLocationOn)
                     if (!isLocationOn) {
                       onOpenLocationSettings()
                       return;

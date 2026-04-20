@@ -18,6 +18,7 @@ export function useLocationInternal(): LocationSlice {
 
   const inFlightRef = useRef<Promise<LocationFetchResult> | null>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const lastResumeRefreshRef = useRef(0);
 
   const refreshLocation = useCallback(async (): Promise<LocationFetchResult> => {
     if (inFlightRef.current) return inFlightRef.current;
@@ -67,6 +68,9 @@ export function useLocationInternal(): LocationSlice {
       const wasBackgrounded = /inactive|background/.test(prev);
 
       if (wasBackgrounded && next === "active") {
+        const now = Date.now();
+        if (now - lastResumeRefreshRef.current < 900) return;
+        lastResumeRefreshRef.current = now;
         setTimeout(() => {
           void refreshLocation();
         }, 750);

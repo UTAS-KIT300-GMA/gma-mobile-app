@@ -108,7 +108,11 @@ export async function resolveLocationStatus(): Promise<{
   error: string | null;
 }> {
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    let { status } = await Location.getForegroundPermissionsAsync();
+    if (status === "undetermined") {
+      const requested = await Location.requestForegroundPermissionsAsync();
+      status = requested.status;
+    }
     if (status !== "granted") {
       return { isLocationOn: false, error: "Permission denied." };
     }

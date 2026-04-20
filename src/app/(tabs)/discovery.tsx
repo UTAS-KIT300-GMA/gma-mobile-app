@@ -4,8 +4,8 @@
  * It manages fetching all events, filtering them by category or access,
  * sorting the results, and toggling user bookmarks.
  */
-import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import { useRouter } from "expo-router";
+import React, { useMemo, useState } from "react";
 import { Alert } from "react-native";
 
 import { calculateHaversineDistance } from "@/components/utils";
@@ -45,18 +45,7 @@ export default function DiscoveryScreen() {
 
   const { events, isLoading: isEventsLoading } = useEvents();
   const { bookmarkedIds, isLoading: isBookmarksLoading, toggleBookmark } = useBookmarks();
-  const { coords, isLocationOn, isLocationLoading, refreshLocation } =
-    useAppLocation();
-
-  /**
-   * In-app navigation (e.g. profile location settings) does not background the app,
-   * so AppState may not run — refresh when this screen is focused again.
-   */
-  useFocusEffect(
-    useCallback(() => {
-      void refreshLocation();
-    }, [refreshLocation]),
-  );
+  const { coords, isLocationOn, isLocationLoading } = useAppLocation();
 
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
