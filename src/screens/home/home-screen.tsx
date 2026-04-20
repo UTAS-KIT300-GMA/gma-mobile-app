@@ -4,16 +4,15 @@ import { colors } from "@/theme/ThemeProvider";
 import { EventDoc } from "@/types/type";
 import { router } from "expo-router";
 import {
-  ActivityIndicator, AppState,
+  ActivityIndicator,
   FlatList,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from 'expo-location';
-import React, {useState, useEffect, useMemo, useCallback, useRef} from "react";
-import { useAuthUser } from "@/context/UserContext.tsx";
+import React, { useMemo } from "react";
+import { useAuthUser, useAppLocation } from "@/context/GlobalContext";
 import { calculateHaversineDistance, getParentCategoryFromTagName } from "@/components/utils";
 
 type HomeUIProps = {
@@ -22,73 +21,11 @@ type HomeUIProps = {
   onRefresh: () => void;
 };
 
-const fetchLocationOnDemand = async () => {
-  try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    if (status !== 'granted') return { error: 'Permission denied.', coords: { latitude: -42.8821, longitude: 147.3272 } };
-
-    const lastKnown = await Location.getLastKnownPositionAsync();
-    if (lastKnown) return { error: null, coords: lastKnown.coords };
-
-    const current = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-    });
-
-    return { error: null, coords: current.coords };
-  } catch (err) {
-    // If it fails, check if services are actually enabled
-    const enabled = await Location.hasServicesEnabledAsync();
-    console.log("Are location services enabled?", enabled);
-
-    return { error: !enabled ? 'Location services off' : null, coords: { latitude: -42.8821, longitude: 147.3272 } };
-  }
-};
-
 export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [userCoords, setUserCoords] = useState<{ latitude: number, longitude: number }>({
-    latitude: -42.8821,
-    longitude: 147.3272,
-  });
   const { userDoc } = useAuthUser();
-  const lastFetchTime = useRef(0);
-  console.log("userCoords", userCoords);
+  const { coords: userCoords, locationError } = useAppLocation();
 
-  // 1. Stable Location Updater
-  const updateLocation = useCallback(async () => {
-    const now = Date.now();
-    // Throttle: Don't run more than once every 3 seconds to prevent loops
-    if (now - lastFetchTime.current < 3000) return;
-    lastFetchTime.current = now;
-
-    const result = await fetchLocationOnDemand();
-
-    if (result.coords) {
-      setUserCoords((prev) => {
-        // Strict primitive check to stop the render loop
-        if (prev?.latitude === result.coords.latitude && prev?.longitude === result.coords.longitude) {
-          return prev;
-        }
-        return { latitude: result.coords.latitude, longitude: result.coords.longitude };
-      });
-    }
-    setErrorMsg(result.error);
-  }, []);
-
-  // 2. Lifecycle Management (Mount & AppState only)
-  useEffect(() => {
-    updateLocation();
-
-    const subscription = AppState.addEventListener("change", (nextState) => {
-      if (nextState === "active") {
-        updateLocation();
-      }
-    });
-
-    return () => subscription.remove();
-  }, [updateLocation]);
-
-  // 3. Process Events (Optimized dependencies)
+  // Process events: interests → distance → time
   const processedEvents = useMemo(() => {
     if (!events || events.length === 0) return [];
 
@@ -150,7 +87,9 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
         <View style={styles.container}>
           <View style={styles.headerRow}>
             <Text style={styles.sectionTitle}>For You</Text>
-            {errorMsg && <Text style={styles.locationError}>{errorMsg}</Text>}
+            {locationError ? (
+              <Text style={styles.locationError}>{locationError}</Text>
+            ) : null}
           </View>
 
           {loading && events.length === 0 ? (

@@ -4,14 +4,30 @@
  * It manages fetching all events, filtering them by category or access,
  * sorting the results, and toggling user bookmarks.
  */
-import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
+import { calculateHaversineDistance } from "@/components/utils";
+import { useAppLocation, useBookmarks, useEvents } from "@/context/GlobalContext";
 import { DiscoveryScreenUI } from "@/screens/discovery/discovery-screen";
 import { EventDoc } from "@/types/type";
-import { useEvents } from "@/context/EventsContext";
-import { useBookmarks } from "@/context/BookmarksContext";
+
+function distanceToEventKm(
+  event: EventDoc,
+  userLat: number,
+  userLon: number,
+): number {
+  const loc = event.location as { latitude?: number; longitude?: number } | undefined;
+  if (
+    !loc ||
+    typeof loc.latitude !== "number" ||
+    typeof loc.longitude !== "number"
+  ) {
+    return Infinity;
+  }
+  return calculateHaversineDistance(userLat, userLon, loc.latitude, loc.longitude);
+}
 
 // Defines the category filters used in top nav.
 const CATEGORY_OPTIONS = [
@@ -27,9 +43,20 @@ export default function DiscoveryScreen() {
   const [sortOption, setSortOption] = useState("default");
   const [accessFilter, setAccessFilter] = useState("all");
 
-  // Consume both contexts
   const { events, isLoading: isEventsLoading } = useEvents();
   const { bookmarkedIds, isLoading: isBookmarksLoading, toggleBookmark } = useBookmarks();
+  const { coords, isLocationOn, isLocationLoading, refreshLocation } =
+    useAppLocation();
+
+  /**
+   * In-app navigation (e.g. profile location settings) does not background the app,
+   * so AppState may not run — refresh when this screen is focused again.
+   */
+  useFocusEffect(
+    useCallback(() => {
+      void refreshLocation();
+    }, [refreshLocation]),
+  );
 
   const filteredEvents = useMemo(() => {
     return events.filter((event) => {
@@ -61,10 +88,27 @@ export default function DiscoveryScreen() {
       sorted.sort(
         (a, b) => b.dateTime.toDate().getTime() - a.dateTime.toDate().getTime(),
       );
+    } else if (sortOption === "location_nearest" && isLocationOn) {
+      sorted.sort((a, b) => {
+        const da = distanceToEventKm(a, coords.latitude, coords.longitude);
+        const db = distanceToEventKm(b, coords.latitude, coords.longitude);
+        return da - db;
+      });
+    } else if (sortOption === "location_furthest" && isLocationOn) {
+      sorted.sort((a, b) => {
+        const da = distanceToEventKm(a, coords.latitude, coords.longitude);
+        const db = distanceToEventKm(b, coords.latitude, coords.longitude);
+        return db - da;
+      });
     }
-    // Default returns original filtered order
     return sorted;
-  }, [filteredEvents, sortOption]);
+  }, [
+    filteredEvents,
+    sortOption,
+    coords.latitude,
+    coords.longitude,
+    isLocationOn,
+  ]);
 
   /**
    * @summary Saves or removes an event from the user's bookmark sub collection.
@@ -97,6 +141,11 @@ export default function DiscoveryScreen() {
           onSelectSort={setSortOption}
           accessFilter={accessFilter}
           onSelectAccessFilter={setAccessFilter}
+          isLocationOn={isLocationOn}
+          isLocationLoading={isLocationLoading}
+          onOpenLocationSettings={() => {
+            router.push("/(profile)/location-settings-logic" as any);
+          }}
       />
   );
 }

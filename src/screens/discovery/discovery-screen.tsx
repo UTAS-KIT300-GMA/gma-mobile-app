@@ -1,11 +1,13 @@
 import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
+import { openLocationRelatedSettings } from "@/components/utils";
 import { colors } from "@/theme/ThemeProvider";
 import { EventDoc } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -34,6 +36,11 @@ interface DiscoveryProps {
   // Future props for sorting
   sortOption: string;
   onSelectSort: (sort: string) => void;
+
+  /** From global location state (updated at app start / resume). */
+  isLocationOn: boolean;
+  isLocationLoading: boolean;
+  onOpenLocationSettings: () => void;
 }
 
 export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
@@ -51,6 +58,9 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
   onSelectSort,
   accessFilter,
   onSelectAccessFilter,
+  isLocationOn,
+  isLocationLoading,
+  onOpenLocationSettings,
 }) => {
   const [sortModalVisible, setSortModalVisible] = useState(false);
 
@@ -173,6 +183,26 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
                     styles.sortOptionRowActive,
                 ]}
                 onPress={() => {
+                  if (option.key.startsWith("location_")) {
+                    console.log("isLocationLoading", isLocationLoading)
+                    console.log("isLocationOn", isLocationOn)
+                    if (isLocationLoading) return;
+                    if (!isLocationOn) {
+                      Alert.alert(
+                        "Location required",
+                        "To sort by distance, turn on location services and allow this app to use your location.",
+                        [
+                          { text: "Cancel", style: "cancel" },
+                          {
+                            text: "Open settings",
+                            onPress: onOpenLocationSettings,
+                          },
+                        ],
+                      );
+                      return;
+                    }
+                  }
+
                   if (option.key === "free_only") {
                     onSelectAccessFilter("free");
                     onSelectSort("default");

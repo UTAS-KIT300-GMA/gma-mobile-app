@@ -13,7 +13,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
-import { useEvents } from "@/context/EventsContext";
+import { useEvents } from "@/context/GlobalContext";
 
 /*
 This screen retrieves the search parameters from the URL, fetches all events 
