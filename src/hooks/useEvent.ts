@@ -1,7 +1,5 @@
-import React, {
-    createContext,
+import {
     useCallback,
-    useContext,
     useEffect,
     useMemo,
     useRef,
@@ -30,7 +28,7 @@ export function useEventsInternal(): EventsSlice {
         setError(null);
         const q = query(
             collection(db, "events"),
-            where("approvalStatus", "==", "approved"),
+            where("eventApprovalStatus", "==", "approved"),
         );
         const snap: FirebaseFirestoreTypes.QuerySnapshot = await getDocs(q);
         const rows = snap.docs.map(
