@@ -81,7 +81,7 @@ export default function LearningRoute() {
           loading={isEventsLoading || isBookmarksLoading}
           expandedId={expandedId}
           onBookmarkPress={handleBookmarkPress}
-          onCardPress={handleCardPress}
+          
       />
   );
 }

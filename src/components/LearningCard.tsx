@@ -1,108 +1,216 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Alert, ActivityIndicator } from "react-native";
-import { LearningScreenUI } from "@/screens/learning/learning-UI";
-import { useBookmarks } from "@/context/BookmarksContext";
-import { useAuth } from "@/hooks/useAuth"; 
-import { db } from "@/services/authService";
-import { collection, getDocs } from "@react-native-firebase/firestore";
+import { colors } from "@/theme/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import React, { useMemo } from "react"; // Added useMemo
 import { LearningVideo } from "@/types/type";
-// 1. Added explicit type import for Firestore snapshots
-import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import {
+  ImageBackground,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
-/**
- * CORE INTERFACE
- * Ensure cloudinaryPublicId is included so the SDK can generate the stream.
- */
+// --- Cloudinary Imports ---
+import { Cloudinary } from "@cloudinary/url-gen";
+import { thumbnail } from "@cloudinary/url-gen/actions/resize";
+import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
 
-export default function LearningRoute() {
-  // 1. Local State for Learning Content
-  const [videos, setVideos] = useState<LearningVideo[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+// Initialize Cloudinary
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: "YOUR_CLOUD_NAME", // Replace with your actual cloud name
+  },
+});
 
-  // 2. Consume Global Contexts
-  const { bookmarkedIds, toggleBookmark, isLoading: isBookmarksLoading } = useBookmarks();
-  const { user } = useAuth(); // Used for membership check
+const FALLBACK_THUMBNAIL =
+  "https://via.placeholder.com/800x450.png?text=Learning+Video";
 
-  // 3. Fetch data directly from 'learningVideos' collection
-  useEffect(() => {
-    const loadContent = async () => {
-      try {
-        setIsLoading(true);
-        // Pointing to the correct collection name identified
-        const querySnapshot = await getDocs(collection(db, "learningVideos"));
-        
-        // Explicitly typed 'doc' to remove the "Implicit Any" error
-        const mappedVideos = querySnapshot.docs.map((doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            title: String(data.title || "Untitled Content"),
-            duration: String(data.duration || "0:00"),
-            thumbnailUrl: String(data.thumbnailUrl || ""), // Forced to string to satisfy type 'string'
-            description: String(data.description || "No description available."),
-            videoUrl: String(data.videoUrl || ""),
-            // Mapping the Cloudinary ID from Firestore to the state
-            cloudinaryPublicId: String(data.cloudinaryPublicId || ""), 
-            accessType: data.accessType === "subscriber" ? "subscriber" : "free",
-            // Derive bookmark status from the global BookmarksContext
-            isBookmarked: !!bookmarkedIds[doc.id],
-          } as LearningVideo; // Type assertion ensures compatibility with global interface
-        });
+export function LearningCard({
+  item,
+  onPressCard,
+  onPressBookmark,
+}: {
+  item: LearningVideo;
+  onPressCard?: () => void;
+  onPressBookmark?: () => void;
+}) {
+  const isSubscriberOnly = item.accessType === "subscriber";
 
-        setVideos(mappedVideos);
-      } catch (error) {
-        console.error("Error loading learningVideos:", error);
-        Alert.alert("Error", "Failed to sync with learning database.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // 1. Generate optimized Cloudinary thumbnail URL
+  // This uses your publicId to create a perfect 16:9 crop (800x450) 
+  const optimizedThumbnail = useMemo(() => {
+    if (!item.cloudinaryPublicId) return item.thumbnailUrl || FALLBACK_THUMBNAIL;
 
-    loadContent();
-  }, [bookmarkedIds]);
-
-  // 4. Logic to determine membership (adjust 'subscriber' logic as per your Firestore user schema)
-  // Update to this when membership feature implemented
-  // const isSubscriber = user?.membership === "subscriber";
-  const isSubscriber = false; // Temporary set to False
-
-  // 5. Handle Persistent Bookmarking
-  const handleBookmarkPress = async (id: string) => {
-    const originalVideo = videos.find(v => v.id === id);
-    if (originalVideo) {
-      try {
-        // Casting to any or specific EventDoc if required by toggleBookmark
-        await toggleBookmark(originalVideo as any);
-      } catch (error) {
-        Alert.alert("Error", "Could not update bookmark.");
-      }
-    }
-  };
-
-  // 6. Handle Access Control and Expansion
-  const handleCardPress = (item: LearningVideo) => {
-    const hasAccess = item.accessType === "free" || isSubscriber;
-
-    if (!hasAccess) {
-      Alert.alert(
-          "Subscribers Only",
-          "This course is available to subscribed members only."
-      );
-      return;
-    }
-
-    // This triggers the layout switch to the VideoPlayer
-    setExpandedId((prev) => (prev === item.id ? null : item.id));
-  };
+    return cld
+      .video(item.cloudinaryPublicId)
+      .format("auto")
+      .quality("auto")
+      .resize(
+        thumbnail()
+          .width(800) 
+          .height(450)
+          .gravity(autoGravity())
+      )
+      .toURL()
+      // "so_auto" ensures Cloudinary picks a frame with content instead of a black start screen
+      .replace("/video/upload", "/video/upload/so_auto");
+  }, [item.cloudinaryPublicId, item.thumbnailUrl]);
 
   return (
-      <LearningScreenUI
-          events={videos} // Passing our mapped learningVideos
-          loading={isLoading || isBookmarksLoading}
-          expandedId={expandedId}
-          onBookmarkPress={handleBookmarkPress}
-          onCardPress={handleCardPress}
-      />
+    <View style={styles.card}>
+      <Pressable
+        onPress={onPressCard}
+        style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+      >
+        <ImageBackground
+          source={{ uri: optimizedThumbnail }} // Swapped to use Cloudinary URL
+          style={styles.image}
+          imageStyle={styles.imageInner}
+        >
+          <LinearGradient
+            colors={["transparent", "rgba(0,0,0,0.8)"]}
+            style={styles.imageOverlay}
+          />
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Bookmark learning video"
+            onPress={onPressBookmark}
+            style={styles.bookmarkButton}
+            hitSlop={10}
+          >
+            <Ionicons
+              name={item.isBookmarked ? "bookmark" : "bookmark-outline"}
+              size={23}
+              color={colors.secondary}
+            />
+          </Pressable>
+
+          <View style={styles.playButtonWrap}>
+            <Ionicons
+              name="play-circle"
+              size={68}
+              color="rgba(255,255,255,0.92)"
+            />
+          </View>
+
+          <View style={styles.bottomLeft}>
+            <Text style={styles.title} numberOfLines={2}>
+              {item.title || "Untitled learning"}
+            </Text>
+
+            <Text style={styles.meta} numberOfLines={1}>
+              {item.duration || "0:00"}
+            </Text>
+          </View>
+
+          <View style={styles.ctaButton}>
+            {isSubscriberOnly && (
+              <Ionicons
+                name="lock-closed"
+                size={12}
+                color={colors.saveBtnTextColor}
+                style={styles.ctaIcon}
+              />
+            )}
+
+            <Text style={styles.ctaText}>
+              {isSubscriberOnly ? "Subscribers only" : "Free"}
+            </Text>
+          </View>
+        </ImageBackground>
+      </Pressable>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 15,
+    width: "100%",
+    alignSelf: "center",
+    overflow: "hidden",
+    backgroundColor: colors.textOnPrimary,
+    borderWidth: 1,
+    borderColor: colors.textOnPrimary,
+    marginBottom: 12,
+  },
+  image: {
+    height: 209,
+    width: "100%",
+    backgroundColor: colors.lightGrey,
+    position: "relative",
+    justifyContent: "flex-end",
+  },
+  imageInner: {
+    borderRadius: 15,
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  bookmarkButton: {
+    position: "absolute",
+    right: 10,
+    top: 10,
+    width: 43,
+    height: 39,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.textOnPrimary,
+    zIndex: 2,
+  },
+  playButtonWrap: {
+    position: "absolute",
+    top: "38%",
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bottomLeft: {
+    position: "absolute",
+    left: 8,
+    bottom: 6,
+    width: "55%",
+    backgroundColor: "transparent",
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 6,
+    gap: 2,
+  },
+  title: {
+    color: colors.textOnPrimary,
+    fontSize: 16,
+    fontWeight: "800",
+    lineHeight: 21,
+  },
+  meta: {
+    color: colors.textOnPrimary,
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  ctaButton: {
+    position: "absolute",
+    right: 12,
+    bottom: 12,
+    backgroundColor: colors.saveBtnColor,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    minHeight: 34,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ctaText: {
+    color: colors.saveBtnTextColor,
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: 0.4,
+  },
+  ctaIcon: {
+    marginRight: 6,
+  },
+});
