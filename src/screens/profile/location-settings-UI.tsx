@@ -1,59 +1,61 @@
 import { AppHeader } from "@/components/AppHeader";
+import { useAppLocation } from "@/context/GlobalContext";
 import { colors } from "@/theme/ThemeProvider";
-import { useRouter } from "expo-router";
-import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useEffect, useRef } from "react";
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
   View,
-  Linking, // Used to open System Settings
+  Linking,
   Platform,
-  AppState, // Used to detect when user returns from settings
+  AppState,
+  type AppStateStatus,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from "expo-location"; // Ensure you have expo-location installed
 
 export default function LocationSettingsScreen() {
-  const [isLocationEnabled, setIsLocationEnabled] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { isLocationOn, locationError, refreshLocation } = useAppLocation();
 
-  // Function to check actual device permission status
-  const checkLocationStatus = async () => {
-    try {
-      // Check if the physical GPS toggle is ON
-      const isProviderEnabled = await Location.hasServicesEnabledAsync();
+  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const lastResumeRefreshRef = useRef(0);
 
-      // Check if the App has permission to use that GPS
-      const { status } = await Location.getForegroundPermissionsAsync();
+  /** Keeps global `isLocationOn` in sync with Discovery. */
+  const syncGlobalLocation = useCallback(() => {
+    void refreshLocation();
+  }, [refreshLocation]);
 
-      // The toggle should only be "ON" if both are true
-      setIsLocationEnabled(isProviderEnabled && status === "granted");
-    } catch (error) {
-      console.error("Error checking location status:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      syncGlobalLocation();
+    }, [syncGlobalLocation]),
+  );
 
-  // Check permission on mount
+  /**
+   * After changing system location, some devices never emit background → active;
+   * they only fire active again. Refresh whenever we become active (debounced).
+   */
   useEffect(() => {
-    checkLocationStatus();
+    const subscription = AppState.addEventListener("change", (next) => {
+      const prev = appStateRef.current;
+      appStateRef.current = next;
+      if (next !== "active") return;
 
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "active") {
-        setLoading(true);
-        // Small timeout ensures the OS has updated the internal state
-        setTimeout(() => {
-          checkLocationStatus();
-        }, 500);
-      }
+      const now = Date.now();
+      if (now - lastResumeRefreshRef.current < 700) return;
+      lastResumeRefreshRef.current = now;
+
+      const wasBackgrounded = /inactive|background/.test(prev);
+      const delay = wasBackgrounded ? 450 : 250;
+      setTimeout(() => {
+        syncGlobalLocation();
+      }, delay);
     });
 
     return () => subscription.remove();
-  }, []);
+  }, [syncGlobalLocation]);
 
   const handleLocationToggle = async () => {
     if (Platform.OS === "ios") {
@@ -77,17 +79,19 @@ export default function LocationSettingsScreen() {
               <View style={styles.labelContainer}>
                 <Text style={styles.rowLabel}>Share My Location</Text>
                 <Text style={styles.subLabel}>
-                  {isLocationEnabled
-                      ? "Your location is currently being shared."
-                      : "Location sharing is disabled in system settings."}
+                  {isLocationOn
+                    ? "Your location is available for distance sorting and nearby features."
+                    : locationError
+                      ? locationError
+                      : "Location sharing is disabled or unavailable. Open system settings to enable it."}
                 </Text>
               </View>
 
               <Switch
-                  value={isLocationEnabled}
-                  onValueChange={handleLocationToggle}
-                  trackColor={{ false: "#D9D9D9", true: colors.primary }}
-                  thumbColor="#ffffff"
+                value={isLocationOn}
+                onValueChange={handleLocationToggle}
+                trackColor={{ false: "#D9D9D9", true: colors.primary }}
+                thumbColor="#ffffff"
               />
             </View>
           </View>
