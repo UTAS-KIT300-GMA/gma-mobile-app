@@ -2,7 +2,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { useAppLocation } from "@/context/GlobalContext";
 import { colors } from "@/theme/ThemeProvider";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -10,61 +10,24 @@ import {
   Text,
   View,
   Linking,
-  Platform,
-  AppState,
-  type AppStateStatus,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function LocationSettingsScreen() {
+  // Pull directly from your Global Context
   const { isLocationOn, locationError, refreshLocation } = useAppLocation();
 
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
-  const lastResumeRefreshRef = useRef(0);
-
-  /** Keeps global `isLocationOn` in sync with Discovery. */
-  const syncGlobalLocation = useCallback(() => {
-    void refreshLocation();
-  }, [refreshLocation]);
-
+  /** * useFocusEffect ensures that every time the user
+   * navigates back to this screen, we check the state.
+   */
   useFocusEffect(
-    useCallback(() => {
-      syncGlobalLocation();
-    }, [syncGlobalLocation]),
+      useCallback(() => {
+        refreshLocation();
+      }, [refreshLocation])
   );
 
-  /**
-   * After changing system location, some devices never emit background → active;
-   * they only fire active again. Refresh whenever we become active (debounced).
-   */
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (next) => {
-      const prev = appStateRef.current;
-      appStateRef.current = next;
-      if (next !== "active") return;
-
-      const now = Date.now();
-      if (now - lastResumeRefreshRef.current < 700) return;
-      lastResumeRefreshRef.current = now;
-
-      const wasBackgrounded = /inactive|background/.test(prev);
-      const delay = wasBackgrounded ? 450 : 250;
-      setTimeout(() => {
-        syncGlobalLocation();
-      }, delay);
-    });
-
-    return () => subscription.remove();
-  }, [syncGlobalLocation]);
-
-  const handleLocationToggle = async () => {
-    if (Platform.OS === "ios") {
-      // iOS: Take them directly to the app settings
-      Linking.openURL("app-settings:");
-    } else {
-      // Android: Take them to location provider settings
-      Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
-    }
+  const handleLocationToggle = () => {
+    Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
   };
 
   return (
@@ -80,26 +43,23 @@ export default function LocationSettingsScreen() {
                 <Text style={styles.rowLabel}>Share My Location</Text>
                 <Text style={styles.subLabel}>
                   {isLocationOn
-                    ? "Your location is available for distance sorting and nearby features."
-                    : locationError
-                      ? locationError
-                      : "Location sharing is disabled or unavailable. Open system settings to enable it."}
+                      ? "Your location is available for distance sorting."
+                      : locationError || "Location sharing is disabled in system settings."}
                 </Text>
               </View>
 
               <Switch
-                value={isLocationOn}
-                onValueChange={handleLocationToggle}
-                trackColor={{ false: "#D9D9D9", true: colors.primary }}
-                thumbColor="#ffffff"
+                  value={isLocationOn}
+                  onValueChange={handleLocationToggle}
+                  trackColor={{ false: "#D9D9D9", true: colors.primary }}
+                  thumbColor="#ffffff"
               />
             </View>
           </View>
 
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>
-              {"To protect your privacy, you must manage location permissions\n" +
-                  "directly within your device's system settings."}
+              To protect your privacy, manage location permissions directly in system settings.
             </Text>
           </View>
         </ScrollView>

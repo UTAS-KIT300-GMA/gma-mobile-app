@@ -36,7 +36,7 @@ export function EventCard({
         onPress={onPressCard}
         style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
       >
-        <ImageBackground source={{ uri: event.image }} style={styles.image}>
+        <ImageBackground source={{ uri: event.image || "https://via.placeholder.com/400" }} style={styles.image}>
           {/* Image overlay */}
           <LinearGradient
               colors={["transparent", "rgba(0,0,0,0.8)"]}

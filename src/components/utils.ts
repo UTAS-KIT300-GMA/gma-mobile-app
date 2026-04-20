@@ -157,12 +157,3 @@ export async function fetchLocationCoordinates(): Promise<{
     }
   }
 }
-
-/** Opens system / app settings so the user can enable location services or app location permission. */
-export function openLocationRelatedSettings(): void {
-  if (Platform.OS === "android") {
-    void RNLinking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
-  } else {
-    void ExpoLinking.openSettings();
-  }
-}
