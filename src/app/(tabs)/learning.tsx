@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
-import { useEvents } from "@/context/EventsContext";
-import { useBookmarks } from "@/context/BookmarksContext";
+import { useBookmarks, useEvents } from "@/context/GlobalContext";
 import { useAuth } from "@/hooks/useAuth"; // Assuming you have membership data in useAuth
 import { EventDoc } from "@/types/type";
 

@@ -5,7 +5,7 @@
 import { useEffect } from "react";
 import { Alert } from "react-native";
 import HomeScreen from "@/screens/home/home-screen";
-import { useEvents } from "@/context/EventsContext";
+import { useEvents } from "@/context/GlobalContext";
 
 export default function HomeRoute() {
   const { events, isLoading, error, refresh } = useEvents();

@@ -3,7 +3,7 @@ import {EventDoc, INTEREST_TAGS, InterestKey} from "@/types/type";
 import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { useEvents } from "@/context/EventsContext";
+import { useEvents } from "@/context/GlobalContext";
 
 export default function SearchScreenLogic() {
   // Stores the navigation tool in the router var.
