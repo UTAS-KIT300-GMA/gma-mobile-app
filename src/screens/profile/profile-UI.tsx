@@ -61,7 +61,9 @@ export default function ProfileUI({
     label: "My membership",
     path: "/(profile)/membership",
     },
-    { id: "saved", label: "Saved events", path: "/saved-events" },
+    { id: "Bookmarked Events",
+      label: "Bookmarked events",
+       path: "/BookmarkedEvents" },
   ];
 
   return (

@@ -1,22 +1,24 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Alert } from "react-native";
+import { BookmarkedEventsUI } from "@/screens/profile/Bookmarked-Events-UI";
+import { auth, db } from "@/services/authService";
+import { EventDoc } from "@/types/type";
 import {
   collection,
-  doc,
-  getDocs,
   deleteDoc,
+  doc,
+  FirebaseFirestoreTypes,
+  getDocs,
   query,
-  FirebaseFirestoreTypes, setDoc, serverTimestamp
+  serverTimestamp,
+  setDoc
 } from "@react-native-firebase/firestore";
-import {useRouter} from "expo-router";
-import { auth, db } from "@/services/authService"
-import { EventDoc } from "@/types/type";
-import { SavedEventsUI } from "@/screens/profile/saved-events-UI";
+import { useRouter } from "expo-router";
+import React, { useEffect, useMemo, useState } from "react";
+import { Alert } from "react-native";
 
 /**
    * @summary Displays a user's bookmarked events (saved events) from Firestore and automactically updates the UI when an user deletes or adds bookmark.
    */
-export default function SavedEventsRoute() {
+export default function BookmarkedEventsRoute() {
   
   const router = useRouter();
   // Stores the array of all available events from the database in the allEvents var.
@@ -112,7 +114,7 @@ export default function SavedEventsRoute() {
   return (
     // Passes the values of bookmarkedEvents, loading, handleRemoveBoomark
     // and navigation instructions to the saved events screen.
-    <SavedEventsUI
+    <BookmarkedEventsUI
       events={bookmarkedEvents}
       loading={loading}
       onBack={() => router.back()}

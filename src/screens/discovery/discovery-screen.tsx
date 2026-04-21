@@ -34,6 +34,11 @@ interface DiscoveryProps {
   // Future props for sorting
   sortOption: string;
   onSelectSort: (sort: string) => void;
+
+  /** From global location state (updated at app start / resume). */
+  isLocationOn: boolean;
+  isLocationLoading: boolean;
+  onOpenLocationSettings: () => void;
 }
 
 export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
@@ -51,6 +56,9 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
   onSelectSort,
   accessFilter,
   onSelectAccessFilter,
+  isLocationOn,
+  isLocationLoading,
+  onOpenLocationSettings,
 }) => {
   const [sortModalVisible, setSortModalVisible] = useState(false);
 
@@ -173,6 +181,13 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
                     styles.sortOptionRowActive,
                 ]}
                 onPress={() => {
+                  if (option.key.startsWith("location_")) {
+                    if (!isLocationOn) {
+                      onOpenLocationSettings()
+                      return;
+                    }
+                  }
+
                   if (option.key === "free_only") {
                     onSelectAccessFilter("free");
                     onSelectSort("default");

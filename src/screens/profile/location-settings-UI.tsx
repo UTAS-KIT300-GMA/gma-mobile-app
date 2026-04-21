@@ -1,68 +1,33 @@
 import { AppHeader } from "@/components/AppHeader";
+import { useAppLocation } from "@/context/GlobalContext";
 import { colors } from "@/theme/ThemeProvider";
-import { useRouter } from "expo-router";
-import { useState, useEffect, useCallback } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
   View,
-  Linking, // Used to open System Settings
-  Platform,
-  AppState, // Used to detect when user returns from settings
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from "expo-location"; // Ensure you have expo-location installed
 
 export default function LocationSettingsScreen() {
-  const [isLocationEnabled, setIsLocationEnabled] = useState(false);
-  const [loading, setLoading] = useState(true);
+  // Pull directly from your Global Context
+  const { isLocationOn, locationError, refreshLocation } = useAppLocation();
 
-  // Function to check actual device permission status
-  const checkLocationStatus = async () => {
-    try {
-      // Check if the physical GPS toggle is ON
-      const isProviderEnabled = await Location.hasServicesEnabledAsync();
+  /** * useFocusEffect ensures that every time the user
+   * navigates back to this screen, we check the state.
+   */
+  useFocusEffect(
+      useCallback(() => {
+        refreshLocation();
+      }, [refreshLocation])
+  );
 
-      // Check if the App has permission to use that GPS
-      const { status } = await Location.getForegroundPermissionsAsync();
-
-      // The toggle should only be "ON" if both are true
-      setIsLocationEnabled(isProviderEnabled && status === "granted");
-    } catch (error) {
-      console.error("Error checking location status:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Check permission on mount
-  useEffect(() => {
-    checkLocationStatus();
-
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (nextAppState === "active") {
-        setLoading(true);
-        // Small timeout ensures the OS has updated the internal state
-        setTimeout(() => {
-          checkLocationStatus();
-        }, 500);
-      }
-    });
-
-    return () => subscription.remove();
-  }, []);
-
-  const handleLocationToggle = async () => {
-    if (Platform.OS === "ios") {
-      // iOS: Take them directly to the app settings
-      Linking.openURL("app-settings:");
-    } else {
-      // Android: Take them to location provider settings
-      Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
-    }
+  const handleLocationToggle = () => {
+    Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
   };
 
   return (
@@ -77,14 +42,14 @@ export default function LocationSettingsScreen() {
               <View style={styles.labelContainer}>
                 <Text style={styles.rowLabel}>Share My Location</Text>
                 <Text style={styles.subLabel}>
-                  {isLocationEnabled
-                      ? "Your location is currently being shared."
-                      : "Location sharing is disabled in system settings."}
+                  {isLocationOn
+                      ? "Your location is available for distance sorting."
+                      : locationError || "Location sharing is disabled in system settings."}
                 </Text>
               </View>
 
               <Switch
-                  value={isLocationEnabled}
+                  value={isLocationOn}
                   onValueChange={handleLocationToggle}
                   trackColor={{ false: "#D9D9D9", true: colors.primary }}
                   thumbColor="#ffffff"
@@ -94,8 +59,7 @@ export default function LocationSettingsScreen() {
 
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>
-              {"To protect your privacy, you must manage location permissions\n" +
-                  "directly within your device's system settings."}
+              To protect your privacy, manage location permissions directly in system settings.
             </Text>
           </View>
         </ScrollView>

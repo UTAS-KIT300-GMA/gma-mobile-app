@@ -1,4 +1,7 @@
 import {EVENT_CATEGORIES, EventDoc} from "@/types/type.ts";
+import * as ExpoLinking from "expo-linking";
+import * as Location from "expo-location";
+import { Platform, Linking as RNLinking } from "react-native";
 
 export function formatDateTime(value: any): string {
   /**
@@ -82,3 +85,79 @@ export const getParentCategoryFromTagName = (
   }
   return null;
 };
+
+export type LocationFetchResult = {
+  error: string | null;
+  coords: { latitude: number; longitude: number };
+  isLocationOn: boolean;
+};
+
+/** Fallback coordinates when none are available (shared with global location state). */
+export const DEFAULT_LOCATION_COORDS = {
+  latitude: -42.8821,
+  longitude: 147.3272,
+};
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Permission + system location services only (no GPS fix). Use for global “location on” UI state.
+ */
+export async function resolveLocationStatus(): Promise<{
+  isLocationOn: boolean;
+  error: string | null;
+}> {
+  try {
+    let { status } = await Location.getForegroundPermissionsAsync();
+    if (status === "undetermined") {
+      const requested = await Location.requestForegroundPermissionsAsync();
+      status = requested.status;
+    }
+    if (status !== "granted") {
+      return { isLocationOn: false, error: "Permission denied." };
+    }
+    const servicesEnabled = await Location.hasServicesEnabledAsync();
+    if (!servicesEnabled) {
+      return { isLocationOn: false, error: "Location services off" };
+    }
+    return { isLocationOn: true, error: null };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "Location unavailable";
+    const enabled = await Location.hasServicesEnabledAsync().catch(() => false);
+    return {
+      isLocationOn: false,
+      error: !enabled ? "Location services off" : message,
+    };
+  }
+}
+
+/**
+ * Best-effort coordinates after status is already “on”. Retries once like the original flow.
+ */
+export async function fetchLocationCoordinates(): Promise<{
+  coords: { latitude: number; longitude: number };
+}> {
+  const readOnce = async () => {
+    const lastKnown = await Location.getLastKnownPositionAsync();
+    if (lastKnown) return lastKnown.coords;
+    const current = await Location.getCurrentPositionAsync({
+      accuracy: Location.Accuracy.Balanced,
+      mayShowUserSettingsDialog: false,
+    });
+    return current.coords;
+  };
+
+  try {
+    const coords = await readOnce();
+    return { coords };
+  } catch {
+    await sleep(850);
+    try {
+      const coords = await readOnce();
+      return { coords };
+    } catch {
+      return { coords: DEFAULT_LOCATION_COORDS };
+    }
+  }
+}
