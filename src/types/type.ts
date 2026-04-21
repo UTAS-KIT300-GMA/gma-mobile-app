@@ -186,9 +186,9 @@ export interface LearningVideo {
   duration: string;
   description?: string; 
   thumbnailUrl?: string;
-  videoUrl?: string;
+  videoId?: string;
   cloudinaryPublicId?: string; 
   accessType: "free" | "subscriber";
   isBookmarked: boolean;
-  pdfUrl?: string;
+  fileId?: string;
 }

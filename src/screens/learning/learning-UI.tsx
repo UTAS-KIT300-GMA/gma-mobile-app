@@ -1,5 +1,5 @@
 import { AppHeader } from "@/components/AppHeader";
-import LearningCard from "@/components/LearningCard"; 
+import LearningCard from "@/components/LearningCard";
 import { colors } from "@/theme/ThemeProvider";
 import { LearningVideo } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,7 +21,7 @@ interface Props {
   expandedId: string | null;
   onBookmarkPress?: (id: string) => void;
   onCardPress?: (item: LearningVideo) => void;
-  onPdfPress?: (url: string) => void;
+  onFilePress?: (url: string) => void;
 }
 
 export const LearningScreenUI: React.FC<Props> = ({
@@ -30,7 +30,7 @@ export const LearningScreenUI: React.FC<Props> = ({
   expandedId,
   onBookmarkPress,
   onCardPress,
-  onPdfPress,
+  onFilePress,
 }) => {
   if (loading) {
     return (
@@ -114,14 +114,14 @@ export const LearningScreenUI: React.FC<Props> = ({
                   {item.description || "No description available yet."}
                 </Text>
 
-                {/* PDF RESOURCE BUTTON */}
-                {item.pdfUrl ? (
+                {/* File RESOURCE BUTTON */}
+                {item.fileId ? (
                   <TouchableOpacity
-                    style={styles.pdfButton}
-                    onPress={() => onPdfPress?.(item.pdfUrl!)}
+                    style={styles.fileButton}
+                    onPress={() => onFilePress?.(item.fileId!)}
                   >
                     <Ionicons name="document-text" size={18} color={colors.saveBtnTextColor} />
-                    <Text style={styles.pdfButtonText}>View Learning Material (PDF)</Text>
+                    <Text style={styles.fileButtonText}>View Learning Material (FILE)</Text>
                   </TouchableOpacity>
                 ) : null}
 
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   ctaIcon: { marginRight: 6 },
   description: { color: "#444", fontSize: 14, lineHeight: 22, marginTop: 10, textAlign: "justify" },
   
-  pdfButton: {
+  fileButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f0f0f0',
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  pdfButtonText: {
+  fileButtonText: {
     marginLeft: 10,
     fontSize: 14,
     fontWeight: '700',
