@@ -26,6 +26,9 @@ export default function LearningRoute() {
   const { user } = useAuth();
 
   useEffect(() => {
+    /**
+   * @summary Synchronizes the component state with Firestore learning content and local bookmark status.
+   */
     const loadContent = async () => {
       try {
         setIsLoading(true);
@@ -95,7 +98,10 @@ export default function LearningRoute() {
   //  Placeholder subscription logic
   const isSubscriber = false;
 
-  //  Toggle bookmark handler
+  /**
+   * @summary Toggles the bookmark status for a specific video asset.
+   * @param id - The unique Firestore document ID of the video to be bookmarked or removed.
+   */
   const handleBookmarkPress = async (id: string) => {
     const originalVideo = videos.find((v) => v.id === id);
     if (originalVideo) {
@@ -107,7 +113,10 @@ export default function LearningRoute() {
     }
   };
 
-  // 🔹 Expand / collapse card + access control
+  /**
+   * @summary Manages UI expansion state and enforces subscription-based access control.
+   * @param item - The full LearningVideo object containing accessType and ID.
+   */
   const handleCardPress = (item: LearningVideo) => {
     const hasAccess = item.accessType === "free" || isSubscriber;
 
@@ -122,15 +131,21 @@ export default function LearningRoute() {
     setExpandedId((prev) => (prev === item.id ? null : item.id));
   };
 
-  // Open file (PDF) from Cloudinary
+  /**
+   * @summary Generates a Cloudinary URL and opens the associated PDF resource in the system browser.
+   * @param fileId - The Cloudinary public ID or direct filename for the asset.
+   */
   const handleFilePress = (fileId: string) => {
     if (!fileId) {
       Alert.alert("Error", "No file available.");
       return;
     }
 
-    // Cloudinary raw file URL
-    const fileUrl = `https://res.cloudinary.com/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/raw/upload/${fileId}.pdf`;
+  
+    // SDK to ensure the URL is valid.
+    const fileUrl = fileId.toLowerCase().endsWith(".pdf")
+      ? cld.image(fileId).toURL()
+      : cld.image(fileId).format("pdf").toURL();
 
     console.log("Generated URL:", fileUrl);
 

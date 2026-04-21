@@ -21,13 +21,23 @@ export interface LearningCardProps {
   onBookmarkPress?: () => void;
 }
 
+/**
+ * @summary A presentational card component that displays video metadata, handles thumbnail optimization via Cloudinary, and provides interaction hooks for playback and bookmarking.
+ * @param item - The LearningVideo object containing title, description, duration, and metadata.
+ * @param onPressCard - Callback function triggered when the user taps the card body to view content.
+ * @param onBookmarkPress - Callback function triggered when the user taps the bookmark icon.
+ */
 export default function LearningCard({ 
   item, 
   onPressCard, 
   onBookmarkPress 
 }: LearningCardProps) {
 
-  // Generate optimized thumbnail from video or fallback to static URL
+  /**
+ * @summary Generates an optimized image URL using Cloudinary transformations (AI-based gravity, auto-quality, and resizing) or returns a fallback placeholder.
+ * @param item.cloudinaryPublicId - Dependency: Recalculates if the Cloudinary ID changes to fetch the correct asset.
+ * @param item.thumbnailUrl - Dependency: Recalculates if the static fallback URL is updated.
+ */
   const optimizedThumbnail = useMemo(() => {
     if (item.cloudinaryPublicId) {
       return cld.image(item.cloudinaryPublicId)

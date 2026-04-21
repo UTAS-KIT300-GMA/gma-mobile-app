@@ -15,17 +15,27 @@ interface Props {
   publicId: string; 
 }
 
+/**
+ * @summary A specialized video playback component that leverages Cloudinary for on-the-fly optimization and `expo-video` for native performance.
+ * @param publicId - The Cloudinary public identifier for the video asset to be streamed.
+ */
 const VideoPlayer: React.FC<Props> = ({ publicId }) => {
   const [isPlaying, setIsPlaying] = useState(false);
 
-  // LOGS IMMEDIATELY ON MOUNT
+  
   useEffect(() => {
+    /**
+ * @summary Logs initialization metadata to the console for debugging deployment environments and asset loading.
+ */
     console.log("--- VideoPlayer Mounted ---");
     console.log("Using Public ID:", publicId);
     console.log("Cloud Name:", process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME);
   }, [publicId]);
 
-  // Force low quality and smaller resolution
+  /**
+ * @summary Generates a performance-optimized streaming URL by enforcing low resolution (480p), high compression (eco mode), and automatic format selection.
+ * @param publicId - Dependency: Triggers a new URL generation if the video source ID is updated.
+ */
   const optimizedUrl = useMemo(() => {
     if (!publicId?.trim()) return "";
     
@@ -48,6 +58,9 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
   });
 
   useEffect(() => {
+ /**
+* @summary Syncs the component's internal state with the native video player's playback events to manage the UI overlay.
+*/
     if (!player) return;
     const sub = player.addListener("playingChange", ({ isPlaying }) => setIsPlaying(isPlaying));
     return () => sub.remove();
