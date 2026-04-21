@@ -1,8 +1,9 @@
+import { Cloudinary } from "@cloudinary/url-gen";
 import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { Cloudinary } from "@cloudinary/url-gen";
+import { scale } from "@cloudinary/url-gen/actions/resize";
 
 const cld = new Cloudinary({
   cloud: {
@@ -24,14 +25,26 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
     console.log("Cloud Name:", process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME);
   }, [publicId]);
 
+  // Force low quality and smaller resolution
   const optimizedUrl = useMemo(() => {
     if (!publicId?.trim()) return "";
-    return cld.video(publicId).format("auto").quality("auto").toURL();
+    
+    return cld.video(publicId)
+      // 1. Force the width to 480 pixels (Low Quality)
+      .resize(scale().width(480)) 
+      
+      // 2. Force high compression. 'eco' prioritizes a smaller file size over visual quality.
+      .quality("auto:eco") 
+      
+      // 3. Let Cloudinary pick the best efficient format (like webm for Android)
+      .format("auto") 
+      .toURL();
   }, [publicId]);
 
-  const player = useVideoPlayer(optimizedUrl, (playerInstance) => {
+
+  const player = useVideoPlayer(optimizedUrl ?? "", (playerInstance) => {
     playerInstance.loop = false;
-    playerInstance.play();
+    playerInstance.pause();
   });
 
   useEffect(() => {
