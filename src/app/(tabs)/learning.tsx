@@ -1,4 +1,4 @@
-import { useBookmarks } from "@/context/BookmarksContext";
+import { useBookmarks } from "@/context/GlobalContext";
 import { useAuth } from "@/hooks/useAuth";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { db } from "@/services/authService";
