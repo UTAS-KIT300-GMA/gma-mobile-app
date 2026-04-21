@@ -1,12 +1,21 @@
-import React, { useState, useEffect } from "react";
-import { Alert, Linking } from "react-native";
-import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { useBookmarks } from "@/context/BookmarksContext";
-import { useAuth } from "@/hooks/useAuth"; 
+import { useAuth } from "@/hooks/useAuth";
+import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { db } from "@/services/authService";
-import { collection, getDocs } from "@react-native-firebase/firestore";
 import { LearningVideo } from "@/types/type";
 import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import { collection, getDocs } from "@react-native-firebase/firestore";
+import React, { useEffect, useState } from "react";
+import { Alert, Linking } from "react-native";
+import { Cloudinary } from "@cloudinary/url-gen";
+import { thumbnail } from "@cloudinary/url-gen/actions/resize";
+import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
+
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  },
+});
 
 export default function LearningRoute() {
   const [videos, setVideos] = useState<LearningVideo[]>([]);
@@ -23,19 +32,36 @@ export default function LearningRoute() {
         // Fetching from the 'learningVideos' collection
         const querySnapshot = await getDocs(collection(db, "learningVideos"));
         
-        const mappedVideos = querySnapshot.docs.map((doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
+       const mappedVideos = querySnapshot.docs.map((doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
           const data = doc.data();
+          const publicId = String(data.cloudinaryPublicId || "");
+          
+          // 1. Setup the default thumbnail from the database
+          let finalThumbnail = String(data.thumbnailUrl || "");
+
+          // 2. If a Public ID exists, overwrite the thumbnail with the Cloudinary generated one
+          if (publicId) {
+            finalThumbnail = cld.video(publicId)
+              .resize(
+                thumbnail()
+                  .width(800)
+                  .gravity(autoGravity()) // Uses AI to find the best frame
+              )
+              .format("jpg") // Force it to return a static image, not a video
+              .quality("auto")
+              .toURL();
+          }
+
           return {
             id: doc.id,
             title: String(data.title || "Untitled Content"),
             duration: String(data.duration || "0:00"),
-            thumbnailUrl: String(data.thumbnailUrl || ""), 
+            thumbnailUrl: finalThumbnail, // <-- Uses the Cloudinary generated URL
             description: String(data.description || "No description available."),
             videoUrl: String(data.videoUrl || ""),
-            cloudinaryPublicId: String(data.cloudinaryPublicId || ""), 
-            pdfUrl: String(data.pdfUrl || ""), // Added PDF mapping
+            cloudinaryPublicId: publicId, 
+            pdfUrl: String(data.pdfUrl || ""),
             accessType: data.accessType === "subscriber" ? "subscriber" : "free",
-            // Syncing bookmark status with global context
             isBookmarked: !!bookmarkedIds[doc.id],
           } as LearningVideo; 
         });
@@ -91,6 +117,7 @@ export default function LearningRoute() {
       expandedId={expandedId}
       onBookmarkPress={handleBookmarkPress}
       onCardPress={handleCardPress}
-      onPdfPress={handlePdfPress} 
+      onPdfPress={handlePdfPress}
+    />
   );
 }
