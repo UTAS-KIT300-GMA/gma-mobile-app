@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Alert } from "react-native";
+import { Alert, Linking } from "react-native";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { useBookmarks } from "@/context/BookmarksContext";
 import { useAuth } from "@/hooks/useAuth"; 
@@ -33,6 +33,7 @@ export default function LearningRoute() {
             description: String(data.description || "No description available."),
             videoUrl: String(data.videoUrl || ""),
             cloudinaryPublicId: String(data.cloudinaryPublicId || ""), 
+            pdfUrl: String(data.pdfUrl || ""), // Added PDF mapping
             accessType: data.accessType === "subscriber" ? "subscriber" : "free",
             // Syncing bookmark status with global context
             isBookmarked: !!bookmarkedIds[doc.id],
@@ -74,6 +75,15 @@ export default function LearningRoute() {
     setExpandedId((prev) => (prev === item.id ? null : item.id));
   };
 
+  // Handler for opening PDFs
+  const handlePdfPress = (url: string) => {
+    if (url) {
+      Linking.openURL(url).catch(() => 
+        Alert.alert("Error", "Could not open the PDF resource.")
+      );
+    }
+  };
+
   return (
     <LearningScreenUI
       events={videos} 
@@ -81,6 +91,6 @@ export default function LearningRoute() {
       expandedId={expandedId}
       onBookmarkPress={handleBookmarkPress}
       onCardPress={handleCardPress}
-    />
+      onPdfPress={handlePdfPress} 
   );
 }

@@ -190,4 +190,5 @@ export interface LearningVideo {
   cloudinaryPublicId?: string; 
   accessType: "free" | "subscriber";
   isBookmarked: boolean;
+  pdfUrl?: string;
 }
