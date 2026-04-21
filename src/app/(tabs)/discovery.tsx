@@ -79,15 +79,15 @@ export default function DiscoveryScreen() {
       );
     } else if (sortOption === "location_nearest" && isLocationOn) {
       sorted.sort((a, b) => {
-        const da = distanceToEventKm(a, coords.latitude, coords.longitude);
-        const db = distanceToEventKm(b, coords.latitude, coords.longitude);
-        return da - db;
+        const distA = distanceToEventKm(a, coords.latitude, coords.longitude);
+        const distB = distanceToEventKm(b, coords.latitude, coords.longitude);
+        return distA - distB;
       });
     } else if (sortOption === "location_furthest" && isLocationOn) {
       sorted.sort((a, b) => {
-        const da = distanceToEventKm(a, coords.latitude, coords.longitude);
-        const db = distanceToEventKm(b, coords.latitude, coords.longitude);
-        return db - da;
+        const distA = distanceToEventKm(a, coords.latitude, coords.longitude);
+        const distB = distanceToEventKm(b, coords.latitude, coords.longitude);
+        return distB - distA;
       });
     }
     return sorted;
