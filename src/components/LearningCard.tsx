@@ -1,10 +1,10 @@
-import React, { useMemo } from "react";
-import { View, Text, StyleSheet, Pressable, Image } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
 import { LearningVideo } from "@/types/type";
 import { Cloudinary } from "@cloudinary/url-gen";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useMemo } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
-// CLOUDINARY ACTIONS: Using the modern Actions-based syntax
+
 import { thumbnail } from "@cloudinary/url-gen/actions/resize";
 import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
 
@@ -30,13 +30,14 @@ export default function LearningCard({
   // Generate optimized thumbnail from video or fallback to static URL
   const optimizedThumbnail = useMemo(() => {
     if (item.cloudinaryPublicId) {
-      return cld.video(item.cloudinaryPublicId)
+      return cld.image(item.cloudinaryPublicId)
+        .setAssetType("video")
         .resize(
           thumbnail()
             .width(800)
             .gravity(autoGravity()) // Uses AI to find the best frame
         )
-        .format("auto")
+        .format("jpg")
         .quality("auto")
         .toURL();
     }
