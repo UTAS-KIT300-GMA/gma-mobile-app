@@ -59,11 +59,6 @@ export default function DiscoveryScreen() {
         accessFilter === "all" ||
         (accessFilter === "free" && event.type?.toLowerCase() === "free") ||
         (accessFilter === "subscriber" && event.type?.toLowerCase() !== "free");
-      
-      console.log(
-        "event types:",
-        events.map((e) => ({ title: e.title, type: e.type })),
-      );
 
 
       return matchesCategory && matchesAccess;
