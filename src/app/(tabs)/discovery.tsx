@@ -33,7 +33,7 @@ function distanceToEventKm(
 const CATEGORY_OPTIONS = [
   { key: "all", label: "All" },
   { key: "connect", label: "Connect" },
-  { key: "growth", label: "Growth" },
+  { key: "grow", label: "Grow" },
   { key: "thrive", label: "Thrive" },
 ];
 
@@ -57,8 +57,14 @@ export default function DiscoveryScreen() {
       // Checks if the event matches the selected access filter.
       const matchesAccess =
         accessFilter === "all" ||
-        (accessFilter === "free" && event.type.toLowerCase() === "free") ||
-        (accessFilter === "subscriber" && event.type.toLowerCase() !== "free");
+        (accessFilter === "free" && event.type?.toLowerCase() === "free") ||
+        (accessFilter === "subscriber" && event.type?.toLowerCase() !== "free");
+      
+      console.log(
+        "event types:",
+        events.map((e) => ({ title: e.title, type: e.type })),
+      );
+
 
       return matchesCategory && matchesAccess;
     });

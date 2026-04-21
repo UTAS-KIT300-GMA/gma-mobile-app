@@ -78,7 +78,7 @@ export const getParentCategoryFromTagName = (
     if (group.items.some((item) => normalize(item.name) === needle)) {
       const name = normalize(group.category);
       if (name === "connect") return "connect";
-      if (name === "grow") return "growth";
+      if (name === "grow") return "grow";
       if (name === "thrive") return "thrive";
       return null;
     }
