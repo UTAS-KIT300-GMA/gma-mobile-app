@@ -1,87 +1,86 @@
-import React, { useMemo, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Alert } from "react-native";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
-import { useEvents } from "@/context/EventsContext";
 import { useBookmarks } from "@/context/BookmarksContext";
-import { useAuth } from "@/hooks/useAuth"; // Assuming you have membership data in useAuth
-import { EventDoc } from "@/types/type";
-
-export interface LearningVideo {
-  id: string;
-  title: string;
-  duration: string;
-  thumbnailUrl: string;
-  isBookmarked: boolean;
-  description: string;
-  videoUrl: string;
-  accessType: "free" | "subscriber";
-}
+import { useAuth } from "@/hooks/useAuth"; 
+import { db } from "@/services/authService";
+import { collection, getDocs } from "@react-native-firebase/firestore";
+import { LearningVideo } from "@/types/type";
+import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
 export default function LearningRoute() {
-  // 1. Consume Global Contexts
-  const { events: allEvents, isLoading: isEventsLoading } = useEvents();
-  const { bookmarkedIds, toggleBookmark, isLoading: isBookmarksLoading } = useBookmarks();
-  const { user } = useAuth(); // Used for membership check
-
+  const [videos, setVideos] = useState<LearningVideo[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // 2. Logic to determine membership (adjust 'subscriber' logic as per your Firestore user schema)
-  // Update to this when membership feature implemented
-  // const isSubscriber = user?.membership === "subscriber";
-  const isSubscriber = false // Temporary set to False
+  const { bookmarkedIds, toggleBookmark, isLoading: isBookmarksLoading } = useBookmarks();
+  const { user } = useAuth(); 
 
-  // 3. Process and Filter Events specifically for the Learning UI
-  const learningVideos = useMemo<LearningVideo[]>(() => {
-    // Note: You might want to filter allEvents by a category like 'learning'
-    // if your EventsContext contains mixed types.
-    return allEvents.map((e: EventDoc & Record<string, any>) => ({
-      id: e.id,
-      title: e.title || "Untitled Content",
-      duration: e.duration || "0:00",
-      thumbnailUrl: e.thumbnailUrl || "",
-      description: e.description || "No description available.",
-      videoUrl: e.videoUrl || "",
-      accessType: e.accessType === "subscriber" ? "subscriber" : "free",
-      // Derive bookmark status from the global BookmarksContext
-      isBookmarked: !!bookmarkedIds[e.id],
-    }));
-  }, [allEvents, bookmarkedIds]);
-
-  // 4. Handle Persistent Bookmarking
-  const handleBookmarkPress = async (id: string) => {
-    const originalEvent = allEvents.find(e => e.id === id);
-    if (originalEvent) {
+  useEffect(() => {
+    const loadContent = async () => {
       try {
-        await toggleBookmark(originalEvent);
+        setIsLoading(true);
+        // Fetching from the 'learningVideos' collection
+        const querySnapshot = await getDocs(collection(db, "learningVideos"));
+        
+        const mappedVideos = querySnapshot.docs.map((doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            title: String(data.title || "Untitled Content"),
+            duration: String(data.duration || "0:00"),
+            thumbnailUrl: String(data.thumbnailUrl || ""), 
+            description: String(data.description || "No description available."),
+            videoUrl: String(data.videoUrl || ""),
+            cloudinaryPublicId: String(data.cloudinaryPublicId || ""), 
+            accessType: data.accessType === "subscriber" ? "subscriber" : "free",
+            // Syncing bookmark status with global context
+            isBookmarked: !!bookmarkedIds[doc.id],
+          } as LearningVideo; 
+        });
+
+        setVideos(mappedVideos);
+      } catch (error) {
+        console.error("Error loading learningVideos:", error);
+        Alert.alert("Error", "Failed to sync with learning database.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadContent();
+  }, [bookmarkedIds]);
+
+  const isSubscriber = false; // Placeholder for membership logic
+
+  const handleBookmarkPress = async (id: string) => {
+    const originalVideo = videos.find(v => v.id === id);
+    if (originalVideo) {
+      try {
+        await toggleBookmark(originalVideo as any);
       } catch (error) {
         Alert.alert("Error", "Could not update bookmark.");
       }
     }
   };
 
-
-  // 5. Handle Access Control and Expansion
   const handleCardPress = (item: LearningVideo) => {
     const hasAccess = item.accessType === "free" || isSubscriber;
-
     if (!hasAccess) {
-      Alert.alert(
-          "Subscribers Only",
-          "This course is available to subscribed members only."
-      );
+      Alert.alert("Subscribers Only", "This course is available to subscribed members only.");
       return;
     }
-
+    // Toggle video expansion
     setExpandedId((prev) => (prev === item.id ? null : item.id));
   };
 
   return (
-      <LearningScreenUI
-          events={learningVideos}
-          loading={isEventsLoading || isBookmarksLoading}
-          expandedId={expandedId}
-          onBookmarkPress={handleBookmarkPress}
-          
-      />
+    <LearningScreenUI
+      events={videos} 
+      loading={isLoading || isBookmarksLoading}
+      expandedId={expandedId}
+      onBookmarkPress={handleBookmarkPress}
+      onCardPress={handleCardPress}
+    />
   );
 }
