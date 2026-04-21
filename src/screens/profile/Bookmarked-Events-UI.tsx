@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-interface SavedEventsUIProps {
+interface BookmarkedEventsUIProps {
   events: EventDoc[];
   loading: boolean;
   onBack: () => void;
@@ -22,14 +22,14 @@ interface SavedEventsUIProps {
   onRsvp: (event: EventDoc) => void;
 }
 
-export const SavedEventsUI = ({
+export const BookmarkedEventsUI = ({
   events,
   loading,
   onBack,
   onPressCard,
   onRemoveBookmark,
   onRsvp,
-}: SavedEventsUIProps) => {
+}: BookmarkedEventsUIProps) => {
   const renderItem = ({ item }: { item: EventDoc }) => (
     <EventCard
       event={item}
