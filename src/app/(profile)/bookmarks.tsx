@@ -1,5 +1,5 @@
 import { useBookmarks } from "@/context/GlobalContext";
-import { BookmarkedEventsUI } from "@/screens/profile/bookmarks-UI";
+import { BookmarksUI } from "@/screens/profile/bookmarks-UI";
 import { db } from "@/services/authService";
 import { EventDoc, LearningDoc } from "@/types/type";
 import {
@@ -83,7 +83,7 @@ export default function BookmarksRoute() {
   return (
     // Passes the values of bookmarkedEvents, loading, handleRemoveBoomark
     // and navigation instructions to the saved events screen.
-    <BookmarkedEventsUI
+    <BookmarksUI
       events={bookmarkedEvents}
       learningContents={bookmarkedLearningContents}
       loading={loading}
