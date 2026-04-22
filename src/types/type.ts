@@ -69,20 +69,6 @@ export type LearningDoc = {
   updatedAt?: FirebaseFirestoreTypes.Timestamp;
 };
 
-export type LearningDoc ={
-  id: string;
-  title: string;
-  duration: string;
-  description?: string;
-  thumbnailUrl?: string;
-  videoId?: string;
-  cloudinaryPublicId?: string;
-  accessType: "free" | "paid";
-  isBookmarked: boolean;
-  fileId?: string;
-  interestTags?: string[];
-}
-
 export interface ProfileFormData {
   firstName: string;
   lastName: string;
