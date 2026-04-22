@@ -41,7 +41,8 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
 
         const today = Date.now();
         const userTagsArray = userDoc?.selectedTags ?? [];
-        // Force the Set to accept generic strings to match Firestore data
+
+        // Fix: Ensure Set is explicitly typed to string to match event tags
         const userTagsSet = new Set<string>(userTagsArray);
 
         // 1. FEATURED (Advertisements)
@@ -59,9 +60,11 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
             .filter((e) => !featured.find((f) => f.id === e.id))
             .map((event) => {
                 // Tag Match (60%)
-                const matchCount = event.interestTags?.filter((t) =>
+                const tags = event.interestTags || [];
+                const matchCount = tags.filter((t): t is string =>
                     userTagsSet.has(t)
-                ).length || 0;
+                ).length;
+
                 const tagScore = userTagsArray.length > 0 ? matchCount / userTagsArray.length : 0;
 
                 // Location Match (25%) - Max 20km
@@ -153,8 +156,14 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
                 ListHeaderComponent={
                     <>
                         {locationError && <Text style={styles.locationError}>{locationError}</Text>}
+
+                        {/* Only show Featured section if data exists */}
                         {featuredEvents.length > 0 && renderHorizontalSection("🔥 Featured", featuredEvents)}
-                        <Text style={styles.sectionTitle}>✨ For You</Text>
+
+                        {/* Only show "For You" title if there are events to display under it */}
+                        {forYouEvents.length > 0 && (
+                            <Text style={styles.sectionTitle}>✨ For You</Text>
+                        )}
                     </>
                 }
                 renderItem={({ item }) => (
@@ -201,8 +210,8 @@ const styles = StyleSheet.create({
         fontWeight: "500",
     } as TextStyle,
     sectionTitle: {
-        paddingHorizontal: 20,
-        paddingTop: 15,
+        paddingHorizontal: 5,
+        paddingTop: 5,
         paddingBottom: 10,
         fontSize: 20,
         fontWeight: "bold",
@@ -214,9 +223,9 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginVertical: 5,
     } as TextStyle,
-    listContent: { paddingBottom: 24 },
+    listContent: { paddingBottom: 12 },
     horizontalSection: { marginVertical: 10 },
-    horizontalListContent: { paddingLeft: 20, paddingRight: 10 },
+    horizontalListContent: { paddingLeft: 5, paddingRight: 10 },
     featuredCardWrapper: { width: 320, marginRight: -10 },
     footerSection: { marginTop: 20 },
 });
