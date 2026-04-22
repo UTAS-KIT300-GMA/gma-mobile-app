@@ -26,23 +26,34 @@ export type EventDoc = {
   location: FirebaseFirestoreTypes.GeoPoint;
   image: string; // URL string
   type: "free" | "paid";
-  
-  // Use Firestore Timestamp for better date handling
-  dateTime: FirebaseFirestoreTypes.Timestamp; 
-  
-  // Better defined ticket structure
+
+  // --- Date & Time ---
+  dateTime: FirebaseFirestoreTypes.Timestamp;
+
+  // --- Ticketing ---
   totalTickets: number;
+  ticketsSold?: number;
   attendees?: string[]; // Array of user UIDs
-  
-  // Pricing structure to support Member/Non-Member logic
+
   memberPrice: number;
   nonMemberPrice: number;
-  
-  // Optional: 
+
   ticketPrices?: {
     member: number;
     nonMember: number;
   };
+  ticketAccess?: "free_for_all" | "members_only";
+  isAd?: boolean;
+
+  // --- Admin & Partner Portal Workflow ---
+  eventApprovalStatus?: "draft" | "pending" | "approved" | "rejected";
+  submittedBy?: string; // partnerId
+  rejectionReason?: string;
+  interestTags?: string[];
+
+  // --- Metadata ---
+  createdAt?: FirebaseFirestoreTypes.Timestamp;
+  updatedAt?: FirebaseFirestoreTypes.Timestamp;
 };
 
 export interface ProfileFormData {
