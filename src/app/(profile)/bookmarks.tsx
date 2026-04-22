@@ -15,7 +15,7 @@ import { Alert } from "react-native";
 /**
    * @summary Displays a user's bookmarked events (saved events) from Firestore and automactically updates the UI when an user deletes or adds bookmark.
    */
-export default function BookmarkssRoute() {
+export default function BookmarksRoute() {
   
   const router = useRouter();
   // Stores the array of all available events and courses from the database in the allEvents var.
