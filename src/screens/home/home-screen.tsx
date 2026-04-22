@@ -1,8 +1,4 @@
-import { AppHeader } from "@/components/AppHeader";
-import { EventCard } from "@/components/EventCard";
-import { colors } from "@/theme/ThemeProvider";
-import { EventDoc } from "@/types/type";
-import { router } from "expo-router";
+import React, { useMemo } from "react";
 import {
     ActivityIndicator,
     FlatList,
@@ -11,15 +7,14 @@ import {
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import React, { useMemo } from "react";
-import { useAuthUser, useAppLocation } from "@/context/GlobalContext";
-import { calculateHaversineDistance, getParentCategoryFromTagName } from "@/components/utils";
+import { router } from "expo-router";
 
-type HomeUIProps = {
-    events: EventDoc[];
-    loading: boolean;
-    onRefresh: () => void;
-};
+import { AppHeader } from "@/components/AppHeader";
+import { EventCard } from "@/components/EventCard";
+import { colors } from "@/theme/ThemeProvider";
+import { useAuthUser, useAppLocation } from "@/context/GlobalContext";
+import { calculateHaversineDistance } from "@/components/utils";
+import {EventDoc} from "@/types/type.ts";
 
 export type RecommendedEvent = EventDoc & {
     finalScore: number;
@@ -27,11 +22,16 @@ export type RecommendedEvent = EventDoc & {
     matchCount: number;
 };
 
+type HomeUIProps = {
+    events: EventDoc[];
+    loading: boolean;
+    onRefresh: () => void;
+};
+
 export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
     const { userDoc } = useAuthUser();
     const { coords: userCoords, locationError } = useAppLocation();
 
-    // Process events: interests → distance → time
     const { featuredEvents, forYouEvents, randomEvents } = useMemo(() => {
         if (!events || events.length === 0) {
             return { featuredEvents: [], forYouEvents: [], randomEvents: [] };
@@ -43,8 +43,6 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
         const userTagsSet = new Set<string>(userTagsArray);
 
         // 1. FEATURED (Advertisements)
-        console.log("test", events
-            .filter((e) => e.isAd === true))
         const featured = events
             .filter((e) => e.isAd === true)
             .sort((a, b) => {
@@ -53,7 +51,6 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
                 return timeA - timeB;
             })
             .slice(0, 10);
-        console.log("featured events", featured);
 
         // 2. FOR YOU (Weighted Scoring)
         const scored: RecommendedEvent[] = events
@@ -103,6 +100,40 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
         return { featuredEvents: featured, forYouEvents: forYou, randomEvents: random };
     }, [events, userCoords, userDoc?.selectedTags]);
 
+    const renderHorizontalSection = (title: string, data: EventDoc[]) => (
+        <View style={styles.horizontalSection}>
+            <Text style={styles.sectionTitle}>{title}</Text>
+            <FlatList
+                horizontal
+                data={data}
+                showsHorizontalScrollIndicator={false}
+                keyExtractor={(item) => `horiz-${item.id}`}
+                contentContainerStyle={styles.horizontalListContent}
+                renderItem={({ item }) => (
+                    <View style={styles.featuredCardWrapper}>
+                        <EventCard
+                            key={`random-${item.id}`}
+                            event={item}
+                            onPressRsvp={() => router.push({ pathname: "/event/booking", params: { eventId: item.id } } as any)}
+                            onPressCard={() => router.push({ pathname: "/event/event-details", params: { id: item.id } } as any)}
+                        />
+                    </View>
+                )}
+            />
+        </View>
+    );
+
+    if (loading && events.length === 0) {
+        return (
+            <SafeAreaView style={styles.safe}>
+                <AppHeader title="GMA Connect" />
+                <View style={styles.center}>
+                    <ActivityIndicator color={colors.primary} size="large" />
+                </View>
+            </SafeAreaView>
+        );
+    }
+
     return (
         <SafeAreaView style={styles.safe}>
             <AppHeader
@@ -111,42 +142,49 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
                 onPressNotifications={() => router.push("/notifications" as any)}
             />
 
-            <View style={styles.container}>
-                <View style={styles.headerRow}>
-                    <Text style={styles.sectionTitle}>For You</Text>
-                    {locationError ? (
-                        <Text style={styles.locationError}>{locationError}</Text>
-                    ) : null}
-                </View>
-
-                {loading && events.length === 0 ? (
-                    <View style={styles.center}>
-                        <ActivityIndicator color={colors.primary} size="large" />
-                    </View>
-                ) : (
-                    <FlatList
-                        data={processedEvents}
-                        keyExtractor={(item) => item.id}
-                        contentContainerStyle={styles.listContent}
-                        refreshing={loading}
-                        onRefresh={onRefresh}
-                        ListEmptyComponent={
-                            <View style={styles.center}>
-                                <Text style={styles.emptyText}>No events found nearby.</Text>
-                            </View>
-                        }
-                        renderItem={({ item }) => (
-                            <EventCard
-                                event={item}
-                                onPressRsvp={() => router.push({ pathname: "/event/booking", params: { eventId: item.id } } as any)}
-                                onPressCard={() => router.push({ pathname: "/event/event-details", params: { id: item.id } } as any)}
-                            />
-                        )}
+            <FlatList
+                data={forYouEvents}
+                keyExtractor={(item) => item.id}
+                contentContainerStyle={styles.listContent}
+                refreshing={loading}
+                onRefresh={onRefresh}
+                ListHeaderComponent={
+                    <>
+                        {locationError && <Text style={styles.locationError}>{locationError}</Text>}
+                        {featuredEvents.length > 0 && renderHorizontalSection("🔥 Featured", featuredEvents)}
+                        <Text style={styles.sectionTitle}>✨ For You</Text>
+                    </>
+                }
+                renderItem={({ item }) => (
+                    <EventCard
+                        key={`random-${item.id}`}
+                        event={item}
+                        onPressRsvp={() => router.push({ pathname: "/event/booking", params: { eventId: item.id } } as any)}
+                        onPressCard={() => router.push({ pathname: "/event/event-details", params: { id: item.id } } as any)}
                     />
                 )}
-                <Text style={styles.sectionTitle}>Featured</Text>
-                <Text style={styles.sectionTitle}>You might be interested in...</Text>
-            </View>
+                ListFooterComponent={
+                    randomEvents.length > 0 ? (
+                        <View style={styles.footerSection}>
+                            <Text style={styles.sectionTitle}>🎲 You might be interested in...</Text>
+                            {randomEvents.map((item) => (
+                                <EventCard
+                                    key={`random-${item.id}`}
+                                    event={item}
+                                    onPressRsvp={() => router.push({ pathname: "/event/booking", params: { eventId: item.id } } as any)}
+                                    onPressCard={() => router.push({ pathname: "/event/event-details", params: { id: item.id } } as any)}
+                                />
+                            ))}
+                            <View style={{ height: 40 }} />
+                        </View>
+                    ) : null
+                }
+                ListEmptyComponent={
+                    <View style={styles.center}>
+                        <Text style={styles.emptyText}>No events found for your interests.</Text>
+                    </View>
+                }
+            />
         </SafeAreaView>
     );
 }
