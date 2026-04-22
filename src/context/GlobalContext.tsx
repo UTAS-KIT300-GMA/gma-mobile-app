@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import { useUser } from "@/hooks/useUser";
-import type { EventDoc, UserDoc } from "@/types/type";
+import type { EventDoc, LearningDoc, UserDoc } from "@/types/type";
 import {
   type LocationFetchResult,
 } from "@/components/utils";
@@ -33,7 +33,7 @@ export type EventsSlice = {
 export type BookmarksSlice = {
   bookmarkedIds: Record<string, boolean>;
   isLoading: boolean;
-  toggleBookmark: (event: EventDoc) => Promise<void>;
+  toggleBookmark: (item: EventDoc | LearningDoc) => Promise<void>;
 };
 
 // --- Location ---

@@ -1,10 +1,9 @@
-import { LearningVideo } from "@/types/type";
+import { LearningDoc } from "@/types/type";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-
-
+import { colors } from "@/theme/ThemeProvider";
 import { thumbnail } from "@cloudinary/url-gen/actions/resize";
 import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
 
@@ -16,14 +15,14 @@ const cld = new Cloudinary({
 
 // Explicitly export props to satisfy IntrinsicAttributes in other files
 export interface LearningCardProps {
-  item: LearningVideo;
+  item: LearningDoc;
   onPressCard?: () => void;
   onBookmarkPress?: () => void;
 }
 
 /**
  * @summary A presentational card component that displays video metadata, handles thumbnail optimization via Cloudinary, and provides interaction hooks for playback and bookmarking.
- * @param item - The LearningVideo object containing title, description, duration, and metadata.
+ * @param item - The LearningDoc object containing title, description, duration, and metadata.
  * @param onPressCard - Callback function triggered when the user taps the card body to view content.
  * @param onBookmarkPress - Callback function triggered when the user taps the bookmark icon.
  */
@@ -58,40 +57,44 @@ export default function LearningCard({
     <Pressable style={styles.card} onPress={onPressCard}>
       {/* Visual Header */}
       <View style={styles.imageContainer}>
-        <Image 
-          source={{ uri: optimizedThumbnail }} 
-          style={styles.thumbnail} 
+        <Image
+          source={{ uri: optimizedThumbnail }}
+          style={styles.thumbnail}
           resizeMode="cover"
         />
         <View style={styles.durationBadge}>
           <Text style={styles.durationText}>{item.duration}</Text>
         </View>
-        <View style={styles.playOverlay}>
-          <Ionicons name="play-circle" size={50} color="rgba(255,255,255,0.8)" />
-        </View>
       </View>
+
+      <Pressable
+        onPress={onBookmarkPress}
+        hitSlop={10}
+        style={styles.bookmarkButton}
+      >
+        <Ionicons
+          name={item.isBookmarked ? "bookmark" : "bookmark-outline"}
+          size={22}
+          color={item.isBookmarked ? colors.secondary : colors.secondary}
+        />
+      </Pressable>
 
       {/* Content Body */}
       <View style={styles.infoContainer}>
         <View style={styles.headerRow}>
-          <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
-          <Pressable onPress={onBookmarkPress} hitSlop={10}>
-            <Ionicons 
-              name={item.isBookmarked ? "bookmark" : "bookmark-outline"} 
-              size={22} 
-              color={item.isBookmarked ? "#007AFF" : "#666"} 
-            />
-          </Pressable>
+          <Text style={styles.title} numberOfLines={1}>
+            {item.title}
+          </Text>
         </View>
-        
+
         <Text style={styles.description} numberOfLines={2}>
           {item.description}
         </Text>
 
         {/* Membership Access Label */}
-        {item.accessType === "subscriber" && (
+        {item.accessType === "paid" && (
           <View style={styles.subscriberBadge}>
-            <Ionicons name="star" size={12} color="#fff" />
+            <Ionicons name="star" size={12} color={colors.saveBtnTextColor} />
             <Text style={styles.subscriberText}>SUBSCRIBER ONLY</Text>
           </View>
         )}
@@ -112,8 +115,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  imageContainer: { height: 180, backgroundColor: "#eee", position: "relative" },
+  imageContainer: {
+    height: 180,
+    backgroundColor: "#eee",
+    position: "relative",
+  },
   thumbnail: { width: "100%", height: "100%" },
+
+  bookmarkButton: {
+    position: "absolute",
+    right: 10,
+    top: 10,
+    width: 43,
+    height: 39,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.textOnPrimary,
+  },
+
   durationBadge: {
     position: "absolute",
     bottom: 10,
@@ -124,19 +144,20 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   durationText: { color: "#fff", fontSize: 12, fontWeight: "600" },
-  playOverlay: { 
-    ...StyleSheet.absoluteFillObject, 
-    justifyContent: "center", 
-    alignItems: "center" 
-  },
   infoContainer: { padding: 15 },
-  headerRow: { 
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    marginBottom: 5 
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5,
   },
-  title: { fontSize: 18, fontWeight: "bold", color: "#1a1a1a", flex: 1, marginRight: 10 },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    flex: 1,
+    marginRight: 10,
+  },
   description: { fontSize: 14, color: "#666", lineHeight: 20 },
   subscriberBadge: {
     flexDirection: "row",
@@ -148,5 +169,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginTop: 10,
   },
-  subscriberText: { color: "#fff", fontSize: 10, fontWeight: "800", marginLeft: 4 },
+  subscriberText: {
+    color: colors.saveBtnTextColor,
+    fontSize: 10,
+    fontWeight: "800",
+    marginLeft: 4,
+  },
 });

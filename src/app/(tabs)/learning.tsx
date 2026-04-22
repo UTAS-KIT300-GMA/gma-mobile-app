@@ -2,7 +2,7 @@ import { useBookmarks } from "@/context/GlobalContext";
 import { useAuth } from "@/hooks/useAuth";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { db } from "@/services/authService";
-import { LearningVideo } from "@/types/type";
+import { LearningDoc } from "@/types/type";
 import { Cloudinary } from "@cloudinary/url-gen";
 import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { collection, getDocs } from "@react-native-firebase/firestore";
@@ -17,7 +17,7 @@ const cld = new Cloudinary({
 });
 
 export default function LearningRoute() {
-  const [videos, setVideos] = useState<LearningVideo[]>([]);
+  const [videos, setVideos] = useState<LearningDoc[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -43,8 +43,6 @@ export default function LearningRoute() {
             // Cloudinary public ID for video/image assets
             const publicId = String(data.cloudinaryPublicId || "");
 
-        
-
             let finalThumbnail = "";
 
             // Use stored thumbnail if available
@@ -56,6 +54,7 @@ export default function LearningRoute() {
               finalThumbnail = `https://res.cloudinary.com/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${publicId}.jpg`;
             }
 
+            
             return {
               id: doc.id,
               title: String(data.title || "Untitled Content"),
@@ -75,11 +74,11 @@ export default function LearningRoute() {
               fileId: String(data.fileId || ""),
 
               accessType:
-                data.accessType === "subscriber" ? "subscriber" : "free",
+                data.accessType ?? "free",
 
               // Bookmark state synced from context
               isBookmarked: !!bookmarkedIds[doc.id],
-            } as LearningVideo;
+            } as LearningDoc;
           }
         );
 
@@ -115,9 +114,9 @@ export default function LearningRoute() {
 
   /**
    * @summary Manages UI expansion state and enforces subscription-based access control.
-   * @param item - The full LearningVideo object containing accessType and ID.
+   * @param item - The full LearningDoc object containing accessType and ID.
    */
-  const handleCardPress = (item: LearningVideo) => {
+  const handleCardPress = (item: LearningDoc) => {
     const hasAccess = item.accessType === "free" || isSubscriber;
 
     if (!hasAccess) {
@@ -148,6 +147,7 @@ export default function LearningRoute() {
       : cld.image(fileId).format("pdf").toURL();
 
     console.log("Generated URL:", fileUrl);
+    
 
     Linking.openURL(fileUrl).catch((err) => {
       console.error("Open URL error:", err);
