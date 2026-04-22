@@ -33,7 +33,7 @@ function distanceToEventKm(
 const CATEGORY_OPTIONS = [
   { key: "all", label: "All" },
   { key: "connect", label: "Connect" },
-  { key: "growth", label: "Growth" },
+  { key: "grow", label: "Grow" },
   { key: "thrive", label: "Thrive" },
 ];
 
@@ -57,8 +57,9 @@ export default function DiscoveryScreen() {
       // Checks if the event matches the selected access filter.
       const matchesAccess =
         accessFilter === "all" ||
-        (accessFilter === "free" && event.type.toLowerCase() === "free") ||
-        (accessFilter === "subscriber" && event.type.toLowerCase() !== "free");
+        (accessFilter === "free" && event.type?.toLowerCase() === "free") ||
+        (accessFilter === "subscriber" && event.type?.toLowerCase() !== "free");
+
 
       return matchesCategory && matchesAccess;
     });
@@ -79,15 +80,15 @@ export default function DiscoveryScreen() {
       );
     } else if (sortOption === "location_nearest" && isLocationOn) {
       sorted.sort((a, b) => {
-        const da = distanceToEventKm(a, coords.latitude, coords.longitude);
-        const db = distanceToEventKm(b, coords.latitude, coords.longitude);
-        return da - db;
+        const distA = distanceToEventKm(a, coords.latitude, coords.longitude);
+        const distB = distanceToEventKm(b, coords.latitude, coords.longitude);
+        return distA - distB;
       });
     } else if (sortOption === "location_furthest" && isLocationOn) {
       sorted.sort((a, b) => {
-        const da = distanceToEventKm(a, coords.latitude, coords.longitude);
-        const db = distanceToEventKm(b, coords.latitude, coords.longitude);
-        return db - da;
+        const distA = distanceToEventKm(a, coords.latitude, coords.longitude);
+        const distB = distanceToEventKm(b, coords.latitude, coords.longitude);
+        return distB - distA;
       });
     }
     return sorted;

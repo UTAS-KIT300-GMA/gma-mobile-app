@@ -1,6 +1,6 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
-export type Category = "all" | "connect" | "growth" | "thrive";
+export type Category = "all" | "connect" | "grow" | "thrive";
 
 export type UserDoc = {
   email: string;
@@ -190,3 +190,16 @@ export type Booking = {
     address: string;
   };
 };
+
+export interface LearningVideo {
+  id: string;
+  title: string;
+  duration: string;
+  description?: string; 
+  thumbnailUrl?: string;
+  videoId?: string;
+  cloudinaryPublicId?: string; 
+  accessType: "free" | "subscriber";
+  isBookmarked: boolean;
+  fileId?: string;
+}
