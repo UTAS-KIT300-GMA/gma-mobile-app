@@ -17,6 +17,9 @@ import { db } from "@/services/authService";
 import type { EventDoc } from "@/types/type";
 import {EventsSlice} from "@/context/GlobalContext.tsx";
 
+/**
+ * @summary Fetches approved events from Firestore once on mount and exposes a refresh function alongside loading and error states.
+ */
 export function useEventsInternal(): EventsSlice {
     const [events, setEvents] = useState<EventDoc[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);

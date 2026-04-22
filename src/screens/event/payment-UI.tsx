@@ -43,6 +43,10 @@ interface PaymentUIProps {
   onConfirmPayment: () => void;
 }
 
+/**
+ * @summary Detects the card network ("Visa", "Mastercard", or "Unknown card") from the card number prefix.
+ * @param number - The raw card number string entered by the user.
+ */
 const detectCardType = (number: string): string => {
   const cleaned = number.replace(/\D/g, "");
 
@@ -63,6 +67,10 @@ const detectCardType = (number: string): string => {
   return "Unknown card";
 };
 
+/**
+ * @summary Returns the appropriate card logo image asset for the given card number, or null if unrecognised.
+ * @param number - The raw card number string entered by the user.
+ */
 const getCardLogo = (number: string) => {
   const cleaned = number.replace(/\D/g, "");
 
@@ -83,6 +91,30 @@ const getCardLogo = (number: string) => {
   return null;
 };
 
+/**
+ * @summary Renders the payment screen UI with method selection, card/Afterpay form fields, and a confirm button.
+ * @param type - The payment context type (e.g., "event" or "membership").
+ * @param title - The name of the item being purchased.
+ * @param price - The formatted price string to display.
+ * @param ticketType - The type of ticket selected by the user.
+ * @param time - The event time string to display in the summary.
+ * @param location - The event location string to display in the summary.
+ * @param ticketCount - The number of tickets being purchased.
+ * @param benefits - A string describing the benefits included.
+ * @param selectedMethod - The currently active payment method.
+ * @param cardHolderName - The cardholder name input value.
+ * @param cardNumber - The card number input value.
+ * @param expiry - The card expiry input value.
+ * @param cvv - The CVV input value.
+ * @param afterpayContact - The email or phone input value for Afterpay.
+ * @param onSelectMethod - Callback invoked when the user selects a payment method.
+ * @param onChangeCardHolderName - Callback for cardholder name input changes.
+ * @param onChangeCardNumber - Callback for card number input changes.
+ * @param onChangeExpiry - Callback for expiry input changes.
+ * @param onChangeCvv - Callback for CVV input changes.
+ * @param onChangeAfterpayContact - Callback for Afterpay contact input changes.
+ * @param onConfirmPayment - Callback invoked when the confirm/continue button is pressed.
+ */
 export function PaymentScreenUI({
   type,
   title,

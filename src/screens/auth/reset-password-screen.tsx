@@ -13,13 +13,17 @@ import {
 } from "react-native";
 import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
 
-/* Reset Password Screen Component 
-
-- This screen allows users to reset their password using a code from their email. 
-- It handles the input of the new password, confirmation, and displays feedback through modals. 
-- The component is styled to match the app's theme and provides a link back to the login screen.
-*/
-
+/**
+ * @summary Renders the reset-password UI where users enter a new password using the action code from their reset email.
+ * @param oobCode - The action code from the password reset email link; if absent, a manual code input is shown.
+ * @param resetEmail - The email address associated with the reset code, displayed for user confirmation.
+ * @param checkingCode - When true, shows a loading indicator while the action code is being verified.
+ * @param loading - When true, shows an activity indicator on the save button.
+ * @param onSave - Callback invoked with the new password, confirmation password, and manual code input when save is pressed.
+ * @param modalVisible - Controls the visibility of the result feedback modal.
+ * @param modalMessage - The message to display inside the feedback modal.
+ * @param onCloseModal - Callback invoked when the modal OK button is pressed.
+ */
 export function ResetPasswordScreen({
   oobCode,
   resetEmail,

@@ -13,9 +13,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 
 /**
- * A custom hook for managing event and learning contentbookmarks.
- *
- * @returns
+ * @summary Manages bookmark state for events and learning content, syncing adds and removes with Firestore.
  */
 export function useBookmarksInternal(): BookmarksSlice {
   const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>(

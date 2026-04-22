@@ -4,19 +4,18 @@ import { useRouter } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { NotificationIcon, ProfileIcon } from "../../assets/icons";
 
-/* The `AppHeader` component is a reusable header component that can be used across different 
-screens in the app. It accepts several props to customize its appearance and functionality:
-
-- `title`: The title text displayed in the center of the header. Defaults to "GMA Connect".
-- `onPressNotifications`: A callback function that is called when the notifications icon is pressed. If not provided, it defaults to navigating to the "/notifications" screen.
-- `onPressProfile`: A callback function that is called when the profile icon is pressed. If not provided, it defaults to navigating to the "/(profile)" screen.
-- `onPressBack`: A callback function that is called when the back button is pressed. If not provided, it defaults to navigating back in the navigation stack.
-- `showBack`: A boolean that determines whether to show the back button on the left side of the header. Defaults to false.
-- `showNotiAndProfile`: A boolean that determines whether to show the notification and profile icons on the right side of the header. Defaults to true.
-
-The component uses React Native's `View`, `Text`, and `Pressable` components for layout and interactivity, and it utilises the `Ionicons` library for icons. The styles are defined using
-*/
-
+/**
+ * @summary Reusable app header that renders the title, optional back button, and optional notification and profile icons.
+ * @param title - Text displayed in the header. Defaults to "GMA Connect".
+ * @param onPressNotifications - Callback when the notifications icon is pressed; defaults to navigating to /notifications.
+ * @param onPressProfile - Callback when the profile icon is pressed; defaults to navigating to /(profile).
+ * @param onPressBack - Callback when the back button is pressed; defaults to router.back().
+ * @param onPressCheckPrimary - Callback for the primary check/action icon shown in selection mode.
+ * @param onPressCheckSecondary - Callback for the secondary check/action icon shown in selection mode.
+ * @param showBack - When true, renders the back-arrow layout instead of the main layout.
+ * @param showNotiAndProfile - When true, renders the notification and profile icon buttons.
+ * @param showCheck - When true, renders the check action icons in the header.
+ */
 export function AppHeader({
   title = "GMA Connect",
   onPressNotifications,
@@ -38,10 +37,11 @@ export function AppHeader({
   showNotiAndProfile?: boolean;
   showCheck?: boolean;
 }) {
-  // Stores the navigation tool in the router var for internal redirects.
   const router = useRouter();
 
-  // Stores function instructions in  handleProfilePress var.
+  /**
+   * @summary Navigates to the profile screen or calls the provided onPressProfile override.
+   */
   const handleProfilePress = () => {
     if (onPressProfile) {
       onPressProfile();
@@ -50,7 +50,9 @@ export function AppHeader({
     }
   };
 
-  // Stores function instructions in handleNotificationPress var.
+  /**
+   * @summary Navigates to the notifications screen or calls the provided onPressNotifications override.
+   */
   const handleNotificationPress = () => {
     if (onPressNotifications) {
       onPressNotifications();
@@ -59,7 +61,9 @@ export function AppHeader({
     }
   };
 
-  // Stores function instructions in the handleBackPress var.
+  /**
+   * @summary Navigates back in the navigation stack or calls the provided onPressBack override.
+   */
   const handleBackPress = () => {
     if (onPressBack) {
       onPressBack();
@@ -68,16 +72,22 @@ export function AppHeader({
     }
   };
 
+  /**
+   * @summary Invokes the primary check action callback if provided.
+   */
   const handleCheckPrimaryPress = () => {
     if (onPressCheckPrimary) {
       onPressCheckPrimary();
-    } // Need to implement primary action to chosen notifications as read in notifications screen
+    }
   };
 
+  /**
+   * @summary Invokes the secondary check action callback if provided.
+   */
   const handleCheckSecondaryPress = () => {
     if (onPressCheckSecondary) {
       onPressCheckSecondary();
-    } // Need to implement secondary action to clear mark all unread in notifications screen as read
+    }
   };
 
   // Back Header Layout for subscreens
