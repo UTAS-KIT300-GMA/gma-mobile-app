@@ -1,5 +1,11 @@
 import React, { useMemo } from "react";
-import { ActivityIndicator, FlatList, StyleSheet, Text, TextStyle, View } from "react-native";
+import {
+    ActivityIndicator,
+    FlatList,
+    StyleSheet,
+    Text, TextStyle,
+    View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
@@ -8,7 +14,7 @@ import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuthUser, useAppLocation } from "@/context/GlobalContext";
 import { calculateHaversineDistance } from "@/components/utils";
-import { EventDoc } from "@/types/type.ts";
+import {EventDoc} from "@/types/type.ts";
 
 export type RecommendedEvent = EventDoc & {
     finalScore: number;
@@ -22,7 +28,7 @@ type HomeUIProps = {
     onRefresh: () => void;
 };
 
-const MATCH_PERCENTAGE = [0.6, 0.25, 0.15]; // Tags, Location, Time
+const MATCH_PERCENTAGE = [0.6, 0.25, 0.15] // Tags , Location, Time
 
 export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
     const { userDoc } = useAuthUser();
@@ -223,4 +229,3 @@ const styles = StyleSheet.create({
     featuredCardWrapper: { width: 320, marginRight: -10 },
     footerSection: { marginTop: 20 },
 });
-
