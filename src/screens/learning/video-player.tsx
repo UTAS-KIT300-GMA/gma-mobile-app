@@ -27,9 +27,7 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
     /**
  * @summary Logs initialization metadata to the console for debugging deployment environments and asset loading.
  */
-    console.log("--- VideoPlayer Mounted ---");
-    console.log("Using Public ID:", publicId);
-    console.log("Cloud Name:", process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME);
+    
   }, [publicId]);
 
   /**
@@ -62,9 +60,24 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
 * @summary Syncs the component's internal state with the native video player's playback events to manage the UI overlay.
 */
     if (!player) return;
-    const sub = player.addListener("playingChange", ({ isPlaying }) => setIsPlaying(isPlaying));
-    return () => sub.remove();
-  }, [player]);
+    
+    // LOG: Verification of optimization
+    const isOptimized = optimizedUrl.includes('w_480') && optimizedUrl.includes('q_auto:eco');
+    console.log("--- VideoPlayer Performance Check ---");
+    console.log("Public ID:", publicId);
+    console.log("Is 480p Eco active?:", isOptimized ? "✅ YES" : "❌ NO");
+    const sub = player.addListener("playingChange", ({ isPlaying }) => {
+    setIsPlaying(isPlaying);
+    console.log(`Video Status: ${isPlaying ? "▶️ Playing" : "⏸️ Paused"}`);
+  });
+
+  return () => sub.remove();
+  }, [player, optimizedUrl, publicId]);
+
+  
+    
+
+    
 
   if (!optimizedUrl) {
     return (
