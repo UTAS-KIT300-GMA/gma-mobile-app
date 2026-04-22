@@ -1,15 +1,12 @@
+import { useBookmarks } from "@/context/GlobalContext";
 import { BookmarkedEventsUI } from "@/screens/profile/Bookmarked-Events-UI";
-import { auth, db } from "@/services/authService";
-import { EventDoc } from "@/types/type";
+import { db } from "@/services/authService";
+import { EventDoc, LearningDoc } from "@/types/type";
 import {
   collection,
-  deleteDoc,
-  doc,
   FirebaseFirestoreTypes,
   getDocs,
   query,
-  serverTimestamp,
-  setDoc
 } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
@@ -21,10 +18,12 @@ import { Alert } from "react-native";
 export default function BookmarkedEventsRoute() {
   
   const router = useRouter();
-  // Stores the array of all available events from the database in the allEvents var.
+  // Stores the array of all available events and courses from the database in the allEvents var.
   const [allEvents, setAllEvents] = useState<EventDoc[]>([]);
-  // Stores an object map of the event IDs the user has saved in the bookmarkedIds var.
-  const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>({});
+  const [allLearningContents, setAllLearningContents] = useState<LearningDoc[]>([]);
+  
+  // Accesses the bookmarkedIds and toggleBookmark function from the bookmark context.
+  const { bookmarkedIds, toggleBookmark } = useBookmarks();
   
   // Stores a boolean in the loading var to track the background data fetching.
   const [loading, setLoading] = useState<boolean>(true);
@@ -34,26 +33,29 @@ export default function BookmarkedEventsRoute() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const uid = auth.currentUser?.uid;
-        if (!uid) return;
-
-        // Fetch ALL events from the event collection and store them in eventRows var.
+        // Fetch ALL events
         const eventsSnap = await getDocs(query(collection(db, "events")));
         const eventRows: EventDoc[] = eventsSnap.docs.map(
-          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot): EventDoc => {
-            const data = d.data() as Omit<EventDoc, 'id'>; 
-            return { ...data, id: d.id };
-          }
+          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot): EventDoc => ({
+            ...(d.data() as Omit<EventDoc, "id">),
+            id: d.id,
+          })
         );
-        if (mounted) setAllEvents(eventRows);
 
-        // Fetch the Doc IDs of the events this specific user has bookmarked and store in bookmarksSnap var.
-        const bookmarksSnap = await getDocs(collection(db, "users", uid, "bookmarks"));
-        const bookmarkMap: Record<string, boolean> = {};
-        bookmarksSnap.forEach((docSnap: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
-          bookmarkMap[docSnap.id] = true;
-        });
-        if (mounted) setBookmarkedIds(bookmarkMap);
+
+        // Fetch ALL learning contents 
+        const learningSnap = await getDocs(query(collection(db, "learningVideos")));
+        const learningRows: LearningDoc[] = learningSnap.docs.map(
+          (d: FirebaseFirestoreTypes.QueryDocumentSnapshot): LearningDoc => ({
+            ...(d.data() as Omit<LearningDoc, "id">),
+            id: d.id,
+            isBookmarked: !!bookmarkedIds[d.id],
+          })
+        );
+        if (mounted) {
+          setAllEvents(eventRows);
+          setAllLearningContents(learningRows);
+        }
       } catch (e: any) {
         Alert.alert("Error", "Failed to load your bookmarks.");
       } finally {
@@ -63,59 +65,27 @@ export default function BookmarkedEventsRoute() {
 
     fetchData();
     return () => { mounted = false; };
-  }, []);
+  }, [bookmarkedIds]); // Refetch data when bookmarks change to ensure UI is up-to-date
 
   // Stores the resulting filtered array in the bookmarkedEvents var.
-  const bookmarkedEvents = useMemo(() => {
-    return allEvents.filter(event => !!bookmarkedIds[event.id]);
-  }, [allEvents, bookmarkedIds]);
+  const bookmarkedEvents = useMemo(
+    () => allEvents.filter((e) => !!bookmarkedIds[e.id]),
+    [allEvents, bookmarkedIds],
+  );
+
+  // Stores the resulting filtered array in the bookmarkedLearningContents var.
+  const bookmarkedLearningContents = useMemo(() => {
+    return allLearningContents.filter(c => !!bookmarkedIds[c.id]);
+  }, [allLearningContents, bookmarkedIds]);
   
-  // Stores function instructions handleRemoveBookmark var.
-  const handleRemoveBookmark = async (event: EventDoc) => {
-    // Stores the user's UID from FirebaseAuth in the uid var.
-    const uid = auth.currentUser?.uid;
 
-    // Stops the function and alerts the user if they are not logged in.
-    if (!uid) return Alert.alert("Sign In", "Please log in to save events.");
-
-    // Checks the bookmarkedIds var to see if the event is already bookmarked.
-    const isBookmarked = !!bookmarkedIds[event.id];
-
-    // Stores the specific Firestore path for the bookmark in the bookmarkRef var.
-    const bookmarkRef = doc(db, "users", uid, "bookmarks", event.id);
-
-    // Updates the UI state immediately for a faster user experience.
-    setBookmarkedIds((prev) => {
-      const next = { ...prev };
-      isBookmarked ? delete next[event.id] : (next[event.id] = true);
-      return next;
-    });
-
-    try {
-      // Deletes the document if it was already saved, otherwise creates a new one.
-      if (isBookmarked) await deleteDoc(bookmarkRef);
-      else
-        await setDoc(bookmarkRef, {
-          eventId: event.id,
-          title: event.title ?? "Unknown",
-          savedAt: serverTimestamp(),
-        });
-    } catch (e) {
-      // Reverts the UI state if the Firestore operation fails.
-      setBookmarkedIds((prev) => {
-        const next = { ...prev };
-        isBookmarked ? (next[event.id] = true) : delete next[event.id];
-        return next;
-      });
-      Alert.alert("Error", "Could not update bookmark.");
-    }
-  };
 
   return (
     // Passes the values of bookmarkedEvents, loading, handleRemoveBoomark
     // and navigation instructions to the saved events screen.
     <BookmarkedEventsUI
       events={bookmarkedEvents}
+      learningContents={bookmarkedLearningContents}
       loading={loading}
       onBack={() => router.back()}
       onPressCard={(item) => router.push({
@@ -124,13 +94,17 @@ export default function BookmarkedEventsRoute() {
           id: item.id,
         },
       } as any)}
-      onRemoveBookmark={handleRemoveBookmark}
+      onRemoveBookmark={toggleBookmark}
       onRsvp={(item) =>
         router.push({
           pathname: "/event/booking",
           params: { eventId: item.id },
-        } as any)
+        } as any)}
+
+      onPressLearning={() => router.push("learning/" as any)
       }
+
+      onRemoveCourseBookmark={toggleBookmark}
     />
   );
 }

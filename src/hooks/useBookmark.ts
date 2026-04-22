@@ -1,79 +1,89 @@
-import {
-    useCallback,
-    useEffect,
-    useMemo,
-    useState,
-} from "react";
-import {
-    collection, deleteDoc, doc,
-    getDocs, serverTimestamp, setDoc,
-} from "@react-native-firebase/firestore";
+import { BookmarksSlice } from "@/context/GlobalContext.tsx";
 import { auth, db } from "@/services/authService";
-import type { EventDoc } from "@/types/type";
-import {Alert} from "react-native";
-import {BookmarksSlice} from "@/context/GlobalContext.tsx";
+import type { EventDoc, LearningDoc } from "@/types/type";
+import {
+    collection,
+    deleteDoc,
+    doc,
+    getDocs,
+    serverTimestamp,
+    setDoc,
+} from "@react-native-firebase/firestore";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert } from "react-native";
 
+/**
+ * A custom hook for managing event and learning contentbookmarks.
+ *
+ * @returns
+ */
 export function useBookmarksInternal(): BookmarksSlice {
-    const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>({});
-    const [isLoading, setIsLoading] = useState(true);
+  const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>(
+    {},
+  );
+  const [isLoading, setIsLoading] = useState(true);
 
-    const fetchBookmarks = useCallback(async () => {
-        const uid = auth.currentUser?.uid;
-        if (!uid) {
-            setBookmarkedIds({});
-            setIsLoading(false);
-            return;
-        }
-        try {
-            const snap = await getDocs(collection(db, "users", uid, "bookmarks"));
-            const bookmarkMap: Record<string, boolean> = {};
-            snap.forEach((docSnap: { id: string }) => {
-                bookmarkMap[docSnap.id] = true;
-            });
-            setBookmarkedIds(bookmarkMap);
-        } catch (e) {
-            console.error("Failed to fetch bookmarks:", e);
-        } finally {
-            setIsLoading(false);
-        }
-    }, []);
+  const fetchBookmarks = useCallback(async () => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      setBookmarkedIds({});
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const snap = await getDocs(collection(db, "users", uid, "bookmarks"));
+      const bookmarkMap: Record<string, boolean> = {};
+      snap.forEach((docSnap: { id: string }) => {
+        bookmarkMap[docSnap.id] = true;
+      });
+      setBookmarkedIds(bookmarkMap);
+    } catch (e) {
+      console.error("Failed to fetch bookmarks:", e);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-    useEffect(() => {
-        fetchBookmarks();
-    }, [fetchBookmarks]);
+  useEffect(() => {
+    fetchBookmarks();
+  }, [fetchBookmarks]);
 
-    const toggleBookmark = useCallback(async (event: EventDoc) => {
-        const uid = auth.currentUser?.uid;
-        if (!uid) return Alert.alert("Sign In", "Please log in to save events.");
-        const isBookmarked = !!bookmarkedIds[event.id];
-        const bookmarkRef = doc(db, "users", uid, "bookmarks", event.id);
+  // Change parameter type to accept any bookmarkable item (event or learning content)
+  const toggleBookmark = useCallback(
+    async (item: EventDoc | LearningDoc) => {
+      const uid = auth.currentUser?.uid;
+      if (!uid) return Alert.alert("Sign In", "Please log in to save events.");
+      const isBookmarked = !!bookmarkedIds[item.id];
+      const bookmarkRef = doc(db, "users", uid, "bookmarks", item.id);
 
+      setBookmarkedIds((prev) => {
+        const next = { ...prev };
+        isBookmarked ? delete next[item.id] : (next[item.id] = true);
+        return next;
+      });
+
+      try {
+        if (isBookmarked) await deleteDoc(bookmarkRef);
+        else
+          await setDoc(bookmarkRef, {
+            eventId: item.id,
+            title: item.title ?? "Unknown",
+            savedAt: serverTimestamp(),
+          });
+      } catch (e) {
         setBookmarkedIds((prev) => {
-            const next = { ...prev };
-            isBookmarked ? delete next[event.id] : (next[event.id] = true);
-            return next;
+          const next = { ...prev };
+          isBookmarked ? (next[item.id] = true) : delete next[item.id];
+          return next;
         });
+        Alert.alert("Error", "Could not update bookmark.");
+      }
+    },
+    [bookmarkedIds],
+  );
 
-        try {
-            if (isBookmarked) await deleteDoc(bookmarkRef);
-            else
-                await setDoc(bookmarkRef, {
-                    eventId: event.id,
-                    title: event.title ?? "Unknown",
-                    savedAt: serverTimestamp(),
-                });
-        } catch (e) {
-            setBookmarkedIds((prev) => {
-                const next = { ...prev };
-                isBookmarked ? (next[event.id] = true) : delete next[event.id];
-                return next;
-            });
-            Alert.alert("Error", "Could not update bookmark.");
-        }
-    }, [bookmarkedIds]);
-
-    return useMemo(
-        () => ({ bookmarkedIds, isLoading, toggleBookmark }),
-        [bookmarkedIds, isLoading, toggleBookmark],
-    );
+  return useMemo(
+    () => ({ bookmarkedIds, isLoading, toggleBookmark }),
+    [bookmarkedIds, isLoading, toggleBookmark],
+  );
 }

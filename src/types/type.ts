@@ -26,6 +26,8 @@ export type EventDoc = {
   location: FirebaseFirestoreTypes.GeoPoint;
   image: string; // URL string
   type: "free" | "paid";
+  interestTags?: string[]; // Array of InterestKeys
+  isAd?: boolean; // Flag to indicate if the event is an ad
   
   // Use Firestore Timestamp for better date handling
   dateTime: FirebaseFirestoreTypes.Timestamp; 
@@ -44,6 +46,20 @@ export type EventDoc = {
     nonMember: number;
   };
 };
+
+export type LearningDoc ={
+  id: string;
+  title: string;
+  duration: string;
+  description?: string;
+  thumbnailUrl?: string;
+  videoId?: string;
+  cloudinaryPublicId?: string;
+  accessType: "free" | "subscriber";
+  isBookmarked: boolean;
+  fileId?: string;
+  interestTags?: string[];
+}
 
 export interface ProfileFormData {
   firstName: string;
@@ -179,16 +195,3 @@ export type Booking = {
     address: string;
   };
 };
-
-export interface LearningVideo {
-  id: string;
-  title: string;
-  duration: string;
-  description?: string; 
-  thumbnailUrl?: string;
-  videoId?: string;
-  cloudinaryPublicId?: string; 
-  accessType: "free" | "subscriber";
-  isBookmarked: boolean;
-  fileId?: string;
-}
