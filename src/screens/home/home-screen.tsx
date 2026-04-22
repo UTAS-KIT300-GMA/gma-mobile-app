@@ -30,7 +30,7 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
     if (!events || events.length === 0) return [];
 
     // 1. Prepare Interests
-    const weights: Record<string, number> = { connect: 0, growth: 0, thrive: 0 };
+    const weights: Record<string, number> = { connect: 0, grow: 0, thrive: 0 };
     const tags = userDoc?.selectedTags ?? [];
 
     tags.forEach((tag) => {

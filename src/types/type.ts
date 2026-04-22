@@ -1,6 +1,6 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
-export type Category = "all" | "connect" | "growth" | "thrive";
+export type Category = "all" | "connect" | "grow" | "thrive";
 
 export type UserDoc = {
   email: string;

@@ -78,7 +78,7 @@ export const getParentCategoryFromTagName = (
     if (group.items.some((item) => normalize(item.name) === needle)) {
       const name = normalize(group.category);
       if (name === "connect") return "connect";
-      if (name === "grow") return "growth";
+      if (name === "grow") return "grow";
       if (name === "thrive") return "thrive";
       return null;
     }
@@ -134,13 +134,13 @@ export async function resolveLocationStatus(): Promise<{
 
 /**
  * Best-effort coordinates after status is already “on”. Retries once like the original flow.
+ * Fixed priority of returned coordinates: GPS > cached last known > default.
+ * i.e. current → retry current → last known → default coords. 
  */
 export async function fetchLocationCoordinates(): Promise<{
   coords: { latitude: number; longitude: number };
 }> {
   const readOnce = async () => {
-    const lastKnown = await Location.getLastKnownPositionAsync();
-    if (lastKnown) return lastKnown.coords;
     const current = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
       mayShowUserSettingsDialog: false,
@@ -157,6 +157,10 @@ export async function fetchLocationCoordinates(): Promise<{
       const coords = await readOnce();
       return { coords };
     } catch {
+      // Last resort: use cached position if available, otherwise default
+      const lastKnown = await Location.getLastKnownPositionAsync().catch(
+        () => null,
+      );
       return { coords: DEFAULT_LOCATION_COORDS };
     }
   }
