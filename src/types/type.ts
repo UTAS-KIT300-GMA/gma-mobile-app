@@ -55,7 +55,7 @@ export type LearningDoc ={
   thumbnailUrl?: string;
   videoId?: string;
   cloudinaryPublicId?: string;
-  accessType: "free" | "subscriber";
+  accessType: "free" | "paid";
   isBookmarked: boolean;
   fileId?: string;
   interestTags?: string[];

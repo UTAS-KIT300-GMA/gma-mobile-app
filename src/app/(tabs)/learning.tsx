@@ -43,8 +43,6 @@ export default function LearningRoute() {
             // Cloudinary public ID for video/image assets
             const publicId = String(data.cloudinaryPublicId || "");
 
-        
-
             let finalThumbnail = "";
 
             // Use stored thumbnail if available
@@ -56,6 +54,7 @@ export default function LearningRoute() {
               finalThumbnail = `https://res.cloudinary.com/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${publicId}.jpg`;
             }
 
+            
             return {
               id: doc.id,
               title: String(data.title || "Untitled Content"),
@@ -75,7 +74,7 @@ export default function LearningRoute() {
               fileId: String(data.fileId || ""),
 
               accessType:
-                data.accessType === "subscriber" ? "subscriber" : "free",
+                data.accessType ?? "free",
 
               // Bookmark state synced from context
               isBookmarked: !!bookmarkedIds[doc.id],
@@ -148,6 +147,7 @@ export default function LearningRoute() {
       : cld.image(fileId).format("pdf").toURL();
 
     console.log("Generated URL:", fileUrl);
+    
 
     Linking.openURL(fileUrl).catch((err) => {
       console.error("Open URL error:", err);
