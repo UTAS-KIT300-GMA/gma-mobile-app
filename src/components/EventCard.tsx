@@ -23,7 +23,6 @@ export function EventCard({
   showBookmark = false,
   bookmarked = false,
 }: {
-  key: string
   event: EventDoc;
   onPressCard?: () => void;
   onPressRsvp?: () => void;
