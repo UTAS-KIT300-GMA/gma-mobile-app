@@ -82,9 +82,14 @@ export default function LearningCard({
       {/* Content Body */}
       <View style={styles.infoContainer}>
         <View style={styles.headerRow}>
-          <Text style={styles.title} numberOfLines={1}>
-            {item.title}
-          </Text>
+          <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+          <Pressable onPress={onBookmarkPress} hitSlop={10}>
+            <Ionicons 
+              name={item.isBookmarked ? "bookmark" : "bookmark-outline"} 
+              size={22} 
+              color={item.isBookmarked ? colors.secondary : colors.secondary} 
+            />
+          </Pressable>
         </View>
 
         <Text style={styles.description} numberOfLines={2}>
