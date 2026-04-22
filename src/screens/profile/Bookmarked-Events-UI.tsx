@@ -1,12 +1,13 @@
 import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
+import LearningCard from "@/components/LearningCard";
 import { colors } from "@/theme/ThemeProvider";
-import { EventDoc } from "@/types/type";
+import { EventDoc, LearningDoc } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
-  FlatList,
+  SectionList,
   StyleSheet,
   Text,
   View,
@@ -15,56 +16,82 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 interface BookmarkedEventsUIProps {
   events: EventDoc[];
+  learningContents: LearningDoc[];
   loading: boolean;
   onBack: () => void;
   onPressCard: (event: EventDoc) => void;
-  onRemoveBookmark: (event: EventDoc) => void;
+  onRemoveBookmark: (item: EventDoc | LearningDoc) => Promise<void>;
   onRsvp: (event: EventDoc) => void;
+  onPressLearning: () => void;
+  onRemoveCourseBookmark: (item: EventDoc | LearningDoc) => Promise<void>;
 }
 
 export const BookmarkedEventsUI = ({
   events,
+  learningContents,
   loading,
   onBack,
   onPressCard,
   onRemoveBookmark,
   onRsvp,
+  onPressLearning,
+  onRemoveCourseBookmark,
 }: BookmarkedEventsUIProps) => {
-  const renderItem = ({ item }: { item: EventDoc }) => (
-    <EventCard
-      event={item}
-      showBookmark
-      bookmarked={true}
-      onPressCard={() => onPressCard(item)}
-      onPressBookmark={() => onRemoveBookmark(item)}
-      onPressRsvp={() => onRsvp(item)}
-    />
-  );
+  const sections: {
+    title: string;
+    data: (EventDoc | LearningDoc)[];
+    type: string;
+  }[] = [
+    { title: "Saved Events", data: events, type: "event" },
+    { title: "Saved Learnings", data: learningContents, type: "learning" },
+  ].filter((s) => s.data.length > 0);
+
+  const isEmpty = events.length === 0 && learningContents.length === 0;
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
-      <AppHeader title="Bookmarked Events" showBack={true} />
+      <AppHeader title="Bookmarks" showBack={true} />
 
       {loading ? (
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
+      ) : isEmpty ? (
+        <View style={styles.center}>
+          <Ionicons name="bookmark-outline" size={60} color={colors.darkGrey} />
+          <Text style={styles.emptyText}>No bookmarks yet!</Text>
+        </View>
       ) : (
-        <FlatList
-          data={events}
-          renderItem={renderItem}
+        <SectionList
+          sections={sections}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listPadding}
-          ListEmptyComponent={
-            <View style={styles.center}>
-              <Ionicons
-                name="bookmark-outline"
-                size={60}
-                color={colors.textOnPrimary}
+          renderSectionHeader={({ section: { title } }) => (
+            <Text style={styles.sectionTitle}>{title}</Text>
+          )}
+          renderItem={({ item, section }) => {
+            if (section.type === "event") {
+              const event = item as EventDoc;
+              return (
+                <EventCard
+                  event={event}
+                  showBookmark
+                  bookmarked={true}
+                  onPressCard={() => onPressCard(event)}
+                  onPressBookmark={() => onRemoveBookmark(event)}
+                  onPressRsvp={() => onRsvp(event)}
+                />
+              );
+            }
+            const content = item as LearningDoc;
+            return (
+              <LearningCard
+                item={{ ...content, isBookmarked: true }}
+                onPressCard={() => onPressLearning()}
+                onBookmarkPress={() => onRemoveCourseBookmark(content)}
               />
-              <Text style={styles.emptyText}>No bookmarked events yet!</Text>
-            </View>
-          }
+            );
+          }}
         />
       )}
     </SafeAreaView>
@@ -80,6 +107,12 @@ const styles = StyleSheet.create({
     marginTop: 100,
   },
   listPadding: { padding: 16 },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 12,
+    color: colors.primary,
+  },
   rsvpBtn: {
     backgroundColor: colors.saveBtnColor,
     padding: 10,
