@@ -28,6 +28,8 @@ type HomeUIProps = {
     onRefresh: () => void;
 };
 
+const MATCH_PERCENTAGE = [0.6, 0.25, 0.15] // Tags , Location, Time
+
 export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
     const { userDoc } = useAuthUser();
     const { coords: userCoords, locationError } = useAppLocation();
@@ -78,7 +80,7 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
                 const daysUntil = (eventTime - today) / (1000 * 60 * 60 * 24);
                 const timeScore = daysUntil >= 0 ? 1 / (1 + daysUntil) : 0;
 
-                const finalScore = tagScore * 0.6 + locScore * 0.25 + timeScore * 0.15;
+                const finalScore = tagScore * MATCH_PERCENTAGE[0] + locScore * MATCH_PERCENTAGE[1] + timeScore * MATCH_PERCENTAGE[2];
 
                 return { ...event, finalScore, dist, matchCount };
             })
