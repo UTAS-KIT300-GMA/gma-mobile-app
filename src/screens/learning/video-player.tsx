@@ -82,13 +82,14 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
         nativeControls={true}
         contentFit="cover" 
       />
-      {!isPlaying && (
+      {/* Currently use Cloudinary native play button setting */}
+      {/* {!isPlaying && (
         <Pressable style={StyleSheet.absoluteFill} onPress={() => player.play()}>
           <View style={styles.overlay}>
             <Ionicons name="play" size={60} color="#fff" />
           </View>
         </Pressable>
-      )}
+      )} */}
     </View>
   );
 };

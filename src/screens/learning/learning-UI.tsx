@@ -1,7 +1,7 @@
 import { AppHeader } from "@/components/AppHeader";
 import LearningCard from "@/components/LearningCard";
 import { colors } from "@/theme/ThemeProvider";
-import { LearningVideo } from "@/types/type";
+import { LearningDoc } from "@/types/type";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
@@ -16,11 +16,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import VideoPlayer from "./video-player";
 
 interface Props {
-  events: LearningVideo[];
+  events: LearningDoc[];
   loading: boolean;
   expandedId: string | null;
   onBookmarkPress?: (id: string) => void;
-  onCardPress?: (item: LearningVideo) => void;
+  onCardPress?: (item: LearningDoc) => void;
   onFilePress?: (url: string) => void;
 }
 

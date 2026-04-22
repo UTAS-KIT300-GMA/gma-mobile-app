@@ -1,10 +1,9 @@
-import { LearningVideo } from "@/types/type";
+import { LearningDoc } from "@/types/type";
 import { Cloudinary } from "@cloudinary/url-gen";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-
-
+import { colors } from "@/theme/ThemeProvider";
 import { thumbnail } from "@cloudinary/url-gen/actions/resize";
 import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
 
@@ -16,14 +15,14 @@ const cld = new Cloudinary({
 
 // Explicitly export props to satisfy IntrinsicAttributes in other files
 export interface LearningCardProps {
-  item: LearningVideo;
+  item: LearningDoc;
   onPressCard?: () => void;
   onBookmarkPress?: () => void;
 }
 
 /**
  * @summary A presentational card component that displays video metadata, handles thumbnail optimization via Cloudinary, and provides interaction hooks for playback and bookmarking.
- * @param item - The LearningVideo object containing title, description, duration, and metadata.
+ * @param item - The LearningDoc object containing title, description, duration, and metadata.
  * @param onPressCard - Callback function triggered when the user taps the card body to view content.
  * @param onBookmarkPress - Callback function triggered when the user taps the bookmark icon.
  */
@@ -66,9 +65,6 @@ export default function LearningCard({
         <View style={styles.durationBadge}>
           <Text style={styles.durationText}>{item.duration}</Text>
         </View>
-        <View style={styles.playOverlay}>
-          <Ionicons name="play-circle" size={50} color="rgba(255,255,255,0.8)" />
-        </View>
       </View>
 
       {/* Content Body */}
@@ -79,7 +75,7 @@ export default function LearningCard({
             <Ionicons 
               name={item.isBookmarked ? "bookmark" : "bookmark-outline"} 
               size={22} 
-              color={item.isBookmarked ? "#007AFF" : "#666"} 
+              color={item.isBookmarked ? colors.secondary : colors.secondary} 
             />
           </Pressable>
         </View>
@@ -124,11 +120,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   durationText: { color: "#fff", fontSize: 12, fontWeight: "600" },
-  playOverlay: { 
-    ...StyleSheet.absoluteFillObject, 
-    justifyContent: "center", 
-    alignItems: "center" 
-  },
   infoContainer: { padding: 15 },
   headerRow: { 
     flexDirection: "row", 
