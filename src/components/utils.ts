@@ -134,8 +134,8 @@ export async function resolveLocationStatus(): Promise<{
 
 /**
  * Best-effort coordinates after status is already “on”. Retries once like the original flow.
- * Fixed priority of returned coordinates: GPS > cached last known > default.
- * i.e. current → retry current → last known → default coords. 
+ * Fixed priority of returned coordinates: last known > GPS > retry GPS > default.
+ * Last-known is checked first because it's instant and reliably reflects emulator mock locations.
  */
 export async function fetchLocationCoordinates(): Promise<{
   coords: { latitude: number; longitude: number };
@@ -148,6 +148,16 @@ export async function fetchLocationCoordinates(): Promise<{
     return current.coords;
   };
 
+  const lastKnown = await Location.getLastKnownPositionAsync().catch(() => null);
+  if (lastKnown?.coords) {
+    return {
+      coords: {
+        latitude: lastKnown.coords.latitude,
+        longitude: lastKnown.coords.longitude,
+      },
+    };
+  }
+
   try {
     const coords = await readOnce();
     return { coords };
@@ -157,10 +167,6 @@ export async function fetchLocationCoordinates(): Promise<{
       const coords = await readOnce();
       return { coords };
     } catch {
-      // Last resort: use cached position if available, otherwise default
-      const lastKnown = await Location.getLastKnownPositionAsync().catch(
-        () => null,
-      );
       return { coords: DEFAULT_LOCATION_COORDS };
     }
   }
