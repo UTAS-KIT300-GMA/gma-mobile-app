@@ -34,13 +34,12 @@ export type EventDoc = {
   
   // Better defined ticket structure
   totalTickets: number;
+  ticketsSold?: number;
   attendees?: string[]; // Array of user UIDs
-  
-  // Pricing structure to support Member/Non-Member logic
+
   memberPrice: number;
   nonMemberPrice: number;
-  
-  // Optional: 
+
   ticketPrices?: {
     member: number;
     nonMember: number;
