@@ -26,8 +26,6 @@ export type EventDoc = {
   location: FirebaseFirestoreTypes.GeoPoint;
   image: string; // URL string
   type: "free" | "paid";
-  interestTags?: string[]; // Array of InterestKeys
-  isAd?: boolean; // Flag to indicate if the event is an ad
   
   // Use Firestore Timestamp for better date handling
   dateTime: FirebaseFirestoreTypes.Timestamp; 
@@ -44,6 +42,18 @@ export type EventDoc = {
     member: number;
     nonMember: number;
   };
+  ticketAccess?: "free_for_all" | "members_only";
+  isAd?: boolean;
+
+  // --- Admin & Partner Portal Workflow ---
+  eventApprovalStatus?: "draft" | "pending" | "approved" | "rejected";
+  submittedBy?: string; // partnerId
+  rejectionReason?: string;
+  interestTags?: string[];
+
+  // --- Metadata ---
+  createdAt?: FirebaseFirestoreTypes.Timestamp;
+  updatedAt?: FirebaseFirestoreTypes.Timestamp;
 };
 
 export type LearningDoc ={
