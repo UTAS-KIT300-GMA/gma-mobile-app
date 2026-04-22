@@ -42,13 +42,19 @@ export type EventDoc = {
     member: number;
     nonMember: number;
   };
-  ticketAccess?: "free_for_all" | "members_only";
-  isAd?: boolean;
+};
 
-  // --- Admin & Partner Portal Workflow ---
-  eventApprovalStatus?: "draft" | "pending" | "approved" | "rejected";
-  submittedBy?: string; // partnerId
-  rejectionReason?: string;
+export type LearningDoc ={
+  id: string;
+  title: string;
+  duration: string;
+  description?: string;
+  thumbnailUrl?: string;
+  videoId?: string;
+  cloudinaryPublicId?: string;
+  accessType: "free" | "paid";
+  isBookmarked: boolean;
+  fileId?: string;
   interestTags?: string[];
 
   // --- Metadata ---
