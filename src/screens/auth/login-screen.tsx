@@ -267,7 +267,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     position: "absolute",
-    left: 15,
+    left: 5,
   },
   socialButtonText: {
     color: colors.darkGrey,
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     position: "absolute",
-    left: 15,
+    left: 10,
   },
   googleButtonText: {
     color: colors.darkGrey,

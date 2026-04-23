@@ -201,17 +201,16 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
 }
 
 const styles = StyleSheet.create({
-    safe: { flex: 1, backgroundColor: colors.textOnPrimary },
+    safe: { flex: 1, backgroundColor: colors.textOnPrimary, marginBottom: -50 },
     center: { flex: 1, alignItems: "center", justifyContent: "center", paddingVertical: 50 },
     emptyText: {
         fontSize: 16,
-        color: colors.darkGrey || "#666",
+        color: colors.darkGrey,
         textAlign: "center",
         fontWeight: "500",
     } as TextStyle,
     sectionTitle: {
         paddingHorizontal: 5,
-        paddingTop: 5,
         paddingBottom: 10,
         fontSize: 20,
         fontWeight: "bold",
