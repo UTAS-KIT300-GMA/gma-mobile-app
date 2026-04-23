@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+
 type NotificationType = "recommendation" | "reminder" | "booking";
 
 type NotificationItem = {
