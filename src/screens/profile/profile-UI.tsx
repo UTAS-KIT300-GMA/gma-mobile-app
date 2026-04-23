@@ -36,8 +36,8 @@ export default function ProfileUI({
     },
     {
       id: "payment",
-      label: "Manage payment methods",
-      path: "/(profile)/manage-payment-method", 
+      label: "Payment methods",
+      path: "/(profile)/payment-methods", 
     },
     
     {
@@ -48,22 +48,19 @@ export default function ProfileUI({
 
     {
       id: "notifs",
-      label: "Notifications setting",
+      label: "Settings",
       path: "(profile)/notifications-settings-logic",
     },
-    {
-      id: "location",
-      label: "Location setting",
-      path: "(profile)/location-settings-logic",
-    },
+    
     {
     id: "membership",
     label: "My membership",
     path: "/(profile)/membership",
     },
-    { id: "Bookmarks",
-      label: "Bookmarks",
-       path: "/(profile)/bookmarks" },
+    
+    { id: "Bookmarked Events",
+      label: "Bookmarked events",
+       path: "/BookmarkedEvents" },
   ];
 
   return (
