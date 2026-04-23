@@ -36,8 +36,8 @@ export default function ProfileUI({
     },
     {
       id: "payment",
-      label: "Manage payment methods",
-      path: "/(profile)/manage-payment-method", 
+      label: "Payment methods",
+      path: "/(profile)/payment-methods", 
     },
     
     {
