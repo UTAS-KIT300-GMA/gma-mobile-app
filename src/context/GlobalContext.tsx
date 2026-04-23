@@ -5,7 +5,7 @@ import React, {
 } from "react";
 
 import { useUser } from "@/hooks/useUser";
-import type { EventDoc, UserDoc } from "@/types/type";
+import type { EventDoc, LearningDoc, UserDoc } from "@/types/type";
 import {
   type LocationFetchResult,
 } from "@/components/utils";
@@ -33,7 +33,7 @@ export type EventsSlice = {
 export type BookmarksSlice = {
   bookmarkedIds: Record<string, boolean>;
   isLoading: boolean;
-  toggleBookmark: (event: EventDoc) => Promise<void>;
+  toggleBookmark: (item: EventDoc | LearningDoc) => Promise<void>;
 };
 
 // --- Location ---
@@ -54,6 +54,10 @@ export type GlobalContextValue = {
 
 const GlobalContext = createContext<GlobalContextValue | null>(null);
 
+/**
+ * @summary Composes all global slices (user, events, bookmarks, location) into a single context provider for the app.
+ * @param children - The React subtree that will have access to the global context.
+ */
 export function GlobalProvider({ children }: { children: React.ReactNode }) {
   const userData = useUser();
   const eventsSlice = useEventsInternal();
@@ -79,12 +83,18 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * @summary Returns the full global context value; throws if called outside GlobalProvider.
+ */
 export function useGlobal(): GlobalContextValue {
   const ctx = useContext(GlobalContext);
   if (!ctx) throw new Error("useGlobal must be used within GlobalProvider");
   return ctx;
 }
 
+/**
+ * @summary Selects the user slice from the global context, exposing the Firestore profile, loading flag, and error.
+ */
 export const useAuthUser = () => {
   const { user } = useGlobal();
   return {
@@ -94,14 +104,23 @@ export const useAuthUser = () => {
   };
 };
 
+/**
+ * @summary Selects the events slice from the global context.
+ */
 export function useEvents(): EventsSlice {
   return useGlobal().events;
 }
 
+/**
+ * @summary Selects the bookmarks slice from the global context.
+ */
 export const useBookmarks = () => {
   return useGlobal().bookmarks;
 };
 
+/**
+ * @summary Selects the location slice from the global context.
+ */
 export function useAppLocation(): LocationSlice {
   return useGlobal().location;
 }

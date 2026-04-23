@@ -9,6 +9,9 @@ type UseUserState = {
   error: string | null;
 };
 
+/**
+ * @summary Subscribes to the current user's Firestore profile document and exposes it with loading and error states.
+ */
 export function useUser(): UseUserState {
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
   const [loading, setLoading] = useState(true);

@@ -11,13 +11,6 @@ import {
 } from "react-native";
 import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
 
-/* The `LoginScreen` component provides a user interface for users to log in to the app.
-- It includes a logo, input fields for email and password, and buttons for logging in, 
-navigating to the registration screen, and resetting the password.
-- The screen features a vignette overlay for visual appeal, and uses styles defined in the `styles` object to ensure a consistent layout.
-- The component accepts props for handling login actions, loading state, and navigation to other screens. 
-*/
-
 interface Props {
   onLogin: (email: string, pass: string) => void;
   onGoogleLogin: () => void;
@@ -27,6 +20,15 @@ interface Props {
   onForgotPress: () => void;
 }
 
+/**
+ * @summary Renders the login UI with email/password fields, social sign-in buttons, and navigation links to register and forgot-password screens.
+ * @param onLogin - Callback invoked with the entered email and password when the login button is pressed.
+ * @param onGoogleLogin - Callback invoked when the Google sign-in button is pressed.
+ * @param onFacebookLogin - Callback invoked when the Facebook sign-in button is pressed.
+ * @param loading - When true, disables inputs and shows an activity indicator.
+ * @param onRegisterPress - Callback to navigate to the registration screen.
+ * @param onForgotPress - Callback to navigate to the forgot-password screen.
+ */
 export const LoginScreen = ({
   onLogin,
   onGoogleLogin, onFacebookLogin,
@@ -265,7 +267,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     position: "absolute",
-    left: 15,
+    left: 5,
   },
   socialButtonText: {
     color: colors.darkGrey,
@@ -281,7 +283,7 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     position: "absolute",
-    left: 15,
+    left: 10,
   },
   googleButtonText: {
     color: colors.darkGrey,

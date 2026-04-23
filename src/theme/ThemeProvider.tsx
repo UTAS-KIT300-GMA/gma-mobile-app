@@ -36,6 +36,10 @@ type ThemeProviderProps = {
   children: ReactNode;
 };
 
+/**
+ * @summary Wraps the app in a theme context so child components can access design tokens via useTheme.
+ * @param children - The React subtree that will receive the theme context.
+ */
 export function ThemeProvider({ children }: ThemeProviderProps) {
   return (
     <ThemeContext.Provider value={defaultTheme}>
@@ -44,6 +48,9 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   );
 }
 
+/**
+ * @summary Returns the current app theme from context, providing access to all design-token color values.
+ */
 export function useTheme() {
   return useContext(ThemeContext);
 }

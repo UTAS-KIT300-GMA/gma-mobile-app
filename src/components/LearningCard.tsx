@@ -1,121 +1,127 @@
-import { LearningVideo } from "@/app/(tabs)/learning";
-import { colors } from "@/theme/ThemeProvider";
+import { LearningDoc } from "@/types/type";
+import { Cloudinary } from "@cloudinary/url-gen";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import {
-  ImageBackground,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import React, { useMemo } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "@/theme/ThemeProvider";
+import { thumbnail } from "@cloudinary/url-gen/actions/resize";
+import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
 
-const FALLBACK_THUMBNAIL =
-  "https://via.placeholder.com/800x450.png?text=Learning+Video";
+const cld = new Cloudinary({
+  cloud: {
+    cloudName: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
+  },
+});
 
-export function LearningCard({
-  item,
-  onPressCard,
-  onPressBookmark,
-}: {
-  item: LearningVideo;
+// Explicitly export props to satisfy IntrinsicAttributes in other files
+export interface LearningCardProps {
+  item: LearningDoc;
   onPressCard?: () => void;
-  onPressBookmark?: () => void;
-}) {
-  const isSubscriberOnly = item.accessType === "subscriber";
+  onBookmarkPress?: () => void;
+}
+
+/**
+ * @summary A presentational card component that displays video metadata, handles thumbnail optimization via Cloudinary, and provides interaction hooks for playback and bookmarking.
+ * @param item - The LearningDoc object containing title, description, duration, and metadata.
+ * @param onPressCard - Callback function triggered when the user taps the card body to view content.
+ * @param onBookmarkPress - Callback function triggered when the user taps the bookmark icon.
+ */
+export default function LearningCard({ 
+  item, 
+  onPressCard, 
+  onBookmarkPress 
+}: LearningCardProps) {
+
+  /**
+ * @summary Generates an optimized image URL using Cloudinary transformations (AI-based gravity, auto-quality, and resizing) or returns a fallback placeholder.
+ * @param item.cloudinaryPublicId - Dependency: Recalculates if the Cloudinary ID changes to fetch the correct asset.
+ * @param item.thumbnailUrl - Dependency: Recalculates if the static fallback URL is updated.
+ */
+  const optimizedThumbnail = useMemo(() => {
+    if (item.cloudinaryPublicId) {
+      return cld.image(item.cloudinaryPublicId)
+        .setAssetType("video")
+        .resize(
+          thumbnail()
+            .width(800)
+            .gravity(autoGravity()) // Uses AI to find the best frame
+        )
+        .format("jpg")
+        .quality("auto")
+        .toURL();
+    }
+    return item.thumbnailUrl || "https://via.placeholder.com/800x450.png?text=No+Thumbnail";
+  }, [item.cloudinaryPublicId, item.thumbnailUrl]);
 
   return (
-    <View style={styles.card}>
+    <Pressable style={styles.card} onPress={onPressCard}>
+      {/* Visual Header */}
+      <View style={styles.imageContainer}>
+        <Image
+          source={{ uri: optimizedThumbnail }}
+          style={styles.thumbnail}
+          resizeMode="cover"
+        />
+        <View style={styles.durationBadge}>
+          <Text style={styles.durationText}>{item.duration}</Text>
+        </View>
+      </View>
+
       <Pressable
-        onPress={onPressCard}
-        style={({ pressed }) => [{ opacity: pressed ? 0.9 : 1 }]}
+        onPress={onBookmarkPress}
+        hitSlop={10}
+        style={styles.bookmarkButton}
       >
-        <ImageBackground
-          source={{ uri: item.thumbnailUrl || FALLBACK_THUMBNAIL }}
-          style={styles.image}
-          imageStyle={styles.imageInner}
-        >
-          <LinearGradient
-            colors={["transparent", "rgba(0,0,0,0.8)"]}
-            style={styles.imageOverlay}
-          />
-
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="Bookmark learning video"
-            onPress={onPressBookmark}
-            style={styles.bookmarkButton}
-            hitSlop={10}
-          >
-            <Ionicons
-              name={item.isBookmarked ? "bookmark" : "bookmark-outline"}
-              size={23}
-              color={colors.secondary}
-            />
-          </Pressable>
-
-          <View style={styles.playButtonWrap}>
-            <Ionicons
-              name="play-circle"
-              size={68}
-              color="rgba(255,255,255,0.92)"
-            />
-          </View>
-
-          <View style={styles.bottomLeft}>
-            <Text style={styles.title} numberOfLines={2}>
-              {item.title || "Untitled learning"}
-            </Text>
-
-            <Text style={styles.meta} numberOfLines={1}>
-              {item.duration || "0:00"}
-            </Text>
-          </View>
-
-          <View style={styles.ctaButton}>
-            {isSubscriberOnly && (
-              <Ionicons
-                name="lock-closed"
-                size={12}
-                color={colors.saveBtnTextColor}
-                style={styles.ctaIcon}
-              />
-            )}
-
-            <Text style={styles.ctaText}>
-              {isSubscriberOnly ? "Subscribers only" : "Free"}
-            </Text>
-          </View>
-        </ImageBackground>
+        <Ionicons
+          name={item.isBookmarked ? "bookmark" : "bookmark-outline"}
+          size={22}
+          color={item.isBookmarked ? colors.secondary : colors.secondary}
+        />
       </Pressable>
-    </View>
+
+      {/* Content Body */}
+      <View style={styles.infoContainer}>
+        <View style={styles.headerRow}>
+          <Text style={styles.title} numberOfLines={1}>
+            {item.title}
+          </Text>
+        </View>
+
+        <Text style={styles.description} numberOfLines={2}>
+          {item.description}
+        </Text>
+
+        {/* Membership Access Label */}
+        {item.accessType === "paid" && (
+          <View style={styles.subscriberBadge}>
+            <Ionicons name="star" size={12} color={colors.saveBtnTextColor} />
+            <Text style={styles.subscriberText}>SUBSCRIBER ONLY</Text>
+          </View>
+        )}
+      </View>
+    </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
+    backgroundColor: "#fff",
     borderRadius: 15,
-    width: "100%",
-    alignSelf: "center",
+    marginBottom: 20,
     overflow: "hidden",
-    backgroundColor: colors.textOnPrimary,
-    borderWidth: 1,
-    borderColor: colors.textOnPrimary,
-    marginBottom: 12,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  image: {
-    height: 209,
-    width: "100%",
-    backgroundColor: colors.lightGrey,
+  imageContainer: {
+    height: 180,
+    backgroundColor: "#eee",
     position: "relative",
-    justifyContent: "flex-end",
   },
-  imageInner: {
-    borderRadius: 15,
-  },
-  imageOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
+  thumbnail: { width: "100%", height: "100%" },
+
   bookmarkButton: {
     position: "absolute",
     right: 10,
@@ -126,58 +132,47 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.textOnPrimary,
-    zIndex: 2,
   },
-  playButtonWrap: {
+
+  durationBadge: {
     position: "absolute",
-    top: "38%",
-    left: 0,
-    right: 0,
+    bottom: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  durationText: { color: "#fff", fontSize: 12, fontWeight: "600" },
+  infoContainer: { padding: 15 },
+  headerRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
-  },
-  bottomLeft: {
-    position: "absolute",
-    left: 8,
-    bottom: 6,
-    width: "55%",
-    backgroundColor: "transparent",
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 6,
-    gap: 2,
+    marginBottom: 5,
   },
   title: {
-    color: colors.textOnPrimary,
-    fontSize: 16,
-    fontWeight: "800",
-    lineHeight: 21,
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1a1a1a",
+    flex: 1,
+    marginRight: 10,
   },
-  meta: {
-    color: colors.textOnPrimary,
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  ctaButton: {
-    position: "absolute",
-    right: 12,
-    bottom: 12,
-    backgroundColor: colors.saveBtnColor,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minHeight: 34,
+  description: { fontSize: 14, color: "#666", lineHeight: 20 },
+  subscriberBadge: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: "#FFD700",
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginTop: 10,
   },
-  ctaText: {
+  subscriberText: {
     color: colors.saveBtnTextColor,
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "800",
-    letterSpacing: 0.4,
-  },
-  ctaIcon: {
-    marginRight: 6,
+    marginLeft: 4,
   },
 });
