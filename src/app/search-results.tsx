@@ -14,8 +14,10 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { useEvents } from "@/context/GlobalContext";
+import { getParentCategoryFromTagName } from "@/components/utils";
 
-/*
+/** 
+search-results.tsx
 This screen retrieves the search parameters from the URL, fetches all events 
 from Firestore, and applies client-side filtering based on the search criteria. 
 
@@ -125,6 +127,13 @@ export default function SearchResultsLogic() {
       return orderedIds.map((id) => byId.get(id)).filter(Boolean) as EventDoc[];
     }
 
+    console.log("🔍 Search params:", {
+      searchQuery,
+      locationQuery,
+      selectedDate,
+      selectedTags,
+    });
+
     return allEvents.filter((event) => {
       const eventDate = event.dateTime.toDate();
       // Creates a string representation of the event date in various formats
@@ -185,9 +194,16 @@ export default function SearchResultsLogic() {
 
       const matchesTags =
         selectedTags.length === 0 ||
-        selectedTags.some(
-          (tag) => normalizeText(event.category) === normalizeText(tag),
-        );
+        selectedTags.some((tag) => {
+          const parentCategory = getParentCategoryFromTagName(tag);
+          console.log(
+            `🏷️ Tag: ${tag} → parent: ${parentCategory} | event category: ${event.category}`,
+          );
+          return (
+            normalizeText(parentCategory ?? "") ===
+            normalizeText(event.category)
+          );
+        });
 
       return matchesQuery && matchesLocation && matchesDate && matchesTags;
     });
