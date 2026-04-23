@@ -4,12 +4,12 @@ import { colors } from "@/theme/ThemeProvider";
 import { useFocusEffect } from "expo-router";
 import { useCallback } from "react";
 import {
+  Linking,
   ScrollView,
   StyleSheet,
   Switch,
   Text,
   View,
-  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 

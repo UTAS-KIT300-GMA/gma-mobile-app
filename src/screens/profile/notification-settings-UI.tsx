@@ -1,8 +1,11 @@
 import { AppHeader } from "@/components/AppHeader";
+import { useAppLocation } from "@/context/GlobalContext";
 import { colors } from "@/theme/ThemeProvider";
-import { useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import {
   Alert,
+  Linking,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -50,7 +53,57 @@ const defaultSettings: NotificationSettings = {
   productUpdate: false,
   paymentReminder: true,
 };
+export function LocationSettingsScreen() {
+  // Pull directly from your Global Context
+  const { isLocationOn, locationError, refreshLocation } = useAppLocation();
 
+  /** * useFocusEffect ensures that every time the user
+   * navigates back to this screen, we check the state.
+   */
+  useFocusEffect(
+      useCallback(() => {
+        refreshLocation();
+      }, [refreshLocation])
+  );
+
+  const handleLocationToggle = () => {
+    Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
+  };
+
+  return (
+      <SafeAreaView style={Lstyles.safe}>
+        
+          <View style={Lstyles.section}>
+            <Text style={Lstyles.sectionTitle}>Privacy & Permissions</Text>
+
+            <View style={Lstyles.rowCard}>
+              <View style={Lstyles.labelContainer}>
+                <Text style={Lstyles.rowLabel}>Share My Location</Text>
+                <Text style={Lstyles.subLabel}>
+                  {isLocationOn
+                      ? "Your location is available for distance sorting."
+                      : locationError || "Location sharing is disabled in system settings."}
+                </Text>
+              </View>
+
+              <Switch
+                  value={isLocationOn}
+                  onValueChange={handleLocationToggle}
+                  trackColor={{ false: "#D9D9D9", true: colors.primary }}
+                  thumbColor="#ffffff"
+              />
+            </View>
+          </View>
+
+          <View style={Lstyles.infoBox}>
+            <Text style={Lstyles.infoText}>
+              To protect your privacy, manage location permissions directly in system settings.
+            </Text>
+          </View>
+        
+      </SafeAreaView>
+  );
+}
 export default function NotificationSettingsScreen() {
   const [settings, setSettings] =
     useState<NotificationSettings>(defaultSettings);
@@ -78,14 +131,18 @@ export default function NotificationSettingsScreen() {
     setSettings(savedSettings);
   };
 
+  
+
   return (
     <SafeAreaView style={styles.safe}>
       <AppHeader title="Notifications Setting" showBack />
-
+      
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        <LocationSettingsScreen
+        />
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>General Notifications</Text>
 
@@ -233,4 +290,36 @@ const styles = StyleSheet.create({
   actionDisabled: {
     opacity: 0.4,
   },
+});
+
+const Lstyles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: "#ffffff" },
+  content: { paddingHorizontal: 20, paddingTop: 24, gap: 28 },
+  section: { gap: 12 },
+  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.textOnSecondary },
+  rowCard: {
+    minHeight: 80,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  labelContainer: { flex: 1, paddingRight: 10 },
+  rowLabel: { fontSize: 16, fontWeight: "600", color: colors.textOnSecondary },
+  subLabel: { fontSize: 13, color: "#666", marginTop: 4 },
+  infoBox: {
+    backgroundColor: "#F8F9FA",
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#E9ECEF"
+  },
+  infoText: { fontSize: 14, color: "#666", lineHeight: 20, textAlign: "center" }
 });
