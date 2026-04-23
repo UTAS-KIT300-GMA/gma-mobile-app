@@ -10,9 +10,6 @@ import {
 } from "@/components/utils";
 import type { LocationSlice } from "@/context/GlobalContext";
 
-/**
- * @summary Resolves device location permission and coordinates, refreshing automatically when the app returns to the foreground.
- */
 export function useLocationInternal(): LocationSlice {
   const [coords, setCoords] = useState(DEFAULT_LOCATION_COORDS);
   const [locationError, setLocationError] = useState<string | null>(null);

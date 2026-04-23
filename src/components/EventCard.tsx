@@ -11,17 +11,10 @@ import {
   View,
 } from "react-native";
 
+/* EventCard component for displaying event information */
+
 const RSVP_BOOK = "RSVP/Book";
 
-/**
- * @summary Displays an event's image, title, date/time, address, and action buttons for RSVP and bookmarking.
- * @param event - The event data object to render.
- * @param onPressCard - Callback when the card body is tapped.
- * @param onPressRsvp - Callback when the RSVP/Book button is tapped.
- * @param onPressBookmark - Callback when the bookmark icon is tapped.
- * @param showBookmark - When true, renders the bookmark icon button.
- * @param bookmarked - When true, renders the bookmark as filled/active.
- */
 export function EventCard({
   event,
   onPressCard,
@@ -30,7 +23,6 @@ export function EventCard({
   showBookmark = false,
   bookmarked = false,
 }: {
-  key: string
   event: EventDoc;
   onPressCard?: () => void;
   onPressRsvp?: () => void;

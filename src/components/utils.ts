@@ -3,11 +3,17 @@ import * as ExpoLinking from "expo-linking";
 import * as Location from "expo-location";
 import { Platform, Linking as RNLinking } from "react-native";
 
-/**
- * @summary Formats a Firebase Timestamp or date string into a human-readable date and time string.
- * @param value - A Firebase Timestamp, ISO date string, or any date-like value to format.
- */
 export function formatDateTime(value: any): string {
+  /**
+   * Formats a date value into a human-readable string.
+   *
+   * Parameters:
+   * value - Can be a Firebase Timestamp, a Date string, or an object.
+   *
+   * Outcome:
+   * Returns a localized date string (e.g., "MM/DD/YYYY, HH:MM AM/PM")
+   * or an empty string if the value is invalid.
+   */
   try {
     if (!value) return "";
 
@@ -44,11 +50,7 @@ export function formatDateTime(value: any): string {
 }
 
 /**
- * @summary Calculates the great-circle distance in kilometres between two geographic coordinates using the Haversine formula.
- * @param lat1 - Latitude of the first point in decimal degrees.
- * @param lon1 - Longitude of the first point in decimal degrees.
- * @param lat2 - Latitude of the second point in decimal degrees.
- * @param lon2 - Longitude of the second point in decimal degrees.
+ * Calculates the distance between two points in kilometers
  */
 export function calculateHaversineDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371; // Earth's radius in kilometers
@@ -66,16 +68,8 @@ export function calculateHaversineDistance(lat1: number, lon1: number, lat2: num
   return R * c; // Distance in km
 }
 
-/**
- * @summary Trims whitespace and converts a string to lowercase for consistent comparisons.
- * @param v - The raw string to normalise.
- */
 export const normalize = (v: string) => v.trim().toLowerCase();
 
-/**
- * @summary Looks up the parent category ("connect" | "grow" | "thrive") for a given interest tag name.
- * @param tagName - The interest tag name to look up in the EVENT_CATEGORIES list.
- */
 export const getParentCategoryFromTagName = (
     tagName: string,
 ): EventDoc["category"] | null => {
@@ -84,7 +78,7 @@ export const getParentCategoryFromTagName = (
     if (group.items.some((item) => normalize(item.name) === needle)) {
       const name = normalize(group.category);
       if (name === "connect") return "connect";
-      if (name === "grow") return "grow";
+      if (name === "grow") return "growth";
       if (name === "thrive") return "thrive";
       return null;
     }
@@ -104,14 +98,10 @@ export const DEFAULT_LOCATION_COORDS = {
   longitude: 147.3272,
 };
 
-/**
- * @summary Pauses execution for a given number of milliseconds.
- * @param ms - Duration to sleep in milliseconds.
- */
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
- * @summary Checks location permission and whether system location services are enabled, without performing a GPS fix.
+ * Permission + system location services only (no GPS fix). Use for global “location on” UI state.
  */
 export async function resolveLocationStatus(): Promise<{
   isLocationOn: boolean;
@@ -143,28 +133,20 @@ export async function resolveLocationStatus(): Promise<{
 }
 
 /**
- * @summary Retrieves the device's current GPS coordinates, falling back to last-known or default coordinates if the fix fails.
+ * Best-effort coordinates after status is already “on”. Retries once like the original flow.
  */
 export async function fetchLocationCoordinates(): Promise<{
   coords: { latitude: number; longitude: number };
 }> {
   const readOnce = async () => {
+    const lastKnown = await Location.getLastKnownPositionAsync();
+    if (lastKnown) return lastKnown.coords;
     const current = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Balanced,
       mayShowUserSettingsDialog: false,
     });
     return current.coords;
   };
-
-  const lastKnown = await Location.getLastKnownPositionAsync().catch(() => null);
-  if (lastKnown?.coords) {
-    return {
-      coords: {
-        latitude: lastKnown.coords.latitude,
-        longitude: lastKnown.coords.longitude,
-      },
-    };
-  }
 
   try {
     const coords = await readOnce();

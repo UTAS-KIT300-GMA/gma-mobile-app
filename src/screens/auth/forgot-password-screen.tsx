@@ -17,11 +17,6 @@ interface Props {
   loading: boolean;
 }
 
-/**
- * @summary Renders the forgot-password UI with an email input field and a button to send a password reset link.
- * @param onSendReset - Callback invoked with the entered email address when the send button is pressed.
- * @param loading - When true, disables the input and shows an activity indicator on the button.
- */
 export function ForgotPasswordScreen({ onSendReset, loading }: Props) {
   const [email, setEmail] = useState("");
 

@@ -1,3 +1,7 @@
+/**
+ * ProfileSetupScreen.tsx (Resolved Hobart Edition)
+ */
+
 import { colors } from "@/theme/ThemeProvider";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
@@ -21,12 +25,6 @@ interface Props {
   initialInterests?: InterestKey[];
 }
 
-/**
- * @summary Renders the interest-selection onboarding screen where users choose their profile tags.
- * @param onSave - Callback invoked with the selected interest keys when the user taps Save.
- * @param saving - When true, disables the save button and shows an activity indicator.
- * @param userName - The user's display name shown in the greeting.
- */
 export function ProfileSetupScreen({
   onSave,
   saving,

@@ -128,7 +128,7 @@ export default function SearchScreenLogic() {
           .sort((a, b) => topIds.indexOf(a.id) - topIds.indexOf(b.id));
 
     } catch (err) {
-      console.log("AI Search Error:", err); // Not showing on user side
+      console.error("AI Search Error:", err);
       return []; // fallback safely
     }
   }, [model]);

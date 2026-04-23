@@ -1,128 +1,72 @@
-import { useBookmarks } from "@/context/GlobalContext";
-import { useAuth } from "@/hooks/useAuth";
+import React, { useMemo, useState } from "react";
+import { Alert } from "react-native";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
-import { db } from "@/services/authService";
-import { LearningDoc } from "@/types/type";
-import { Cloudinary } from "@cloudinary/url-gen";
-import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
-import { collection, getDocs } from "@react-native-firebase/firestore";
-import React, { useEffect, useState } from "react";
-import { Alert, Linking } from "react-native";
+import { useBookmarks, useEvents } from "@/context/GlobalContext";
+import { useAuth } from "@/hooks/useAuth"; // Assuming you have membership data in useAuth
+import { EventDoc } from "@/types/type";
 
-// Cloudinary instance (used for other transformations if needed later)
-const cld = new Cloudinary({
-  cloud: {
-    cloudName: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  },
-});
+export interface LearningVideo {
+  id: string;
+  title: string;
+  duration: string;
+  thumbnailUrl: string;
+  isBookmarked: boolean;
+  description: string;
+  videoUrl: string;
+  accessType: "free" | "subscriber";
+}
 
 export default function LearningRoute() {
-  const [videos, setVideos] = useState<LearningDoc[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // 1. Consume Global Contexts
+  const { events: allEvents, isLoading: isEventsLoading } = useEvents();
+  const { bookmarkedIds, toggleBookmark, isLoading: isBookmarksLoading } = useBookmarks();
+  const { user } = useAuth(); // Used for membership check
+
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const { bookmarkedIds, toggleBookmark, isLoading: isBookmarksLoading } =
-    useBookmarks();
-  const { user } = useAuth();
+  // 2. Logic to determine membership (adjust 'subscriber' logic as per your Firestore user schema)
+  // Update to this when membership feature implemented
+  // const isSubscriber = user?.membership === "subscriber";
+  const isSubscriber = false // Temporary set to False
 
-  useEffect(() => {
-    /**
-   * @summary Synchronizes the component state with Firestore learning content and local bookmark status.
-   */
-    const loadContent = async () => {
-      try {
-        setIsLoading(true);
+  // 3. Process and Filter Events specifically for the Learning UI
+  const learningVideos = useMemo<LearningVideo[]>(() => {
+    // Note: You might want to filter allEvents by a category like 'learning'
+    // if your EventsContext contains mixed types.
+    return allEvents.map((e: EventDoc & Record<string, any>) => ({
+      id: e.id,
+      title: e.title || "Untitled Content",
+      duration: e.duration || "0:00",
+      thumbnailUrl: e.thumbnailUrl || "",
+      description: e.description || "No description available.",
+      videoUrl: e.videoUrl || "",
+      accessType: e.accessType === "subscriber" ? "subscriber" : "free",
+      // Derive bookmark status from the global BookmarksContext
+      isBookmarked: !!bookmarkedIds[e.id],
+    }));
+  }, [allEvents, bookmarkedIds]);
 
-        // Fetch Firestore learning videos
-        const querySnapshot = await getDocs(collection(db, "learningVideos"));
-
-        const mappedVideos = querySnapshot.docs.map(
-          (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
-            const data = doc.data();
-
-            // Cloudinary public ID for video/image assets
-            const publicId = String(data.cloudinaryPublicId || "");
-
-            let finalThumbnail = "";
-
-            // Use stored thumbnail if available
-            if (data.thumbnailUrl?.trim()) {
-              finalThumbnail = data.thumbnailUrl.trim();
-
-              // Otherwise generate Cloudinary video thumbnail
-            } else if (publicId) {
-              finalThumbnail = `https://res.cloudinary.com/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${publicId}.jpg`;
-            }
-
-            
-            return {
-              id: doc.id,
-              title: String(data.title || "Untitled Content"),
-              duration: String(data.duration || "0:00"),
-
-              // Final resolved thumbnail used by UI
-              thumbnailUrl: finalThumbnail,
-
-              description: String(
-                data.description || "No description available."
-              ),
-
-              videoId: String(data.videoId || ""),
-              cloudinaryPublicId: publicId,
-
-              // Used later for file downloads
-              fileId: String(data.fileId || ""),
-
-              accessType:
-                data.accessType ?? "free",
-
-              // Bookmark state synced from context
-              isBookmarked: !!bookmarkedIds[doc.id],
-            } as LearningDoc;
-          }
-        );
-
-        setVideos(mappedVideos);
-      } catch (error) {
-        console.error("Error loading learningVideos:", error);
-        Alert.alert("Error", "Failed to sync with learning database.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadContent();
-  }, [bookmarkedIds]);
-
-  //  Placeholder subscription logic
-  const isSubscriber = false;
-
-  /**
-   * @summary Toggles the bookmark status for a specific video asset.
-   * @param id - The unique Firestore document ID of the video to be bookmarked or removed.
-   */
+  // 4. Handle Persistent Bookmarking
   const handleBookmarkPress = async (id: string) => {
-    const originalVideo = videos.find((v) => v.id === id);
-    if (originalVideo) {
+    const originalEvent = allEvents.find(e => e.id === id);
+    if (originalEvent) {
       try {
-        await toggleBookmark(originalVideo as any);
+        await toggleBookmark(originalEvent);
       } catch (error) {
         Alert.alert("Error", "Could not update bookmark.");
       }
     }
   };
 
-  /**
-   * @summary Manages UI expansion state and enforces subscription-based access control.
-   * @param item - The full LearningDoc object containing accessType and ID.
-   */
-  const handleCardPress = (item: LearningDoc) => {
+
+  // 5. Handle Access Control and Expansion
+  const handleCardPress = (item: LearningVideo) => {
     const hasAccess = item.accessType === "free" || isSubscriber;
 
     if (!hasAccess) {
       Alert.alert(
-        "Subscribers Only",
-        "This course is available to subscribed members only."
+          "Subscribers Only",
+          "This course is available to subscribed members only."
       );
       return;
     }
@@ -130,39 +74,13 @@ export default function LearningRoute() {
     setExpandedId((prev) => (prev === item.id ? null : item.id));
   };
 
-  /**
-   * @summary Generates a Cloudinary URL and opens the associated PDF resource in the system browser.
-   * @param fileId - The Cloudinary public ID or direct filename for the asset.
-   */
-  const handleFilePress = (fileId: string) => {
-    if (!fileId) {
-      Alert.alert("Error", "No file available.");
-      return;
-    }
-
-  
-    // SDK to ensure the URL is valid.
-    const fileUrl = fileId.toLowerCase().endsWith(".pdf")
-      ? cld.image(fileId).toURL()
-      : cld.image(fileId).format("pdf").toURL();
-
-    console.log("Generated URL:", fileUrl);
-    
-
-    Linking.openURL(fileUrl).catch((err) => {
-      console.error("Open URL error:", err);
-      Alert.alert("Error", "Could not open the file.");
-    });
-  };
-
   return (
-    <LearningScreenUI
-      events={videos}
-      loading={isLoading || isBookmarksLoading}
-      expandedId={expandedId}
-      onBookmarkPress={handleBookmarkPress}
-      onCardPress={handleCardPress}
-      onFilePress={handleFilePress}
-    />
+      <LearningScreenUI
+          events={learningVideos}
+          loading={isEventsLoading || isBookmarksLoading}
+          expandedId={expandedId}
+          onBookmarkPress={handleBookmarkPress}
+          onCardPress={handleCardPress}
+      />
   );
 }

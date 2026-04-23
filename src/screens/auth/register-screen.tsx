@@ -19,10 +19,6 @@ import {
 } from "react-native";
 import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
 
-/**
- * @summary Displays a password strength hint indicating whether the password meets the minimum length requirement.
- * @param password - The current password string entered by the user.
- */
 function PasswordStrengthHint({ password }: { password: string }) {
   if (!password) return null;
   const isValid = password.length >= 8;
@@ -46,12 +42,6 @@ interface RegisterUIProps {
   loading?: boolean;
 }
 
-/**
- * @summary Renders the registration form with fields for name, date of birth, gender, email, password, and terms agreement.
- * @param onRegisterPress - Callback invoked with the collected email, password, and profile data when the register button is pressed.
- * @param onLoginPress - Callback to navigate back to the login screen.
- * @param loading - When true, disables submission and shows an activity indicator.
- */
 export function RegisterScreen({
   onRegisterPress,
   onLoginPress,

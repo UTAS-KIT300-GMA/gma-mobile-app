@@ -60,9 +60,9 @@ export interface RegisterData {
 }
 
 /**
- * @summary Logs in the user with email and password and checks if their email is verified.
- * @param email - The user's email address.
- * @param pass - The user's password.
+ * @summary Logs in user with their email and password, also checks if email is verified.
+ * @param email User's inputted email.
+ * @param pass  User's inputted password.
  */
 export async function loginUser(email: string, pass: string) {
   // Signs the user in via Firebase Auth
@@ -77,10 +77,11 @@ export async function loginUser(email: string, pass: string) {
 }
 
 /**
- * @summary Creates a Firebase Auth account and Firestore user profile, then sends an email verification link.
- * @param email - The user's email address.
- * @param password - The user's chosen password.
- * @param profile - The user's registration profile data (name, gender, date of birth).
+ *@summary Creates Auth account,Firestore user profile and Sends email verification link.
+ * @param email - user's email
+ * @param password - user's password
+ * @param profile - user's profile data
+
  */
 export async function registerUser(
   email: string,
@@ -135,8 +136,8 @@ export type FacebookSignInProfile = {
 };
 
 /**
- * @summary Ensures a Firestore user profile exists for a Google sign-in, creating it on first sign-in without overwriting an existing profile.
- * @param googleUser - Optional Google profile data used to populate first/last name and photo.
+ * After Firebase Auth sign-in with Google, ensure `users/{uid}` exists with the same
+ * core fields as email/password registration. Does not overwrite an existing profile.
  */
 export async function ensureGoogleUserFirestoreProfile(
   googleUser?: GoogleSignInProfile,
@@ -178,10 +179,6 @@ export async function ensureGoogleUserFirestoreProfile(
   });
 }
 
-/**
- * @summary Ensures a Firestore user profile exists for a Facebook sign-in, creating it on first sign-in and updating photo/provider on subsequent sign-ins.
- * @param facebookUser - Optional Facebook profile data used to populate first/last name and photo.
- */
 export async function ensureFacebookUserFirestoreProfile(
   facebookUser?: FacebookSignInProfile,
 ): Promise<void> {
@@ -239,8 +236,7 @@ export async function ensureFacebookUserFirestoreProfile(
 }
 
 /**
- * @summary Signs into Firebase Auth using a Google ID token obtained from @react-native-google-signin.
- * @param idToken - The ID token returned by the Google Sign-In SDK.
+ * Sign into Firebase Auth with a Google ID token (from @react-native-google-signin).
  */
 export async function signInWithGoogleIdToken(idToken: string) {
   const credential = GoogleAuthProvider.credential(idToken);
@@ -248,10 +244,6 @@ export async function signInWithGoogleIdToken(idToken: string) {
   await reload(auth.currentUser!);
 }
 
-/**
- * @summary Signs into Firebase Auth using a Facebook access token obtained from the Facebook SDK.
- * @param accessToken - The access token returned by the Facebook Login SDK.
- */
 export async function signInWithFacebookAccessToken(accessToken: string) {
   const credential = FacebookAuthProvider.credential(accessToken);
   await signInWithCredential(auth, credential);
@@ -259,8 +251,8 @@ export async function signInWithFacebookAccessToken(accessToken: string) {
 }
 
 /**
- * @summary Updates both Firebase Auth and the Firestore profile with the user's new email address.
- * @param newEmail - The new email address to apply.
+ *@summary Updates Firebase Auth and Firestore with user's new email address.
+ *@param newEmail The user's new email address.
  */
 export async function updateUserEmail(newEmail: string) {
   const user = auth.currentUser;
@@ -278,7 +270,7 @@ export async function updateUserEmail(newEmail: string) {
 }
 
 /**
- * @summary Sends a new email verification link to the currently signed-in user's email address.
+ *@summary A verification email is delivered to the user's email and opens the app directly.
  */
 export async function resendVerificationEmail() {
   const user = auth.currentUser;
@@ -289,8 +281,8 @@ export async function resendVerificationEmail() {
 }
 
 /**
- * @summary Sends a password reset email to the specified address via Firebase Auth.
- * @param email - The email address to send the reset link to.
+ *@summary Sends a password reset email to the user.
+ *@param email User's email address.
  */
 export async function sendPasswordReset(email: string) {
   // Just send the default password reset email
@@ -298,24 +290,24 @@ export async function sendPasswordReset(email: string) {
 }
 
 /**
- * @summary Verifies a password reset code from the email link and returns the associated email address.
- * @param oobCode - The unique action code extracted from the password reset email link.
+ *@summary Verifies a password reset code (oobCode) from the email link.
+ *@param oobCode - The unique code from the password reset email.
  */
 export async function getPasswordResetEmail(oobCode: string) {
   return await verifyPasswordResetCode(auth, oobCode);
 }
 
 /**
- * @summary Resets the user's password using the action code from the reset email link.
- * @param oobCode - The unique action code extracted from the password reset email link.
- * @param newPass - The new password to set for the account.
+ *@summary Resets the user's password using the oobCode from the reset link.
+ *@param oobCode The unique code from the password reset email.
+ *@param newPass The new password entered by the user.
  */
 export async function resetPasswordWithCode(oobCode: string, newPass: string) {
   return await confirmPasswordReset(auth, oobCode, newPass);
 }
 
 /**
- * @summary Reloads the current Firebase Auth user to get the latest profile data, including email verification status.
+ *@summary Returns the latest user profile data from Firebase
  */
 export async function reloadUser() {
   const user = auth.currentUser;
@@ -325,15 +317,15 @@ export async function reloadUser() {
 }
 
 /**
- * @summary Ends the user's active Firebase Auth session.
+ ** @summaryEnds user's active session in app.
  */
 export async function logoutUser() {
   await signOut(auth);
 }
 
 /**
- * @summary Converts a Firebase error code into a user-friendly error message string.
- * @param e - The raw error caught from a Firebase function call.
+ * @summary Converts technical Firebase error codes into readable messages for the user.
+ * @parame The raw error caught from a Firebase function.
  */
 export function getFriendlyError(e: any): string {
   return ERROR_MESSAGES[e?.code] ?? e?.message ?? "Something went wrong.";
