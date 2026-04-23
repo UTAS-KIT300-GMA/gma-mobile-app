@@ -49,7 +49,7 @@ export default function ProfileUI({
     {
       id: "notifs",
       label: "Settings",
-      path: "(profile)/notifications-settings-logic",
+      path: "(profile)/settings",
     },
     
     {
@@ -58,9 +58,9 @@ export default function ProfileUI({
     path: "/(profile)/membership",
     },
     
-    { id: "Bookmarked Events",
-      label: "Bookmarked events",
-       path: "/BookmarkedEvents" },
+    { id: "bookmarks",
+      label: "Bookmarks",
+       path: "/(profile)/bookmarks" },
   ];
 
   return (

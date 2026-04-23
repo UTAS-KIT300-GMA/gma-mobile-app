@@ -48,14 +48,14 @@ export default function SearchScreenLogic() {
 
   // Stores the function instructions in the handleApply var.
   const handleApply = () => {
-    // Logic: Prevents the user from applying the search if they haven't typed anything.
-    if (!query.trim() && !location && !date) {
-      return;
-    }
-    // Logic: Filters the selected store to create a clean array of only the active tags.
     const selectedTags = (Object.keys(selected) as InterestKey[]).filter(
       (k) => selected[k],
     );
+
+    // Logic: Prevents the user from applying the search if they haven't typed anything.
+    if (!query.trim() && !location && !date && selectedTags.length === 0) {
+      return;
+    }
 
     // Uses the router tool to navigate to the results screen,
     // passing the current stores as URL parameters.
