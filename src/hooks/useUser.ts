@@ -11,8 +11,11 @@ type UseUserState = {
 
 /**
  * @summary Subscribes to the current user's Firestore profile document and exposes it with loading and error states.
+ * @throws {never} Hook setup does not throw synchronously.
+ * @Returns {UseUserState} Live user profile state for the signed-in user.
  */
 export function useUser(): UseUserState {
+  // Stores Firestore user document data and request state.
   const [userDoc, setUserDoc] = useState<UserDoc | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

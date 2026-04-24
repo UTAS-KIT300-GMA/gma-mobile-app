@@ -11,8 +11,11 @@ import { onSnapshot } from "@react-native-firebase/firestore";
 
 /**
  * @summary Monitors Firebase Auth and provides the user's identity and verification state to the App Layout for navigation guarding.
+ * @throws {never} Hook setup does not throw synchronously.
+ * @Returns {{user: FirebaseAuthTypes.User | null; initializing: boolean; isProfileValidated: boolean | null; isVerified: boolean}} Memoized auth state.
  */
 export function useAuth() {
+  // Stores auth/profile state used by global route guards.
   const [user, setUser] = useState<FirebaseAuthTypes.User | null>(null);
   const [isProfileValidated, setIsProfileValidated] = useState<boolean | null>(null);
   const [initializing, setInitializing] = useState(true);
@@ -20,6 +23,8 @@ export function useAuth() {
   useEffect(() => {
     /**
      * @summary Synchronizes the app's internal user state with Firebase Auth and ensures the loading spinner stops once both Auth & Profile are retrieved.
+     * @throws {never} Callback logic handles async errors internally.
+     * @Returns {void} Sets up auth and profile listeners.
      */
     let unsubscribeSnapshot: (() => void) | null = null;
     let isMounted = true; // Prevents state updates on unmounted components
@@ -64,6 +69,8 @@ export function useAuth() {
       /**
        * @summary Real-time sync with the user's Firestore document.
        * This ensures the app reacts IMMEDIATELY when the user finishes onboarding.
+       * @throws {never} Snapshot error callback handles failures.
+       * @Returns {void} Updates profile validation state from Firestore.
        */
       unsubscribeSnapshot = onSnapshot(userRef, (snap) => {
         if (!isMounted) return;
@@ -98,6 +105,8 @@ export function useAuth() {
 
   /**
    * @summary Stabilizes the return object to prevent unnecessary downstream re-renders in the RootLayout.
+   * @throws {never} Memoized value construction does not throw.
+   * @Returns {{user: FirebaseAuthTypes.User | null; initializing: boolean; isProfileValidated: boolean | null; isVerified: boolean}} Stable auth state object.
    */
   return useMemo(() => ({ 
     user, 

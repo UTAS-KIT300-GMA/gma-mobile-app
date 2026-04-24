@@ -14,13 +14,21 @@ import { Alert } from "react-native";
 
 /**
  * @summary Manages bookmark state for events and learning content, syncing adds and removes with Firestore.
+ * @throws {never} Hook setup does not throw synchronously.
+ * @Returns {BookmarksSlice} Bookmark state map with loading and toggle action.
  */
 export function useBookmarksInternal(): BookmarksSlice {
+  // Stores bookmark IDs keyed by content ID and loading status.
   const [bookmarkedIds, setBookmarkedIds] = useState<Record<string, boolean>>(
     {},
   );
   const [isLoading, setIsLoading] = useState(true);
 
+  /**
+   * @summary Loads the current user's bookmark IDs from Firestore.
+   * @throws {Error} Throws when Firestore bookmark retrieval fails.
+   * @Returns {Promise<void>} Resolves after bookmark state is hydrated.
+   */
   const fetchBookmarks = useCallback(async () => {
     const uid = auth.currentUser?.uid;
     if (!uid) {
@@ -47,6 +55,12 @@ export function useBookmarksInternal(): BookmarksSlice {
   }, [fetchBookmarks]);
 
   // Change parameter type to accept any bookmarkable item (event or learning content)
+  /**
+   * @summary Adds or removes an item bookmark and optimistically updates local state.
+   * @param item - The event or learning document to toggle.
+   * @throws {never} Errors are handled with rollback and user alert.
+   * @Returns {Promise<void>} Resolves when bookmark write attempt completes.
+   */
   const toggleBookmark = useCallback(
     async (item: EventDoc | LearningDoc) => {
       const uid = auth.currentUser?.uid;

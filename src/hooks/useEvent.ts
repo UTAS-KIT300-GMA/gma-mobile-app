@@ -19,14 +19,23 @@ import {EventsSlice} from "@/context/GlobalContext.tsx";
 
 /**
  * @summary Fetches approved events from Firestore once on mount and exposes a refresh function alongside loading and error states.
+ * @throws {never} Hook setup does not throw synchronously.
+ * @Returns {EventsSlice} Event list state with refresh controls.
  */
 export function useEventsInternal(): EventsSlice {
+    // Stores event query results and request lifecycle state.
     const [events, setEvents] = useState<EventDoc[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [lastFetchedAt, setLastFetchedAt] = useState<number | null>(null);
+    // Tracks the current fetch promise to avoid duplicate initial loads.
     const inFlightRef = useRef<Promise<void> | null>(null);
 
+    /**
+     * @summary Loads approved events from Firestore and stores them in local state.
+     * @throws {Error} Throws when Firestore query fails.
+     * @Returns {Promise<void>} Resolves after state is updated.
+     */
     const fetchOnce = useCallback(async () => {
         setError(null);
         const q = query(
@@ -44,6 +53,11 @@ export function useEventsInternal(): EventsSlice {
         setLastFetchedAt(Date.now());
     }, []);
 
+    /**
+     * @summary Triggers a manual refresh of event data with loading/error handling.
+     * @throws {never} Errors are captured and reflected in hook state.
+     * @Returns {Promise<void>} Resolves when refresh completes.
+     */
     const refresh = useCallback(async () => {
         setIsLoading(true);
         try {

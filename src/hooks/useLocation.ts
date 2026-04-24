@@ -12,17 +12,26 @@ import type { LocationSlice } from "@/context/GlobalContext";
 
 /**
  * @summary Resolves device location permission and coordinates, refreshing automatically when the app returns to the foreground.
+ * @throws {never} Hook setup does not throw synchronously.
+ * @Returns {LocationSlice} Memoized location state and refresh action.
  */
 export function useLocationInternal(): LocationSlice {
+  // Stores location values, availability state, and loading/error status.
   const [coords, setCoords] = useState(DEFAULT_LOCATION_COORDS);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocationOn, setIsLocationOn] = useState(false);
   const [isLocationLoading, setIsLocationLoading] = useState(true);
 
+  // Stores refs for in-flight requests and foreground refresh throttling.
   const inFlightRef = useRef<Promise<LocationFetchResult> | null>(null);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
   const lastResumeRefreshRef = useRef(0);
 
+  /**
+   * @summary Fetches current location status and coordinates with request deduplication.
+   * @throws {Error} Throws when location status or coordinate fetch fails.
+   * @Returns {Promise<LocationFetchResult>} Latest location fetch result.
+   */
   const refreshLocation = useCallback(async (): Promise<LocationFetchResult> => {
     if (inFlightRef.current) return inFlightRef.current;
 

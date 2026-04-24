@@ -9,6 +9,8 @@ import { sendPasswordReset, getFriendlyError } from "@/services/authService";
 
 /**
  * @summary Provides a unified interface for email validation, loading states, and Firebase communication to trigger reset emails independently of the UI.
+ * @throws {never} Hook setup does not throw synchronously.
+ * @Returns {{loading: boolean; handleSendReset: (email: string) => Promise<void>}} Password-reset state and action.
  */
 export function useForgotPassword() {
 
@@ -17,6 +19,8 @@ export function useForgotPassword() {
   /**
   * @summary Requests a reset link from Firebase and manages the internal loading state.
   * @param email - The string address provided by the user.
+  * @throws {Error} Throws when email validation fails or Firebase request fails.
+  * @Returns {Promise<void>} Resolves when reset email flow completes.
   */
   const handleSendReset = async (email: string) => {
     
