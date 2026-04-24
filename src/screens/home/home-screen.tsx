@@ -215,8 +215,11 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
               <Text style={styles.sectionTitle}>
                 🎲 You might be interested in...
               </Text>
-              {randomEvents.map((item) => (
-                <View style={styles.verticalCardWrapper}>
+              {randomEvents.map((item, index) => (
+                <View
+                  key={`random-wrapper-${item.id ?? index}`}
+                  style={styles.verticalCardWrapper}
+                >
                   <EventCard
                     key={`random-${item.id}`}
                     event={item}
