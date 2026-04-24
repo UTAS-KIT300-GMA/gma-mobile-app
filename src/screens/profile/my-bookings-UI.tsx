@@ -44,44 +44,48 @@ export const BookedEventsUI = ({
    * @Returns {React.JSX.Element} Booking row element.
    */
   const renderItem = ({ item }: { item: Booking }) => (
-     <View>
-     <EventCard
-  event={{
-    id: item.eventId,
-    title: item.event.title,
-    image: item.event.image,
-    dateTime: item.event.dateTime,
-    address: item.event.address,
-    category: "all",
-    description: "",
-    location: {} as any,
-    type: "free",
-    totalTickets: 0,
-    memberPrice: 0,
-    nonMemberPrice: 0,
-  }}
-  onPressCard={() => onPressCard(item)}
-/>
-
-    <View style={styles.ticketInfo}>
-      <Text style={styles.infoText}>
-        Tickets booked: {item.ticketCount}
-      </Text>
-
-      <Text style={styles.infoText}>
-        Total paid: ${item.totalPaid}
-      </Text>
-
-       <Text style={styles.infoText}>
-        Status: {item.status}
-       </Text>
-
-        <Text style={styles.infoText}>
-           Booked on:{" "}
-          {item.createdAt?.toDate?.()?.toLocaleDateString?.() ||
-           "N/A"}
-        </Text>
-      </View>
+    <View>
+      <EventCard
+        key={item.id}
+        event={{
+          id: item.eventId,
+          title: item.event.title,
+          image: item.event.image,
+          dateTime: item.event.dateTime,
+          address: item.event.address,
+          category: "all",
+          description: "",
+          location: {} as any,
+          type: "free",
+          totalTickets: 0,
+          memberPrice: 0,
+          nonMemberPrice: 0,
+        }}
+        onPressCard={() => onPressCard(item)}
+        showRsvpButton={false}
+        footerContent={
+          <View style={styles.ticketInfoContent}>
+            <View style={styles.ticketInfoRow}>
+              <Text style={styles.infoLabel}>Tickets booked</Text>
+              <Text style={styles.infoValue}>{item.ticketCount}</Text>
+            </View>
+            <View style={styles.ticketInfoRow}>
+              <Text style={styles.infoLabel}>Total paid</Text>
+              <Text style={styles.infoValue}>${item.totalPaid}</Text>
+            </View>
+            <View style={styles.ticketInfoRow}>
+              <Text style={styles.infoLabel}>Status</Text>
+              <Text style={styles.infoValue}>{item.status}</Text>
+            </View>
+            <View style={styles.ticketInfoRow}>
+              <Text style={styles.infoLabel}>Booked on</Text>
+              <Text style={styles.infoValue}>
+                {item.createdAt?.toDate?.()?.toLocaleDateString?.() || "N/A"}
+              </Text>
+            </View>
+          </View>
+        }
+      />
     </View>
   );
 
@@ -123,15 +127,27 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: 100,
   },
-  ticketInfo: {
-  marginTop: 10,
-  paddingHorizontal: 10,
-},
-infoText: {
-  fontSize: 13,
-  color: "#555",
-  marginTop: 2,
-},
+  ticketInfoContent: {
+    gap: 2,
+  },
+  ticketInfoRow: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    paddingVertical: 3,
+  },
+  infoLabel: {
+    fontSize: 13,
+    color: "#555",
+    minWidth: 100,
+  },
+  infoValue: {
+    fontSize: 13,
+    color: colors.saveBtnTextColor,
+    fontWeight: "700",
+    textTransform: "capitalize",
+    marginLeft: 8,
+  },
 
   listPadding: { padding: 16 },
   rsvpBtn: {
