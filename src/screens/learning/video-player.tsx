@@ -1,9 +1,8 @@
 import { Cloudinary } from "@cloudinary/url-gen";
 import { scale } from "@cloudinary/url-gen/actions/resize";
-import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 const cld = new Cloudinary({
   cloud: {
@@ -88,14 +87,6 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
         nativeControls={true}
         contentFit="cover" 
       />
-      {/* Currently use Cloudinary native play button setting */}
-      {/* {!isPlaying && (
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => player.play()}>
-          <View style={styles.overlay}>
-            <Ionicons name="play" size={60} color="#fff" />
-          </View>
-        </Pressable>
-      )} */}
     </View>
   );
 };
