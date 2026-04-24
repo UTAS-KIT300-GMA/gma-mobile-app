@@ -6,6 +6,7 @@
 
 import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/ThemeProvider";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -48,6 +49,11 @@ export default function EditInterestsUI({
   const [selected, setSelected] = useState<
     Partial<Record<InterestKey, boolean>>
   >({});
+  const [expandedSections, setExpandedSections] = useState({
+    connect: false,
+    grow: false,
+    thrive: false,
+  });
 
   // EFFECT: Pre-fill the selected tags when the screen loads so the pills light up
   useEffect(() => {
@@ -73,6 +79,10 @@ export default function EditInterestsUI({
    */
   const toggle = (key: InterestKey) => {
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
   /**
@@ -110,50 +120,89 @@ export default function EditInterestsUI({
         <Text style={styles.heading1}>Update Your Interests</Text>
 
         {/* --- PILLAR 1: CONNECT --- */}
-        <Text style={styles.pillarHeader}>Connect (Social & Community)</Text>
-        <View style={styles.tagWrapper}>
-          {[
-            "Social Networking",
-            "Cultural & Community Events",
-            "Creative Arts & Crafts",
-            "Games, Trivia & Bingo",
-            "Food & Cooking",
-            "Music & Karaoke",
-            "Book Club",
-            "Theatre & Movies",
-          ].map((tag) => renderPill(tag as InterestKey))}
-        </View>
+        <TouchableOpacity
+          style={styles.pillarHeaderRow}
+          onPress={() => toggleSection("connect")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.pillarHeader}>Connect (Social & Community)</Text>
+          <Ionicons
+            name={expandedSections.connect ? "chevron-up" : "chevron-down"}
+            size={20}
+            color={colors.saveBtnTextColor}
+          />
+        </TouchableOpacity>
+        {expandedSections.connect && (
+          <View style={styles.tagWrapper}>
+            {[
+              "Social Networking",
+              "Cultural & Community Events",
+              "Creative Arts & Crafts",
+              "Games, Trivia & Bingo",
+              "Food & Cooking",
+              "Music & Karaoke",
+              "Book Club",
+              "Theatre & Movies",
+            ].map((tag) => renderPill(tag as InterestKey))}
+          </View>
+        )}
 
         {/* --- PILLAR 2: GROW --- */}
-        <Text style={styles.pillarHeader}>Grow (Professional & Skills)</Text>
-        <View style={styles.tagWrapper}>
-          {[
-            "Professional Networking",
-            "Career Development & Info",
-            "Workshops & Skill Share",
-            "Mentoring & Coaching",
-            "Financial Literacy & Investing",
-            "Real Estate & Home Ownership",
-            "Public Speaking & Communication",
-            "Entrepreneurship",
-          ].map((tag) => renderPill(tag as InterestKey))}
-        </View>
+        <TouchableOpacity
+          style={styles.pillarHeaderRow}
+          onPress={() => toggleSection("grow")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.pillarHeader}>Grow (Professional & Skills)</Text>
+          <Ionicons
+            name={expandedSections.grow ? "chevron-up" : "chevron-down"}
+            size={20}
+            color={colors.saveBtnTextColor}
+          />
+        </TouchableOpacity>
+        {expandedSections.grow && (
+          <View style={styles.tagWrapper}>
+            {[
+              "Professional Networking",
+              "Career Development & Info",
+              "Workshops & Skill Share",
+              "Mentoring & Coaching",
+              "Financial Literacy & Investing",
+              "Real Estate & Home Ownership",
+              "Public Speaking & Communication",
+              "Entrepreneurship",
+            ].map((tag) => renderPill(tag as InterestKey))}
+          </View>
+        )}
 
         {/* --- PILLAR 3: THRIVE --- */}
-        <Text style={styles.pillarHeader}>Thrive (Health & Wellness)</Text>
-        <View style={styles.tagWrapper}>
-          {[
-            "Running & Walking",
-            "Hiking & Outdoor Adventure",
-            "Yoga & Pilates",
-            "Gym & Fitness",
-            "Team Sports",
-            "Wellness & Retreats",
-            "Climbing & Extreme Sports",
-            "Cycling & Riding",
-            "Healthy Eating",
-          ].map((tag) => renderPill(tag as InterestKey))}
-        </View>
+        <TouchableOpacity
+          style={styles.pillarHeaderRow}
+          onPress={() => toggleSection("thrive")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.pillarHeader}>Thrive (Health & Wellness)</Text>
+          <Ionicons
+            name={expandedSections.thrive ? "chevron-up" : "chevron-down"}
+            size={20}
+            color={colors.saveBtnTextColor}
+          />
+        </TouchableOpacity>
+        {expandedSections.thrive && (
+          <View style={styles.tagWrapper}>
+            {[
+              "Running & Walking",
+              "Hiking & Outdoor Adventure",
+              "Yoga & Pilates",
+              "Gym & Fitness",
+              "Team Sports",
+              "Wellness & Retreats",
+              "Climbing & Extreme Sports",
+              "Cycling & Riding",
+              "Healthy Eating",
+            ].map((tag) => renderPill(tag as InterestKey))}
+          </View>
+        )}
 
         {/* UPDATED COPY: Changed button text to "Save Changes" */}
         <TouchableOpacity
@@ -190,9 +239,14 @@ const styles = StyleSheet.create({
     color: colors.black,
     fontSize: 16,
     fontWeight: "800",
+  },
+  pillarHeaderRow: {
     marginTop: 20,
     marginBottom: 10,
-    paddingLeft: 8,
+    paddingHorizontal: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   tagWrapper: {
     flexDirection: "row",
