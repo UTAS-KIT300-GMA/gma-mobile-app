@@ -24,101 +24,88 @@ export const BookingConfirmedUI = ({
   details,
   onGoToBookings,
   onViewDetails,
-}: any) => (
-  <SafeAreaView style={styles.safe}>
-    <AppHeader title="Confirmation" showBack={true} />
+}: any) => {
+  const renderDetailRow = (label: string, value: string | number) => (
+    <View style={styles.detailRow} key={label}>
+      <Text style={styles.detailLabel}>{label}</Text>
+      <Text style={styles.detailValue}>{value}</Text>
+    </View>
+  );
 
-    <View style={styles.content}>
-      <Ionicons name="checkmark-circle" size={100} color="#4CAF50" />
-    <Text style={styles.statusText}>
-  {details.type === "event" ? "Booking Confirmed" : "Membership Activated"}
-</Text>
-    {details.type === "event" &&(
-      <View style={styles.card}>
-        <ImageBackground source={{ uri: details.image }} style={styles.image}>
-          {/* Image overlay */}
-          <LinearGradient
-            colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.65)"]}
-            locations={[0, 0.65, 0.85, 1]}
-            start={{ x: 0.3, y: 0 }}
-            end={{ x: 0.3, y: 1 }}
-            style={styles.imageOverlay}
-          />
-          <Text style={styles.eventTitle}>{details.title}</Text>
-          <Text style={styles.eventInfo}>
-            {details.time}
-            {"\n"}
-            {details.location}
+  return (
+    <SafeAreaView style={styles.safe}>
+      <AppHeader title="Confirmation" showBack={true} />
+
+      <View style={styles.content}>
+        <Ionicons name="checkmark-circle" size={96} color="#4CAF50" />
+        <Text style={styles.statusText}>
+          {details.type === "event" ? "Booking Confirmed" : "Membership Activated"}
+        </Text>
+
+        {details.type === "event" && (
+          <View style={styles.card}>
+            <ImageBackground source={{ uri: details.image }} style={styles.image}>
+              <LinearGradient
+                colors={["rgba(0,0,0,0)", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.65)"]}
+                locations={[0, 0.65, 0.85, 1]}
+                start={{ x: 0.3, y: 0 }}
+                end={{ x: 0.3, y: 1 }}
+                style={styles.imageOverlay}
+              />
+              <Text style={styles.eventTitle}>{details.title}</Text>
+              <Text style={styles.eventInfo}>
+                {details.time}
+                {"\n"}
+                {details.location}
+              </Text>
+            </ImageBackground>
+          </View>
+        )}
+
+        {details.type === "membership" && (
+          <View style={styles.membershipCardContainer}>
+            <View style={styles.membershipCard}>
+              <Text style={styles.membershipTitle}>{details.title}</Text>
+              <Text style={styles.membershipPrice}>{details.totalCost}/month</Text>
+              <Text style={styles.membershipBenefit}>Early access to selected events</Text>
+              <Text style={styles.membershipBenefit}>Event discounts</Text>
+              <Text style={styles.membershipBenefit}>Priority booking</Text>
+              <Text style={styles.membershipBenefit}>Exclusive content</Text>
+            </View>
+          </View>
+        )}
+
+        {details.type === "event" && (
+          <View style={styles.detailsBox}>
+            {renderDetailRow("Booking ID", details.bookingId)}
+            {renderDetailRow("Ticket Type", details.ticketType)}
+            {renderDetailRow("Number of Tickets", details.ticketCount)}
+            {renderDetailRow("Total Cost", details.totalCost)}
+          </View>
+        )}
+
+        {details.type === "membership" && (
+          <View style={styles.detailsBox}>
+            {renderDetailRow("Booking ID", details.bookingId)}
+            {renderDetailRow("Ticket Type", "Membership")}
+            {renderDetailRow("Total Cost", details.totalCost)}
+          </View>
+        )}
+
+        <TouchableOpacity style={styles.mainBtn} onPress={onGoToBookings}>
+          <Text style={styles.mainBtnText}>
+            {details.type === "event" ? "My Bookings" : "My Membership"}
           </Text>
-        </ImageBackground>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.secBtn} onPress={onViewDetails}>
+          <Text style={styles.secBtnText}>
+            {details.type === "event" ? "Event Details" : "Explore More"}
+          </Text>
+        </TouchableOpacity>
       </View>
-      )}
-
-{details.type === "membership" && (
-  <View style={styles.card}>
-    <View style={styles.membershipCard}>
-      <Text style={styles.membershipTitle}>{details.title}</Text>
-      <Text style={styles.membershipPrice}>{details.totalCost}/month</Text>
-
-      <Text style={styles.membershipBenefit}>Early access to selected events</Text>
-      <Text style={styles.membershipBenefit}>Event discounts</Text>
-      <Text style={styles.membershipBenefit}>Priority booking</Text>
-      <Text style={styles.membershipBenefit}>Exclusive content</Text>
-    </View>
-  </View>
-)}
-  {details.type === "event" && (
-      <View style={styles.detailsBox}>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailRowText}>Ticket Type:</Text>
-          <Text style={styles.detailRowText}>{details.ticketType}</Text>
-          <Text style={styles.detailRowText}>Ticket Type</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailRowText}>Number of Ticket:</Text>
-          <Text style={styles.detailRowText}>{details.ticketCount}</Text>
-          <Text style={styles.detailRowText}>Number of Ticket:</Text>
-        </View>
-        <View style={styles.detailRow}>
-          <Text style={styles.detailRowText}>Booking ID:</Text>
-          <Text style={styles.detailRowText}>{details.bookingId}</Text>
-          <Text style={styles.detailRowText}>Booking ID:</Text>
-        </View>
-        <View style={[styles.detailRow, { marginTop: 10 }]}>
-          <Text style={styles.detailRowText}>Total Cost:</Text>
-          <Text style={styles.detailRowText}>{details.totalCost}</Text>
-        </View>
-      </View>
-  )}    
-
-  {details.type === "membership" && (
-  <View style={styles.detailsBox}>
-    <View style={styles.detailRow}>
-      <Text style={styles.detailRowText}>Ticket Type:</Text>
-      <Text style={styles.detailRowText}>Membership</Text>
-    </View>
-
-    <View style={styles.detailRow}>
-      <Text style={styles.detailRowText}>Booking ID:</Text>
-      <Text style={styles.detailRowText}>{details.bookingId}</Text>
-    </View>
-
-    <View style={[styles.detailRow, { marginTop: 10 }]}>
-      <Text style={styles.detailRowText}>Total Cost:</Text>
-      <Text style={styles.detailRowText}>{details.totalCost}</Text>
-    </View>
-  </View>
-)}
-
-      <TouchableOpacity style={styles.mainBtn} onPress={onGoToBookings}>
-        <Text style={styles.mainBtnText}> {details.type === "event" ? "My bookings" : "My membership"}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.secBtn} onPress={onViewDetails}>
-        <Text style={styles.secBtnText}> {details.type === "event" ? "Event details" : "Explore More"}</Text>
-      </TouchableOpacity>
-    </View>
-  </SafeAreaView>
-);
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
   safe: {
@@ -143,33 +130,40 @@ membershipTitle: {
   fontSize: 18,
   fontWeight: "700",
   color: colors.saveBtnTextColor,
-  marginBottom: 1,
+  marginBottom: 4,
 },
 
 membershipPrice: {
   fontSize: 20,
   fontWeight: "bold",
   color: colors.primary,
-  marginBottom: 10,
+  marginBottom: 12,
 },
 
 membershipBenefit: {
-  fontSize: 16,
+  fontSize: 15,
   fontWeight: "500",
   color: "#be5c94",
-  marginTop: 2,
+  marginTop: 3,
+},
+membershipCardContainer: {
+  width: "95%",
+  marginBottom: 12,
 },
 
   content: {
     flex: 1,
     alignItems: "center",
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 20,
   },
   statusText: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: "bold",
     color: colors.saveBtnTextColor,
-    marginBottom: 25,
+    marginTop: 10,
+    marginBottom: 16,
   },
 
   card: {
@@ -177,7 +171,7 @@ membershipBenefit: {
     height: 200,
     borderRadius: 15,
     overflow: "hidden",
-    marginBottom: 10,
+    marginBottom: 12,
   },
 
   image: {
@@ -210,23 +204,33 @@ membershipBenefit: {
     elevation: 2,
     borderRadius: 15,
     marginBottom: 25,
-    
-    
   },
   detailRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 8,
+    alignItems: "center",
+    paddingVertical: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1E7EF",
   },
-  detailRowText: {
+  detailLabel: {
     fontWeight: "600",
-    fontSize: 16,
+    fontSize: 15,
     color: colors.saveBtnTextColor,
+    opacity: 0.8,
+    paddingRight: 8,
+  },
+  detailValue: {
+    fontWeight: "700",
+    fontSize: 15,
+    color: colors.saveBtnTextColor,
+    flexShrink: 1,
+    textAlign: "right",
   },
   mainBtn: {
     backgroundColor: colors.primary,
-    width: "100%",
-    padding: 15,
+    width: "95%",
+    paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 12,
@@ -234,50 +238,21 @@ membershipBenefit: {
   mainBtnText: {
     color: "white",
     fontWeight: "bold",
-    fontSize: 20,
+    fontSize: 17,
   },
   secBtn: {
     backgroundColor: "white",
-    width: "100%",
-    padding: 15,
+    width: "95%",
+    paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
     elevation: 2,
     borderWidth: 1,
-    borderColor: colors.textOnPrimary,
+    borderColor: "#EADBE4",
   },
   secBtnText: {
     color: colors.primary,
     fontWeight: "bold",
-    fontSize: 20,
+    fontSize: 17,
   },
-  membershipDetailsBox: {
-  backgroundColor: "white",
-  width: "95%",
-  padding: 20,
-  elevation: 2,
-  borderRadius: 15,
-  marginBottom: 25,
-},
-
-membershipDetailRow: {
-  flexDirection: "row",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: 14,
-},
-
-membershipDetailLabel: {
-  fontWeight: "600",
-  fontSize: 16,
-  color: colors.saveBtnTextColor,
-},
-
-membershipDetailValue: {
-  fontWeight: "600",
-  fontSize: 16,
-  color: colors.saveBtnTextColor,
-  maxWidth: "55%",
-  textAlign: "right",
-},
 });
