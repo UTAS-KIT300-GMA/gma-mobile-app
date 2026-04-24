@@ -23,6 +23,8 @@ import { ActivityIndicator, Alert, StyleSheet, View } from "react-native";
 
 /**
  * @summary Fetches the user's current data from Firestore, fills the edit form, and saves the updated profile data back to Firestore.
+ * @throws {never} Errors are handled with alerts and safe exits.
+ * @Returns {React.JSX.Element} Edit-profile screen with preloaded data.
  */
 export default function EditProfileRoute() {
   // Stores the navigation tool in the router var to allow moving between screens.
@@ -86,7 +88,9 @@ export default function EditProfileRoute() {
 
   /**
    * @summary Updates Firestore profile fields and optionally updates Auth email/password,
-   * @param data The user's edited form values.
+   * @param data - The user's edited form values.
+   * @throws {never} Errors are handled through targeted alert messages.
+   * @Returns {Promise<void>} Resolves when save flow completes.
    */
   const handleSave = async (data: ProfileFormData) => {
     // Stores the current user account in the user var.

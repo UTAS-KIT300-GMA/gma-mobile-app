@@ -19,6 +19,11 @@ const paymentHistory = [
   { id: 6, plan: "GMA Premium Plan", amount: "$10", date: "15/8/26", status: "Successful" },
 ];
 
+/**
+ * @summary Renders static payment history entries for membership billing.
+ * @throws {never} Pure render path does not throw.
+ * @Returns {React.JSX.Element} Payment history screen.
+ */
 export default function PaymentHistoryScreen() {
   const router = useRouter();
 

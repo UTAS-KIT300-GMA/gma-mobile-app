@@ -13,6 +13,8 @@ import { Alert, ActivityIndicator, View } from "react-native";
 
   /**
    * @summary Updates the user's selected interests in Firestore and returns them to the previous profile screen.
+   * @throws {never} Errors are handled through alerts and guarded returns.
+   * @Returns {React.JSX.Element} Edit-interests screen logic container.
    */
 export default function EditInterestsRoute() {
 
@@ -86,7 +88,9 @@ export default function EditInterestsRoute() {
 
   /**
      * @summary Updates the users selected tags to their profile via firestore,
-     * @param selectedTags An array var storing the interests tags selected by the user.
+     * @param selectedTags - An array storing the interest tags selected by the user.
+     * @throws {never} Errors are handled and surfaced through alerts.
+     * @Returns {Promise<void>} Resolves when update flow completes.
      */
   // Stores the function instructions in the handleUpdate var.
   const handleUpdate = async (selectedTags: InterestKey[]) => {

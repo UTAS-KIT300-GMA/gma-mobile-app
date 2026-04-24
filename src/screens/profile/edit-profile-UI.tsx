@@ -29,6 +29,14 @@ interface Props {
   initialData: ProfileFormData | null;
 }
 
+/**
+ * @summary Renders editable profile form fields and validates before save.
+ * @param onSave - Callback invoked with normalized profile form data.
+ * @param onBack - Back navigation callback.
+ * @param initialData - Initial profile values for the form.
+ * @throws {never} Validation errors are handled via alerts.
+ * @Returns {React.JSX.Element} Edit-profile form screen.
+ */
 export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
   // --- STATE ---
   // Stores the user's input values for each field in the form.
@@ -40,6 +48,11 @@ export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   // --- LOGIC ---
+  /**
+   * @summary Validates form values and submits them to the parent save handler.
+   * @throws {never} Validation failures return early with alerts.
+   * @Returns {void} Submits save when valid.
+   */
   const handleSavePress = () => {
     if (
       !firstName.trim() ||

@@ -16,6 +16,8 @@ interface UserProfile {
 
 /**
    * @summary Fetches the user's name from Firestore to display it on profile screen.
+   * @throws {never} Errors are handled through logging and fallback state.
+   * @Returns {React.JSX.Element} Profile screen container.
    */
 export default function ProfileRoute() {
   
@@ -88,6 +90,11 @@ export default function ProfileRoute() {
   );
 
   // Stores the function instructions in the handleLogout var.
+  /**
+   * @summary Confirms and executes logout flow for the current user.
+   * @throws {never} Errors are handled with alerts.
+   * @Returns {void} Shows confirmation and logs user out on approval.
+   */
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to log out?", [
       { text: "Cancel", style: "cancel" },

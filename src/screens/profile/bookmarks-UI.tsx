@@ -26,6 +26,20 @@ interface BookmarkedEventsUIProps {
   onRemoveCourseBookmark: (item: EventDoc | LearningDoc) => Promise<void>;
 }
 
+/**
+ * @summary Renders bookmarked events and learning content grouped by section.
+ * @param events - Bookmarked event records.
+ * @param learningContents - Bookmarked learning records.
+ * @param loading - Loading state for bookmark hydration.
+ * @param onBack - Back navigation callback.
+ * @param onPressCard - Event-card press callback.
+ * @param onRemoveBookmark - Event bookmark removal callback.
+ * @param onRsvp - RSVP callback for event cards.
+ * @param onPressLearning - Learning-card press callback.
+ * @param onRemoveCourseBookmark - Learning bookmark removal callback.
+ * @throws {never} UI delegates all side effects to callbacks.
+ * @Returns {React.JSX.Element} Bookmark section list screen.
+ */
 export const BookmarksUI = ({
   events,
   learningContents,
@@ -37,6 +51,7 @@ export const BookmarksUI = ({
   onPressLearning,
   onRemoveCourseBookmark,
 }: BookmarkedEventsUIProps) => {
+  // Stores grouped section data for events and learning bookmarks.
   const sections: {
     title: string;
     data: (EventDoc | LearningDoc)[];
