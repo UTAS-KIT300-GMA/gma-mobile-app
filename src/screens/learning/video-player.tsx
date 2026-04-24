@@ -22,10 +22,9 @@ interface Props {
  * @Returns {React.JSX.Element} Video player surface with optional fallback.
  */
 const VideoPlayer: React.FC<Props> = ({ publicId }) => {
-  // Stores whether the video is currently playing for overlay state.
-  const [isPlaying, setIsPlaying] = useState(false);
 
-  
+    const [isPlaying, setIsPlaying] = useState(false); // Stores whether the video is currently playing for overlay state.
+
   useEffect(() => {
     /**
  * @summary Logs initialization metadata to the console for debugging deployment environments and asset loading.
@@ -34,7 +33,7 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
   }, [publicId]);
 
   /**
- * @summary Generates a performance-optimized streaming URL by enforcing low resolution (480p), high compression (eco mode), and automatic format selection.
+ * @summary Generates a performance-optimized streaming URL by enforcing low resolution (480p), high compression (eco-mode), and automatic format selection.
  * @param publicId - Dependency: Triggers a new URL generation if the video source ID is updated.
  * @throws {never} URL builder returns empty string on invalid input.
  * @Returns {string} Optimized streaming URL.
@@ -43,17 +42,11 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
     if (!publicId?.trim()) return "";
     
     return cld.video(publicId)
-      // 1. Force the width to 480 pixels (Low Quality)
-      .resize(scale().width(480)) 
-      
-      // 2. Force high compression. 'eco' prioritizes a smaller file size over visual quality.
-      .quality("auto:eco") 
-      
-      // 3. Let Cloudinary pick the best efficient format (like webm for Android)
-      .format("auto") 
+      .resize(scale().width(480))    // Force Low Quality.
+      .quality("auto:eco")      // Force high compression.
+      .format("auto")          // Cloudinary pick efficient format.
       .toURL();
   }, [publicId]);
-
 
   const player = useVideoPlayer(optimizedUrl ?? "", (playerInstance) => {
     playerInstance.loop = false;
@@ -78,11 +71,6 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
 
   return () => sub.remove();
   }, [player, optimizedUrl, publicId]);
-
-  
-    
-
-    
 
   if (!optimizedUrl) {
     return (
