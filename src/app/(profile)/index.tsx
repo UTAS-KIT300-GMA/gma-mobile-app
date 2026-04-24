@@ -12,6 +12,7 @@ interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
+  photoURL?: string;
 }
 
 /**
@@ -30,6 +31,7 @@ export default function ProfileRoute() {
 
   // Stores a boolean in the loading var to track the fetching status.
   const [loading, setLoading] = useState(true);
+  const [photoURL, setPhotoURL] = useState<string | undefined>(undefined);
 
   // useFocusEffect runs every time this screen becomes the active screen.
   useFocusEffect(
@@ -68,10 +70,16 @@ export default function ProfileRoute() {
               } else {
                 setUserName("User"); 
               }
+              setPhotoURL(
+                typeof data.photoURL === "string" ? data.photoURL : undefined,
+              );
             }
           } else {
             // If the document somehow doesn't exist, provide a safe fallback
-            if (mounted) setUserName("Guest User");
+            if (mounted) {
+              setUserName("Guest User");
+              setPhotoURL(undefined);
+            }
           }
         } catch (e) {
           console.error("Error fetching profile:", e);
@@ -119,6 +127,7 @@ export default function ProfileRoute() {
     // and navigation instructions to the profile-screen.
     <ProfileUI 
       userName={userName} 
+      photoURL={photoURL}
       loading={loading} 
       onLogout={handleLogout}
       onBack={() => router.back()}

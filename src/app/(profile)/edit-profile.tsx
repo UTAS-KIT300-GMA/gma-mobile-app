@@ -32,6 +32,9 @@ export default function EditProfileRoute() {
 
   // Stores the user's existing profile information for the form.
   const [initialData, setInitialData] = useState<ProfileFormData | null>(null);
+  const [initialPhotoURL, setInitialPhotoURL] = useState<string | undefined>(
+    undefined,
+  );
 
   // Tracks whether the profile is still being fetched.
   const [loading, setLoading] = useState(true);
@@ -64,6 +67,9 @@ export default function EditProfileRoute() {
             password: "",
             email: rawData?.email || user.email || "",
           });
+          setInitialPhotoURL(
+            typeof rawData?.photoURL === "string" ? rawData.photoURL : undefined,
+          );
         } else {
           // Changes the initialData var to empty fallback values if the profile doc does not exist yet.
           setInitialData({
@@ -73,6 +79,7 @@ export default function EditProfileRoute() {
             password: "",
             email: user.email || "",
           });
+          setInitialPhotoURL(undefined);
         }
       } catch (error) {
         console.error("Load Error:", error);
@@ -92,7 +99,40 @@ export default function EditProfileRoute() {
    * @throws {never} Errors are handled through targeted alert messages.
    * @Returns {Promise<void>} Resolves when save flow completes.
    */
-  const handleSave = async (data: ProfileFormData) => {
+  const uploadProfileImage = async (localUri: string): Promise<string> => {
+    const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+    if (!cloudName || !uploadPreset) {
+      throw new Error("Cloudinary config missing. Add cloud name and upload preset.");
+    }
+
+    const formData = new FormData();
+    formData.append("file", {
+      uri: localUri,
+      type: "image/jpeg",
+      name: "profile.jpg",
+    } as any);
+    formData.append("upload_preset", uploadPreset);
+    formData.append("folder", "profile_photos");
+
+    const response = await fetch(
+      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    const payload = await response.json();
+    if (!response.ok || !payload?.secure_url) {
+      throw new Error(payload?.error?.message ?? "Image upload failed");
+    }
+
+    return String(payload.secure_url);
+  };
+
+  const handleSave = async (data: ProfileFormData, profileImageUri?: string) => {
     // Stores the current user account in the user var.
     const user = auth.currentUser;
     if (!user) return;
@@ -112,12 +152,17 @@ export default function EditProfileRoute() {
       }
 
       // Stores the structured profile data to be saved in the updatePayload var.
-      const updatePayload = {
+      const updatePayload: Record<string, unknown> = {
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
         email: data.email?.toLowerCase() || user.email || "",
         updatedAt: Timestamp.now(),
       };
+
+      if (profileImageUri) {
+        const uploadedPhotoUrl = await uploadProfileImage(profileImageUri);
+        updatePayload.photoURL = uploadedPhotoUrl;
+      }
 
       // Updates the Firestore profile document with the new payload.
       await updateDoc(userRef, updatePayload);
@@ -152,6 +197,7 @@ export default function EditProfileRoute() {
   return (
     <EditProfileScreen
       initialData={initialData}
+      initialPhotoURL={initialPhotoURL}
       onSave={handleSave}
       onBack={() => router.back()}
     />

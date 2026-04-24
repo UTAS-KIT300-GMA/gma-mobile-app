@@ -1,8 +1,10 @@
 import { AppHeader } from "@/components/AppHeader";
 import { colors } from "@/theme/ThemeProvider";
+import * as ImagePicker from "expo-image-picker";
 import React, { useState } from "react";
 import {
   Alert,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -24,9 +26,10 @@ export interface ProfileFormData {
 }
 
 interface Props {
-  onSave: (data: ProfileFormData) => void;
+  onSave: (data: ProfileFormData, profileImageUri?: string) => void;
   onBack: () => void;
   initialData: ProfileFormData | null;
+  initialPhotoURL?: string;
 }
 
 /**
@@ -37,7 +40,12 @@ interface Props {
  * @throws {never} Validation errors are handled via alerts.
  * @Returns {React.JSX.Element} Edit-profile form screen.
  */
-export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
+export function EditProfileScreen({
+  onSave,
+  onBack,
+  initialData,
+  initialPhotoURL,
+}: Props) {
   // --- STATE ---
   // Stores the user's input values for each field in the form.
   const [firstName, setFirstName] = useState(initialData?.firstName || "");
@@ -46,6 +54,25 @@ export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
   const [password, setPassword] = useState(initialData?.password || "");
   const [email, setEmail] = useState(initialData?.email || "");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(
+    initialPhotoURL ?? null,
+  );
+
+  const handlePickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      setProfileImageUri(result.assets[0].uri);
+    }
+  };
 
   // --- LOGIC ---
   /**
@@ -74,13 +101,16 @@ export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
       return;
     }
 
-    onSave({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      gender: gender.trim(),
-      password,
-      email: email.trim(),
-    });
+    onSave(
+      {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        gender: gender.trim(),
+        password,
+        email: email.trim(),
+      },
+      profileImageUri ?? undefined,
+    );
   };
 
   return (
@@ -92,6 +122,21 @@ export function EditProfileScreen({ onSave, onBack, initialData }: Props) {
       >
         <ScrollView contentContainerStyle={styles.container}>
           <View style={styles.card}>
+            <View style={styles.avatarSection}>
+              <TouchableOpacity
+                style={styles.avatarButton}
+                onPress={handlePickImage}
+                activeOpacity={0.8}
+              >
+                {profileImageUri ? (
+                  <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
+                ) : (
+                  <Text style={styles.avatarPlaceholder}>Add Photo</Text>
+                )}
+              </TouchableOpacity>
+              <Text style={styles.avatarHint}>Tap to change profile photo</Text>
+            </View>
+
             <Text style={styles.label}>First Name</Text>
             <TextInput
               style={styles.input}
@@ -190,6 +235,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     elevation: 3,
     borderColor: colors.background,
+  },
+  avatarSection: {
+    alignItems: "center",
+    marginBottom: 18,
+  },
+  avatarButton: {
+    width: 92,
+    height: 92,
+    borderRadius: 46,
+    backgroundColor: "#F0F1F5",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E1E3EA",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+  },
+  avatarPlaceholder: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  avatarHint: {
+    marginTop: 8,
+    fontSize: 12,
+    color: colors.darkGrey,
   },
   label: {
     fontSize: 14,

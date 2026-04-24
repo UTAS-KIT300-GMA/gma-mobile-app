@@ -3,6 +3,7 @@ import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 type ProfileUIProps = {
   userName: string;
+  photoURL?: string;
   loading: boolean;
   onLogout: () => void;
   onBack: () => void;
@@ -31,6 +33,7 @@ type ProfileUIProps = {
  */
 export default function ProfileUI({
   userName,
+  photoURL,
   loading,
   onLogout,
   onBack,
@@ -84,11 +87,15 @@ export default function ProfileUI({
       >
         {/* Profile Top Section */}
         <View style={styles.profileTop}>
-          <Ionicons
-            name="person-circle-outline"
-            size={130}
-            color={colors.primary}
-          />
+          {photoURL ? (
+            <Image source={{ uri: photoURL }} style={styles.profilePhoto} />
+          ) : (
+            <Ionicons
+              name="person-circle-outline"
+              size={130}
+              color={colors.primary}
+            />
+          )}
           {/* Displays the Busy spinner while data is being fetched, otherwise shows name */}
           {loading ? (
             <ActivityIndicator
@@ -140,6 +147,14 @@ const styles = StyleSheet.create({
   profileTop: {
     alignItems: "center",
     marginBottom: 24,
+  },
+  profilePhoto: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    backgroundColor: "#F0F1F5",
   },
   userName: {
     marginTop: 8,

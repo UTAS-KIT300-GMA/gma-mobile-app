@@ -1,8 +1,10 @@
 import { colors } from "@/theme/ThemeProvider";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -14,7 +16,7 @@ import { InterestKey } from "@/types/type";
 
 // We keep your "HEAD" Props because they support the Editing state for Hobart users
 interface Props {
-  onSave: (selectedTags: InterestKey[]) => void;
+  onSave: (selectedTags: InterestKey[], profileImageUri?: string) => void;
   saving: boolean;
   userName?: string;
   isEditing?: boolean;
@@ -40,6 +42,7 @@ export function ProfileSetupScreen({
   const [selected, setSelected] = useState<
     Partial<Record<InterestKey, boolean>>
   >({});
+  const [profileImageUri, setProfileImageUri] = useState<string | null>(null);
 
   // Converts selected object to array for Firestore
   const selectedTags = useMemo(() => {
@@ -54,6 +57,22 @@ export function ProfileSetupScreen({
    */
   const toggle = (key: InterestKey) => {
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const handlePickImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]?.uri) {
+      setProfileImageUri(result.assets[0].uri);
+    }
   };
 
   /**
@@ -85,6 +104,20 @@ export function ProfileSetupScreen({
     >
       <View style={styles.box}>
         <Text style={styles.heading1}>Select Your Interests</Text>
+        <View style={styles.avatarSection}>
+          <TouchableOpacity
+            style={styles.avatarButton}
+            onPress={handlePickImage}
+            activeOpacity={0.8}
+          >
+            {profileImageUri ? (
+              <Image source={{ uri: profileImageUri }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarPlaceholder}>Add Photo</Text>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.avatarHint}>Upload a profile photo (optional)</Text>
+        </View>
 
         {/* --- PILLAR 1: CONNECT --- */}
         <Text style={styles.pillarHeader}>Connect (Social & Community)</Text>
@@ -135,7 +168,7 @@ export function ProfileSetupScreen({
         <TouchableOpacity
           style={[styles.saveButton, saving && styles.saveButtonDisabled]}
           disabled={saving}
-          onPress={() => onSave(selectedTags)}
+          onPress={() => onSave(selectedTags, profileImageUri ?? undefined)}
         >
           {saving ? (
             <ActivityIndicator color={colors.textOnPrimary} />
@@ -182,6 +215,36 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 10,
     paddingLeft: 4,
+  },
+  avatarSection: {
+    alignItems: "center",
+    marginTop: 18,
+    marginBottom: 8,
+  },
+  avatarButton: {
+    width: 86,
+    height: 86,
+    borderRadius: 43,
+    backgroundColor: "#F0F1F5",
+    alignItems: "center",
+    justifyContent: "center",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E1E3EA",
+  },
+  avatarImage: {
+    width: "100%",
+    height: "100%",
+  },
+  avatarPlaceholder: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  avatarHint: {
+    marginTop: 8,
+    fontSize: 12,
+    color: colors.darkGrey,
   },
   tagWrapper: {
     flexDirection: "row",

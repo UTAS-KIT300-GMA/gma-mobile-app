@@ -1,7 +1,8 @@
 import { colors } from "@/theme/ThemeProvider";
+import { useUser } from "@/hooks/useUser";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { NotificationIcon, ProfileIcon } from "../../assets/icons";
 
 /**
@@ -38,6 +39,7 @@ export function AppHeader({
   showCheck?: boolean;
 }) {
   const router = useRouter();
+  const { userDoc } = useUser();
 
   /**
    * @summary Navigates to the profile screen or calls the provided onPressProfile override.
@@ -134,7 +136,13 @@ export function AppHeader({
             style={styles.iconButton}
             hitSlop={10}
           >
-            <ProfileIcon width={24} height={24} />
+            <View style={styles.profileCircle}>
+              {userDoc?.photoURL ? (
+                <Image source={{ uri: userDoc.photoURL }} style={styles.avatarImage} />
+              ) : (
+                <ProfileIcon width={18} height={18} />
+              )}
+            </View>
           </Pressable>
         </View>
       )}
@@ -177,6 +185,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 999,
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  profileCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    borderWidth: 2,
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#F0F1F5",
+    overflow: "hidden",
   },
 
   // Back header layout for subscreens with back button and optional check icons for actions like marking notifications as read or clearing notifications
