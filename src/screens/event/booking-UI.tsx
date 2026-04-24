@@ -250,13 +250,15 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     padding: 20,
+    alignItems: "center",
     backgroundColor: colors.textOnPrimary,
     borderTopWidth: 1,
     borderColor: colors.textOnPrimary,
   },
   confirmBtn: {
     backgroundColor: colors.secondary,
-    padding: 18,
+    padding: 14,
+    width: "70%",
     borderRadius: 12,
     alignItems: "center",
     marginBottom: 40,
