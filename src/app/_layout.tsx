@@ -14,13 +14,21 @@ import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { GlobalProvider } from "@/context/GlobalContext";
 
+/**
+ * @summary Applies app-wide navigation guards and renders the root stack only when auth and routing state are synchronized.
+ * @throws {never} Component-level logic handles recoverable async errors internally.
+ * @Returns {React.JSX.Element} Root loading gate or the authenticated navigation stack.
+ */
 export default function RootLayout() {
+  // Stores global auth/onboarding state for root route guarding.
   const { user, initializing, isProfileValidated } = useAuth();
   
   
+  // Tracks deep-link processing and initial URL readiness.
   const [isHandlingLink, setIsHandlingLink] = useState(false);
   const [initialLinkChecked, setInitialLinkChecked] = useState(false);
   
+  // Stores current navigation segments and router helpers.
   const segments = useSegments() as string[];
   const router = useRouter();
 
@@ -41,6 +49,8 @@ export default function RootLayout() {
   /**
    * @summary Parses the URL mode (verifyEmail or resetPassword) and executes the corresponding action.
    * @param event - The incoming linking event containing the URL.
+   * @throws {Error} Throws when Firebase link action application fails.
+   * @Returns {Promise<void>} Resolves after deep-link handling completes.
    */
     const handleDeepLink = async (event: Linking.EventType | { url: string }) => {
       const { url } = event;
@@ -98,6 +108,8 @@ export default function RootLayout() {
   // --- EFFECT 2: THE NAVIGATION GUARD (Traffic Controller) ---
   /**
    *@summary Redirects users to Landing, Verify, Onboarding, or Tabs based on their status.
+   * @throws {never} Guard logic handles navigation without throwing.
+   * @Returns {void} Performs route redirects when state changes.
    */
   useEffect(() => {
     // Prevent routing while auth, deep links, or initialization is in progress.
@@ -142,6 +154,8 @@ export default function RootLayout() {
   /**
    * @summary Determines if the router is physically in the correct location based on current Auth state.
    * This prevents the "1-frame flash" of the wrong screen during a redirect.
+   * @throws {never} Pure derived state does not throw.
+   * @Returns {boolean} True when route and auth state are aligned.
    */
   const isRoutingReady = 
     !routeInfo.isOnInvalidPath &&
@@ -156,6 +170,8 @@ export default function RootLayout() {
   /**
    * @summary Determines if the application is in a loading state. 
    * Blocks UI if initializing, handling a link, waiting for Firestore, or if the router hasn't landed yet.
+   * @throws {never} Pure derived state does not throw.
+   * @Returns {boolean} True when loading UI should be displayed.
    */
   const isLoading = 
     initializing || 

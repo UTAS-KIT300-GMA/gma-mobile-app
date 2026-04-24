@@ -26,6 +26,8 @@ interface Props {
  * @param onSave - Callback invoked with the selected interest keys when the user taps Save.
  * @param saving - When true, disables the save button and shows an activity indicator.
  * @param userName - The user's display name shown in the greeting.
+ * @throws {never} UI delegates save and validation handling to parent callbacks.
+ * @Returns {React.JSX.Element} Onboarding interest selection UI.
  */
 export function ProfileSetupScreen({
   onSave,
@@ -44,10 +46,22 @@ export function ProfileSetupScreen({
     return (Object.keys(selected) as InterestKey[]).filter((k) => selected[k]);
   }, [selected]);
 
+  /**
+   * @summary Toggles selected state for an interest tag.
+   * @param key - Interest tag key to toggle.
+   * @throws {never} Pure state update does not throw.
+   * @Returns {void} Updates selected tag map.
+   */
   const toggle = (key: InterestKey) => {
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  /**
+   * @summary Renders a selectable interest pill for a given tag key.
+   * @param key - Interest tag key to render.
+   * @throws {never} Pure render helper does not throw.
+   * @Returns {React.JSX.Element} Interest pill element.
+   */
   const renderPill = (key: InterestKey) => {
     const isActive = selected[key];
     return (

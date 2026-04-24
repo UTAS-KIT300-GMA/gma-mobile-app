@@ -15,8 +15,11 @@ const cld = new Cloudinary({
 
 // Explicitly export props to satisfy IntrinsicAttributes in other files
 export interface LearningCardProps {
+  // Holds the learning item rendered by this card.
   item: LearningDoc;
+  // Holds tap handler for opening/expanding the card.
   onPressCard?: () => void;
+  // Holds tap handler for bookmark toggle action.
   onBookmarkPress?: () => void;
 }
 
@@ -104,6 +107,7 @@ export default function LearningCard({
 }
 
 const styles = StyleSheet.create({
+  // Holds all style declarations for the reusable learning card component.
   card: {
     backgroundColor: "#fff",
     borderRadius: 15,

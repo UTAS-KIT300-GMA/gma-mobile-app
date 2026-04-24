@@ -12,10 +12,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+/**
+ * @summary Displays available membership plans and starts subscription checkout.
+ * @throws {never} User actions are handled by navigation/alerts.
+ * @Returns {React.JSX.Element} Membership plan selection screen.
+ */
 export default function MembershipPlansScreen() {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<"free" | "premium">("premium");
 
+/**
+ * @summary Navigates to payment with the selected membership payload.
+ * @throws {never} Navigation call does not throw synchronously.
+ * @Returns {void} Opens payment route.
+ */
 const handleSubscribe = () => {
    router.push({
       pathname: "/event/payment",

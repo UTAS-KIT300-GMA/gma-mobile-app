@@ -7,11 +7,17 @@
 import { Stack } from "expo-router";
 import React from "react";
 
+/**
+ * @summary Renders stack settings for onboarding routes.
+ * @throws {never} Pure layout rendering does not throw.
+ * @Returns {React.JSX.Element} Onboarding stack navigator.
+ */
 export default function OnboardingLayout() {
   return (
     <Stack
       screenOptions={{
         headerShown: false,
+        
         // 🛡️ Safety: Prevents users from swiping back during the onboarding process.
         gestureEnabled: false,
         animation: "slide_from_right",
