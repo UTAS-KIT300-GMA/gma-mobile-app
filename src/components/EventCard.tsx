@@ -10,6 +10,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { ReactNode } from "react";
 
 const RSVP_BOOK = "RSVP/Book";
 
@@ -29,14 +30,17 @@ export function EventCard({
   onPressBookmark,
   showBookmark = false,
   bookmarked = false,
+  footerContent,
+  showRsvpButton = true,
 }: {
-  key: string
   event: EventDoc;
   onPressCard?: () => void;
   onPressRsvp?: () => void;
   onPressBookmark?: () => void;
   showBookmark?: boolean;
   bookmarked?: boolean;
+  footerContent?: ReactNode;
+  showRsvpButton?: boolean;
 }) {
   return (
     <View style={styles.card}>
@@ -80,17 +84,20 @@ export function EventCard({
             </Text>
           </View>
 
-          <Pressable
-            accessibilityRole="button"
-            accessibilityLabel="RSVP"
-            onPress={onPressRsvp}
-            style={styles.rsvpButton}
-            hitSlop={10}
-          >
-            <Text style={styles.rsvpText}>{RSVP_BOOK}</Text>
-          </Pressable>
+          {showRsvpButton && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="RSVP"
+              onPress={onPressRsvp}
+              style={styles.rsvpButton}
+              hitSlop={10}
+            >
+              <Text style={styles.rsvpText}>{RSVP_BOOK}</Text>
+            </Pressable>
+          )}
         </ImageBackground>
       </Pressable>
+      {footerContent ? <View style={styles.footer}>{footerContent}</View> : null}
     </View>
   );
 }
@@ -109,8 +116,9 @@ const styles = StyleSheet.create({
     overflow: "hidden", // Ensures the image and content are clipped to the card's rounded corners
     backgroundColor: colors.textOnPrimary,
     borderWidth: 1,
-    borderColor: colors.textOnPrimary,
+    borderColor: "#E8E8EE",
     marginBottom: 12,
+    elevation: 2,
   },
 
   image: {
@@ -174,5 +182,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: colors.textOnPrimary,
+  },
+  footer: {
+    backgroundColor: "#FCFCFD",
+    borderTopWidth: 1,
+    borderTopColor: "#ECECF2",
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 12,
   },
 });
