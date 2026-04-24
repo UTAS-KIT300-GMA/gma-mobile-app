@@ -5,10 +5,16 @@ import { Alert } from "react-native";
 
 import { PaymentMethod } from "@/types/payment";
 
+/**
+ * @summary Collects payment details, validates method-specific fields, and routes to confirmation.
+ * @throws {never} Validation failures are handled with alerts.
+ * @Returns {React.JSX.Element} Payment screen with method handlers.
+ */
 export default function PaymentScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
 
+  // Stores normalized payment and booking values from route params.
   const paymentData = {
     type: String(params.type ?? "membership"),
     title: String(params.title ?? "Premium Plan"),
@@ -21,14 +27,20 @@ export default function PaymentScreen() {
     benefits: String(params.benefits ?? ""),
   };
 
-const [selectedMethod, setSelectedMethod] =
-  useState<PaymentMethod>("card");
-const [cardHolderName, setCardHolderName] = useState("");
-const [cardNumber, setCardNumber] = useState("");
-const [expiry, setExpiry] = useState("");
-const [cvv, setCvv] = useState("");
-const [afterpayContact, setAfterpayContact] = useState("");
+  // Stores payment form input state for selected method.
+  const [selectedMethod, setSelectedMethod] =
+    useState<PaymentMethod>("card");
+  const [cardHolderName, setCardHolderName] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [afterpayContact, setAfterpayContact] = useState("");
 
+  /**
+   * @summary Validates payment inputs and routes to confirmation payload.
+   * @throws {never} Validation errors are shown in alerts.
+   * @Returns {void} Navigates to confirmation on success.
+   */
   const handlePayment = () => {
     if (selectedMethod === "card") {
       if (!cardHolderName ||!cardNumber || !expiry || !cvv) {

@@ -2,6 +2,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 // Path: @/ alias points to src/
 import { BookingConfirmedUI } from "@/screens/event/confirmation-UI";
 
+/**
+ * @summary Normalizes confirmation params and wires navigation actions for post-booking UI.
+ * @throws {never} Pure normalization/navigation does not throw.
+ * @Returns {React.JSX.Element} Booking confirmation screen.
+ */
 export default function BookingConfirmedRoute() {
   const router = useRouter();
   // Stores the navigation parameters passed from the booking screen in the params var.

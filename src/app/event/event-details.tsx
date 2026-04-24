@@ -11,6 +11,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
 
+/**
+ * @summary Loads event details and bookmark state, then binds detail actions for the event UI.
+ * @throws {never} Errors are handled through alerts/logging.
+ * @Returns {React.JSX.Element} Event details screen container.
+ */
 export default function EventDetailScreen() {
   const router = useRouter();
   // Catches the unique event ID from the navigation parameters.
@@ -75,6 +80,11 @@ export default function EventDetailScreen() {
   }, [eventId]);
 
   // Stores the function instructions for handleBookmark var.
+  /**
+   * @summary Toggles bookmark state for the current event with optimistic UI.
+   * @throws {never} Errors are handled with rollback and alert.
+   * @Returns {Promise<void>} Resolves when bookmark write attempt completes.
+   */
   const handleBookmark = async () => {
     const uid = auth.currentUser?.uid;
     if (!uid) return;
@@ -93,6 +103,11 @@ export default function EventDetailScreen() {
     }
   };
 
+  /**
+   * @summary Navigates back to the previous route.
+   * @throws {never} Navigation call does not throw synchronously.
+   * @Returns {void} Returns to prior screen.
+   */
   const handleBack = () => {
     router.back();
   };
@@ -100,6 +115,11 @@ export default function EventDetailScreen() {
   // Stores the function instructions for handleBook var.
   // Checks if the event is free and has a valid ID. If so, navigates to the
   // booking screen with the event ID as a parameter.
+  /**
+   * @summary Starts the booking flow for eligible events.
+   * @throws {never} Validation failures are shown via alerts.
+   * @Returns {void} Navigates to booking when allowed.
+   */
   const handleBook = () => {
     
     if (!event?.id) {

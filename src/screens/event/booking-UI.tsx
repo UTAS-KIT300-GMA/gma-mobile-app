@@ -25,6 +25,20 @@ export interface BookingUIProps {
   onConfirm: () => void;
 }
 
+/**
+ * @summary Renders booking checkout UI with ticket controls and total pricing.
+ * @param event - Event payload shown in booking summary.
+ * @param loading - Loading state for event hydration.
+ * @param processing - Submission state while booking is being saved.
+ * @param tickets - Current ticket count.
+ * @param totalPrice - Computed total price value.
+ * @param onBack - Back navigation callback.
+ * @param onIncreaseTickets - Increment ticket callback.
+ * @param onDecreaseTickets - Decrement ticket callback.
+ * @param onConfirm - Confirm booking callback.
+ * @throws {never} UI delegates actions to callbacks.
+ * @Returns {React.JSX.Element} Booking checkout screen.
+ */
 export const BookingScreenUI: React.FC<BookingUIProps> = ({
   event,
   loading,
@@ -48,6 +62,11 @@ export const BookingScreenUI: React.FC<BookingUIProps> = ({
   const nonMemberPrice = event.ticketPrices?.nonMember ?? 0;
   const isFreeEvent = memberPrice === 0 && nonMemberPrice === 0;
 
+  /**
+   * @summary Builds the display text for event pricing tiers.
+   * @throws {never} Pure formatter does not throw.
+   * @Returns {string} Human-readable price label.
+   */
   const getPriceLabel = () => {
     if (isFreeEvent) {
       return "Free Event";

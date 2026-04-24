@@ -46,6 +46,8 @@ interface PaymentUIProps {
 /**
  * @summary Detects the card network ("Visa", "Mastercard", or "Unknown card") from the card number prefix.
  * @param number - The raw card number string entered by the user.
+ * @throws {never} Pure card-prefix detection does not throw.
+ * @Returns {string} Detected card network label.
  */
 const detectCardType = (number: string): string => {
   const cleaned = number.replace(/\D/g, "");
@@ -70,6 +72,8 @@ const detectCardType = (number: string): string => {
 /**
  * @summary Returns the appropriate card logo image asset for the given card number, or null if unrecognised.
  * @param number - The raw card number string entered by the user.
+ * @throws {never} Pure asset selection does not throw.
+ * @Returns {number | null} Bundled image resource identifier or null.
  */
 const getCardLogo = (number: string) => {
   const cleaned = number.replace(/\D/g, "");
@@ -114,6 +118,8 @@ const getCardLogo = (number: string) => {
  * @param onChangeCvv - Callback for CVV input changes.
  * @param onChangeAfterpayContact - Callback for Afterpay contact input changes.
  * @param onConfirmPayment - Callback invoked when the confirm/continue button is pressed.
+ * @throws {never} UI delegates all mutations to callback props.
+ * @Returns {React.JSX.Element} Payment form screen.
  */
 export function PaymentScreenUI({
   type,
@@ -138,6 +144,7 @@ export function PaymentScreenUI({
   onChangeAfterpayContact,
   onConfirmPayment,
 }: PaymentUIProps) {
+  // Stores the currently detected card logo asset for card-number input.
   const cardLogo = getCardLogo(cardNumber);
 
   return (

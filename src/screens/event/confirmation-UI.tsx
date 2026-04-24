@@ -12,6 +12,14 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+/**
+ * @summary Renders booking or membership confirmation details and post-action navigation buttons.
+ * @param details - Normalized confirmation payload (event or membership).
+ * @param onGoToBookings - Callback for opening bookings/membership destination.
+ * @param onViewDetails - Callback for opening event details or explore flow.
+ * @throws {never} UI delegates actions to parent callbacks.
+ * @Returns {React.JSX.Element} Confirmation screen content.
+ */
 export const BookingConfirmedUI = ({
   details,
   onGoToBookings,

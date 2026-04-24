@@ -1,6 +1,11 @@
 import { useTheme } from '@/theme/ThemeProvider';
 import { Stack } from 'expo-router';
 
+/**
+ * @summary Configures stack headers for event-related routes.
+ * @throws {never} Pure layout rendering does not throw.
+ * @Returns {React.JSX.Element} Event stack navigator.
+ */
 export default function EventLayout() {
   // Stores the active color palette and style settings in the theme var
   const theme = useTheme(); 
