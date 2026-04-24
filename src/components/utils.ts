@@ -148,33 +148,65 @@ export async function resolveLocationStatus(): Promise<{
 export async function fetchLocationCoordinates(): Promise<{
   coords: { latitude: number; longitude: number };
 }> {
+  return fetchLocationCoordinatesWithOptions();
+}
+
+type FetchLocationOptions = {
+  preferLastKnown?: boolean;
+  forceFresh?: boolean;
+};
+
+/**
+ * @summary Retrieves device coordinates with configurable stale-cache preference.
+ * @param options - Fetch behavior flags.
+ */
+export async function fetchLocationCoordinatesWithOptions(
+  options: FetchLocationOptions = {},
+): Promise<{
+  coords: { latitude: number; longitude: number };
+}> {
+  const { preferLastKnown = true, forceFresh = false } = options;
+
   const readOnce = async () => {
     const current = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Balanced,
-      mayShowUserSettingsDialog: false,
+      accuracy: forceFresh ? Location.Accuracy.High : Location.Accuracy.Balanced,
+      mayShowUserSettingsDialog: forceFresh,
+      timeInterval: forceFresh ? 0 : 1000,
+      distanceInterval: forceFresh ? 0 : 10,
     });
     return current.coords;
   };
 
-  const lastKnown = await Location.getLastKnownPositionAsync().catch(() => null);
-  if (lastKnown?.coords) {
-    return {
-      coords: {
-        latitude: lastKnown.coords.latitude,
-        longitude: lastKnown.coords.longitude,
-      },
-    };
+  if (preferLastKnown) {
+    const lastKnown = await Location.getLastKnownPositionAsync().catch(() => null);
+    if (lastKnown?.coords) {
+      return {
+        coords: {
+          latitude: lastKnown.coords.latitude,
+          longitude: lastKnown.coords.longitude,
+        },
+      };
+    }
   }
 
   try {
     const coords = await readOnce();
     return { coords };
   } catch {
-    await sleep(850);
+    await sleep(forceFresh ? 300 : 850);
     try {
       const coords = await readOnce();
       return { coords };
     } catch {
+      const lastKnown = await Location.getLastKnownPositionAsync().catch(() => null);
+      if (lastKnown?.coords) {
+        return {
+          coords: {
+            latitude: lastKnown.coords.latitude,
+            longitude: lastKnown.coords.longitude,
+          },
+        };
+      }
       return { coords: DEFAULT_LOCATION_COORDS };
     }
   }
