@@ -41,21 +41,21 @@ export default function ProfileUI({
 }: ProfileUIProps) {
   // Array defining the navigation options on the profile screen.
   const menuItems = [
-    { id: "edit", label: "Edit profile", path: "/edit-profile" },
+    { id: "edit", label: "Edit Profile", path: "/edit-profile" },
     {
       id: "interests",
-      label: "Update interest",
+      label: "Update Interests",
       path: "/(profile)/edit-interests",
     },
     {
       id: "payment",
-      label: "Payment methods",
+      label: "Payment Methods",
       path: "/(profile)/payment-methods", 
     },
     
     {
       id: "bookings",
-      label: "My bookings",
+      label: "My Bookings",
       path: "/(profile)/booked-events", 
     },
 
@@ -67,7 +67,7 @@ export default function ProfileUI({
     
     {
     id: "membership",
-    label: "My membership",
+    label: "My Membership",
     path: "/(profile)/membership",
     },
     

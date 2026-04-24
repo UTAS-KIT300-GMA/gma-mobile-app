@@ -5,6 +5,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import {
   ImageBackground,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -36,8 +37,8 @@ export const BookingConfirmedUI = ({
     <SafeAreaView style={styles.safe}>
       <AppHeader title="Confirmation" showBack={true} />
 
-      <View style={styles.content}>
-        <Ionicons name="checkmark-circle" size={96} color="#4CAF50" />
+      <ScrollView contentContainerStyle={styles.content}>
+        <Ionicons name="checkmark-circle" size={85} color="#4CAF50" />
         <Text style={styles.statusText}>
           {details.type === "event" ? "Booking Confirmed" : "Membership Activated"}
         </Text>
@@ -102,7 +103,7 @@ export const BookingConfirmedUI = ({
             {details.type === "event" ? "Event Details" : "Explore More"}
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -110,7 +111,7 @@ export const BookingConfirmedUI = ({
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: "#F7F2F5"
+    backgroundColor: colors.textOnPrimary,
   },
  membershipCard: {
   backgroundColor: colors.textOnPrimary,
@@ -162,7 +163,7 @@ membershipCardContainer: {
     fontSize: 24,
     fontWeight: "bold",
     color: colors.saveBtnTextColor,
-    marginTop: 10,
+    marginTop: 4,
     marginBottom: 16,
   },
 
