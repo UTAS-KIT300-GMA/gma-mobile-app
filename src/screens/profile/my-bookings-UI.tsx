@@ -20,6 +20,15 @@ interface BookedEventsUIProps {
   onPressCard: (event: Booking) => void;
 }
 
+/**
+ * @summary Renders the user's booked events list with ticket/payment metadata.
+ * @param events - Booking records to display.
+ * @param loading - Loading state for bookings fetch.
+ * @param onBack - Back navigation callback.
+ * @param onPressCard - Event-card press callback.
+ * @throws {never} UI delegates side effects to callback props.
+ * @Returns {React.JSX.Element} Booked-events screen UI.
+ */
 export const BookedEventsUI = ({
   events,
   loading,
@@ -28,6 +37,12 @@ export const BookedEventsUI = ({
  
   
 }: BookedEventsUIProps) => {
+  /**
+   * @summary Renders a booking row with event card and booking metadata.
+   * @param item - Booking record for one rendered row.
+   * @throws {never} Pure render helper does not throw.
+   * @Returns {React.JSX.Element} Booking row element.
+   */
   const renderItem = ({ item }: { item: Booking }) => (
      <View>
      <EventCard

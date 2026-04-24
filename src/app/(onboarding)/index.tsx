@@ -12,7 +12,9 @@ import { useState, useEffect } from "react";
 import { Alert } from "react-native";
 
 /**
-*@summary Saves the user's selected interests to Firestore and marks their onboarding as complete. The rootlayout will automatically detect this update and route the user to the main tabs.
+* @summary Saves the user's selected interests to Firestore and marks their onboarding as complete. The rootlayout will automatically detect this update and route the user to the main tabs.
+* @throws {never} Errors are handled with alerts and console logs.
+* @Returns {React.JSX.Element} Onboarding interest selection screen.
 */
 export default function ProfileSetupRoute() {
 
@@ -22,7 +24,9 @@ export default function ProfileSetupRoute() {
 
   useEffect(() => {
   /**
-   @summary Looks into the 'users' collection using the UID to get the name saved during registration.
+     @summary Looks into the 'users' collection using the UID to get the name saved during registration.
+   * @throws {never} Fetch errors are caught and logged.
+   * @Returns {Promise<void>} Resolves after user name fetch attempt.
    */
     const fetchName = async () => {
       
@@ -60,7 +64,9 @@ export default function ProfileSetupRoute() {
 
   /**
    * @summary Updates the user's database file with their new tags and marks their profile as "complete."
-   * @param selectedTags An array of the interests the user clicked on.
+   * @param selectedTags - An array of the interests the user clicked on.
+   * @throws {never} Errors are handled and surfaced in alerts.
+   * @Returns {Promise<void>} Resolves when save flow completes.
    */
   const handleSave = async (selectedTags: InterestKey[]) => {
     

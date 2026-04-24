@@ -13,22 +13,32 @@ import { RegisterScreen } from "@/screens/auth/register-screen";
 
 /**
 * @summary Validates user input, creates a FirebaseAuth account, creates a profile collection on Firestore, and navigates to the verification screen if successful.
+* @throws {never} Errors are handled through validation and alerts.
+* @Returns {React.JSX.Element} Registration UI container with submit handlers.
 */
 export default function RegisterRoute() {
 
-  const router = useRouter();                    // Stores the navigation tool to allow moving between screens.
+  const router = useRouter();                     // Stores the navigation tool to allow moving between screens.
   const [loading, setLoading] = useState(false); // Stores true/false value to track if app is trying to register user.
 
   // Checks if value is a valid Date object.
+  /**
+   * @summary Validates whether a value is a real Date instance.
+   * @param value - Value to validate as a date.
+   * @throws {never} Pure validation does not throw.
+   * @Returns {boolean} True when the value is a valid date.
+   */
   const isValidDate = (value: unknown): value is Date => {
     return value instanceof Date && !isNaN(value.getTime());
   };
 
   /**
    * @summary Checks if the user has inputted all required details for to register an account
-   * @param email User's inputted email
-   * @param password User's inputted password
-   * @param profile The users profie (firstname,lastname,gender,dateofbirth)
+   * @param email - User's inputted email.
+   * @param password - User's inputted password.
+   * @param profile - The user's profile (firstName, lastName, gender, dateOfBirth).
+   * @throws {never} Validation returns messages instead of throwing.
+   * @Returns {string | null} Validation message or null when input is valid.
    */
   const validateRegister = (email: string,password: string,profile: RegisterData,) => {
   
@@ -81,9 +91,11 @@ export default function RegisterRoute() {
   
   /**
    * @summary User account is created and directed to verification screen, otherwise display an error due to validation of data failing.
-   * @param email User's inputted email.
-   * @param password User's inputted password.
-   * @param profile The users profile (firstname,lastname,gender,dateofbrith).
+   * @param email - User's inputted email.
+   * @param password - User's inputted password.
+   * @param profile - The user's profile (firstName, lastName, gender, dateOfBirth).
+   * @throws {never} Errors are handled and shown through alerts.
+   * @Returns {Promise<void>} Resolves when registration flow completes.
    */
   const handleRegister = async (email: string,password: string,profile: RegisterData, ) => {
   

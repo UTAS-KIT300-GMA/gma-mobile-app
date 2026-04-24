@@ -42,7 +42,10 @@ export type LocationSlice = {
   locationError: string | null;
   isLocationOn: boolean;
   isLocationLoading: boolean;
-  refreshLocation: () => Promise<LocationFetchResult>;
+  refreshLocation: (options?: {
+    forceFresh?: boolean;
+    maxAgeMs?: number;
+  }) => Promise<LocationFetchResult>;
 };
 
 export type GlobalContextValue = {

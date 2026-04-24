@@ -13,6 +13,11 @@ appropriate screens when the buttons are pressed.
 
 */
 
+/**
+ * @summary Renders the auth landing screen with navigation to login, register, and password reset.
+ * @throws {never} Navigation handlers do not throw synchronously.
+ * @Returns {React.JSX.Element} Landing screen view.
+ */
 export default function LandingScreen() {
   const router = useRouter();
 

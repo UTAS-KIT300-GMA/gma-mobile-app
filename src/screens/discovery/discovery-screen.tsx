@@ -33,14 +33,37 @@ interface DiscoveryProps {
 
   // Future props for sorting
   sortOption: string;
-  onSelectSort: (sort: string) => void;
+  onSelectSort: (sort: string) => void | Promise<void>;
 
   /** From global location state (updated at app start / resume). */
   isLocationOn: boolean;
   isLocationLoading: boolean;
+  isApplyingLocationSort: boolean;
   onOpenLocationSettings: () => void;
 }
 
+/**
+ * @summary Renders discovery event list UI with category filters, sort modal, and bookmark actions.
+ * @param filteredEvents - Events after filtering/sorting in route logic.
+ * @param loading - Combined loading state for events/bookmarks.
+ * @param bookmarkedIds - Map of bookmarked event IDs.
+ * @param onBookmark - Bookmark toggle callback.
+ * @param onCardPress - Event-card press callback.
+ * @param onRsvp - RSVP action callback.
+ * @param category - Active category key.
+ * @param setCategory - Category update callback.
+ * @param options - Category options for top pills.
+ * @param title - Screen title text.
+ * @param accessFilter - Active access filter.
+ * @param onSelectAccessFilter - Access filter change callback.
+ * @param sortOption - Active sort key.
+ * @param onSelectSort - Sort key change callback.
+ * @param isLocationOn - Whether device location is enabled.
+ * @param isLocationLoading - Location resolution loading state.
+ * @param onOpenLocationSettings - Callback to open system location settings.
+ * @throws {never} UI handles state updates via callbacks.
+ * @Returns {React.JSX.Element} Discovery screen UI.
+ */
 export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
   filteredEvents,
   loading,
@@ -58,8 +81,10 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
   onSelectAccessFilter,
   isLocationOn,
   isLocationLoading,
+  isApplyingLocationSort,
   onOpenLocationSettings,
 }) => {
+  // Stores local visibility state for the sort/filter modal.
   const [sortModalVisible, setSortModalVisible] = useState(false);
 
   return (
@@ -68,39 +93,48 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
 
       <View style={styles.container}>
         {options.length > 0 && (
-          <View style={styles.categoryRow}>
-            {options.map((opt) => (
-              <Pressable
-                key={opt.key}
-                onPress={() => setCategory(opt.key)}
-                style={[
-                  styles.categoryPill,
-                  opt.key === category && styles.categoryPillActive,
-                ]}
-              >
-                <Text
+          <View>
+            <View style={styles.categoryRow}>
+              {options.map((opt) => (
+                <Pressable
+                  key={opt.key}
+                  onPress={() => setCategory(opt.key)}
                   style={[
-                    styles.categoryText,
-                    opt.key === category && styles.categoryTextActive,
+                    styles.categoryPill,
+                    opt.key === category && styles.categoryPillActive,
                   ]}
                 >
-                  {opt.label}
-                </Text>
-              </Pressable>
-            ))}
+                  <Text
+                    style={[
+                      styles.categoryText,
+                      opt.key === category && styles.categoryTextActive,
+                    ]}
+                  >
+                    {opt.label}
+                  </Text>
+                </Pressable>
+              ))}
 
-            <Pressable
-              onPress={() => setSortModalVisible(true)}
-              style={styles.sortButton}
-              accessibilityRole="button"
-              accessibilityLabel="Sort events"
-            >
-              <Ionicons
-                name="swap-vertical-outline"
-                size={26}
-                color={colors.primary}
-              />
-            </Pressable>
+              <Pressable
+                onPress={() => setSortModalVisible(true)}
+                style={styles.sortButton}
+                accessibilityRole="button"
+                accessibilityLabel="Sort events"
+              >
+                <Ionicons
+                  name="swap-vertical-outline"
+                  size={26}
+                  color={colors.primary}
+                />
+              </Pressable>
+            </View>
+
+            {isApplyingLocationSort && (
+              <View style={styles.locationRefreshRow}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.locationRefreshText}>Refreshing location...</Text>
+              </View>
+            )}
           </View>
         )}
 
@@ -309,6 +343,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     paddingVertical: 8,
     borderRadius: 10,
+  },
+  locationRefreshRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 12,
+    paddingBottom: 6,
+  },
+  locationRefreshText: {
+    color: colors.primary,
+    fontSize: 13,
+    fontWeight: "600",
   },
 
   modalBackdrop: {

@@ -18,7 +18,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import VideoPlayer from "./video-player";
 
 // Helper to parse "MM:SS" or "H:MM:SS" duration string to total seconds
+/**
+ * @summary Converts a duration string into total seconds for sort comparisons.
+ * @param duration - Duration in MM:SS or H:MM:SS format.
+ * @throws Returns 0 when format is invalid or unparsable.
+ * @Returns Total duration in seconds.
+ */
 function parseDurationToSeconds(duration: string): number {
+  // Holds parsed numeric duration segments split by ":".
   const parts = duration.split(":").map(Number);
   if (parts.length === 2) return parts[0] * 60 + parts[1];
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
@@ -34,6 +41,17 @@ interface Props {
   onFilePress?: (url: string) => void;
 }
 
+/**
+ * @summary Renders learning cards with sort/filter controls, expansion, and media actions.
+ * @param events - Learning content records to display.
+ * @param loading - Loading state for content fetch.
+ * @param expandedId - Currently expanded card ID.
+ * @param onBookmarkPress - Optional bookmark toggle callback.
+ * @param onCardPress - Optional card expand/collapse callback.
+ * @param onFilePress - Optional file-open callback.
+ * @throws {never} UI delegates side effects to callback props.
+ * @Returns {React.JSX.Element} Learning screen view.
+ */
 export const LearningScreenUI: React.FC<Props> = ({
   events,
   loading,
@@ -42,11 +60,14 @@ export const LearningScreenUI: React.FC<Props> = ({
   onCardPress,
   onFilePress,
 }) => {
+  // Holds modal visibility and active sort/filter choices.
   const [sortModalVisible, setSortModalVisible] = useState(false);
   const [sortOption, setSortOption] = useState("default");
   const [accessFilter, setAccessFilter] = useState("all");
 
+  // Holds a derived list after applying filter + sort rules.
   const sortedEvents = useMemo(() => {
+    // Holds mutable working copy of events for transformations.
     let filtered = [...events];
 
     // Apply access filter
@@ -78,6 +99,7 @@ export const LearningScreenUI: React.FC<Props> = ({
     return filtered;
   }, [events, sortOption, accessFilter]);
 
+  // Holds selectable sort/filter menu options shown in modal sheet.
   const sortOptions = [
     { key: "default", label: "Default" },
     { key: "duration_asc", label: "Shortest Contents first" },
@@ -88,6 +110,12 @@ export const LearningScreenUI: React.FC<Props> = ({
     { key: "subscriber_only", label: "Subscribers only" },
   ];
 
+  /**
+   * @summary Checks whether a sort/filter option is currently active in UI.
+   * @param key - Option key from the sort/filter menu.
+   * @throws Does not throw; evaluates current local state only.
+   * @Returns True when the option is active, otherwise false.
+   */
   const isActive = (key: string) => {
     if (key === "free_only") return accessFilter === "free";
     if (key === "subscriber_only") return accessFilter === "paid";
@@ -283,6 +311,7 @@ export const LearningScreenUI: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
+  // Holds all style declarations for the learning screen UI.
   safe: { flex: 1, backgroundColor: colors.textOnPrimary },
   center: {
     flex: 1,

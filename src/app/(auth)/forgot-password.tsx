@@ -12,16 +12,20 @@ import { Alert } from "react-native";
 /**
    * @summary Sets up the logic for the forgot password UI.
    * @description Prepares the loading status and the navigation tools, then shows the forgot-password-UI to the user.
+   * @throws {never} Errors are handled in alert dialogs.
+   * @Returns {React.JSX.Element} Forgot-password UI with reset handler.
    * */
 export default function ForgotPassword() {
   
   const [loading, setLoading] = useState(false); // Stores true/false value to track if the Firebase reset request is loading.
-  const router = useRouter(); // Stores the navigation tool to allow moving between screens.
+  const router = useRouter();                   // Stores the navigation tool to allow moving between screens.
   
   /**
      * @summary Checks the user's email and sends the password reset link.
-     * @param email The email address the user typed in.
+     * @param email - The email address the user typed in.
      * @description Sends the reset email and shows a success message. Once the user clicks "OK," it takes them back to the login screen.
+     * @throws {never} Errors are converted and surfaced through alerts.
+     * @Returns {Promise<void>} Resolves when reset request handling completes.
      */
   const handleSendReset = async (email: string) => {
   

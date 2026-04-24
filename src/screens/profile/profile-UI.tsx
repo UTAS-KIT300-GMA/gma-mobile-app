@@ -19,6 +19,16 @@ type ProfileUIProps = {
   onNavigate: (path: string) => void;
 };
 
+/**
+ * @summary Renders profile overview with account navigation links and logout action.
+ * @param userName - Display name shown in profile header.
+ * @param loading - Loading state while profile data resolves.
+ * @param onLogout - Logout callback.
+ * @param onBack - Back navigation callback.
+ * @param onNavigate - Callback to navigate to sub-routes.
+ * @throws {never} UI delegates side effects to callback props.
+ * @Returns {React.JSX.Element} Profile screen UI.
+ */
 export default function ProfileUI({
   userName,
   loading,

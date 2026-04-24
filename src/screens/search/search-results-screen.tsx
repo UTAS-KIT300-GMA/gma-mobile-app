@@ -28,6 +28,19 @@ interface SearchResultsScreenUI {
   title?: string;
 }
 
+/**
+ * @summary Renders filtered search results with bookmark and RSVP actions.
+ * @param events - Result events to display.
+ * @param loading - Loading state while search resolves.
+ * @param bookmarkedIds - Map of bookmarked event IDs.
+ * @param onBookmark - Bookmark toggle callback.
+ * @param onCardPress - Event-card press callback.
+ * @param onRsvp - RSVP action callback.
+ * @param onBack - Back navigation callback.
+ * @param title - Optional title value.
+ * @throws {never} UI delegates side effects to callback props.
+ * @Returns {React.JSX.Element} Search results screen.
+ */
 export const SearchResultsScreen: React.FC<SearchResultsScreenUI> = ({
   events,
   loading,

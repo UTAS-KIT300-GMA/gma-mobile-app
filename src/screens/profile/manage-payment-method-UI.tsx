@@ -28,6 +28,14 @@ const PAYMENT_OPTIONS: PaymentMethod[] = [
   "Visa",
 ];
 
+/**
+ * @summary Renders one selectable payment option row.
+ * @param label - Payment method label.
+ * @param selected - Whether the row is currently selected.
+ * @param onPress - Callback when row is pressed.
+ * @throws {never} Pure render helper does not throw.
+ * @Returns {React.JSX.Element} Payment method option row.
+ */
 function PaymentOptionRow({
   label,
   selected,
@@ -57,12 +65,22 @@ function PaymentOptionRow({
   );
 }
 
+/**
+ * @summary Renders payment-method preference screen and saves selected option.
+ * @throws {never} Save and navigation actions are handled via alerts/callbacks.
+ * @Returns {React.JSX.Element} Manage payment method screen.
+ */
 export default function ManagePaymentMethodScreen() {
   const router = useRouter();
   const [selectedMethod, setSelectedMethod] = useState<PaymentMethod>(
     "Credit / Debit Card",
   );
 
+  /**
+   * @summary Saves the currently selected payment method preference.
+   * @throws {never} Uses alert feedback only.
+   * @Returns {void} Displays save confirmation.
+   */
   const handleSave = () => {
     Alert.alert("Saved", `Preferred payment method: ${selectedMethod}`);
   };

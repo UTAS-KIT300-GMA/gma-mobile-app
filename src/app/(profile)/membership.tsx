@@ -13,10 +13,20 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+/**
+ * @summary Displays active membership details and provides plan management actions.
+ * @throws {never} User actions are handled with alerts/navigation.
+ * @Returns {React.JSX.Element} Membership management screen.
+ */
 export default function MembershipScreen() {
   const router = useRouter();
   const [showCancelModal, setShowCancelModal] = useState(false);
 
+  /**
+   * @summary Confirms subscription cancellation and navigates back.
+   * @throws {never} Alert flow handles user interaction without throwing.
+   * @Returns {void} Closes modal and processes cancellation flow.
+   */
   const handleCancelSave = () => {
     setShowCancelModal(false);
     Alert.alert(

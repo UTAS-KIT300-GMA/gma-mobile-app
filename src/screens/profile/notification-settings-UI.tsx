@@ -30,6 +30,14 @@ type ToggleRowProps = {
   onValueChange: (value: boolean) => void;
 };
 
+/**
+ * @summary Renders one settings row with label and switch control.
+ * @param label - Row label text.
+ * @param value - Current switch value.
+ * @param onValueChange - Callback when switch value changes.
+ * @throws {never} Pure render helper does not throw.
+ * @Returns {React.JSX.Element} Toggle row element.
+ */
 function ToggleRow({ label, value, onValueChange }: ToggleRowProps) {
   return (
     <View style={styles.rowCard}>
@@ -53,6 +61,11 @@ const defaultSettings: NotificationSettings = {
   productUpdate: false,
   paymentReminder: true,
 };
+/**
+ * @summary Renders location-permission status and quick link to system settings.
+ * @throws {never} Side effects are limited to refresh and system intent.
+ * @Returns {React.JSX.Element} Location settings card.
+ */
 export function LocationSettingsScreen() {
   // Pull directly from your Global Context
   const { isLocationOn, locationError, refreshLocation } = useAppLocation();
@@ -66,6 +79,11 @@ export function LocationSettingsScreen() {
       }, [refreshLocation])
   );
 
+  /**
+   * @summary Opens system location settings so users can enable/disable location access.
+   * @throws {never} Platform intent call does not throw synchronously.
+   * @Returns {void} Triggers settings intent.
+   */
   const handleLocationToggle = () => {
     Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
   };
@@ -104,7 +122,13 @@ export function LocationSettingsScreen() {
       </SafeAreaView>
   );
 }
+/**
+ * @summary Renders notification preference toggles with save/reset controls.
+ * @throws {never} UI operations use local state and alerts only.
+ * @Returns {React.JSX.Element} Notification settings screen.
+ */
 export default function NotificationSettingsScreen() {
+  // Stores current editable settings and last-saved settings snapshots.
   const [settings, setSettings] =
     useState<NotificationSettings>(defaultSettings);
 
@@ -115,6 +139,13 @@ export default function NotificationSettingsScreen() {
     return JSON.stringify(settings) !== JSON.stringify(savedSettings);
   }, [settings, savedSettings]);
 
+  /**
+   * @summary Updates one notification setting field.
+   * @param key - Settings key to update.
+   * @param value - New boolean value.
+   * @throws {never} Pure state update does not throw.
+   * @Returns {void} Updates settings state.
+   */
   const handleToggle = (key: keyof NotificationSettings, value: boolean) => {
     setSettings((prev) => ({
       ...prev,
@@ -122,11 +153,21 @@ export default function NotificationSettingsScreen() {
     }));
   };
 
+  /**
+   * @summary Saves current settings as the new baseline snapshot.
+   * @throws {never} Uses local state and alert feedback only.
+   * @Returns {void} Persists settings in component state.
+   */
   const handleSave = () => {
     setSavedSettings(settings);
     Alert.alert("Success", "Notification settings saved.");
   };
 
+  /**
+   * @summary Resets unsaved changes back to last saved settings.
+   * @throws {never} Pure state restore does not throw.
+   * @Returns {void} Restores settings snapshot.
+   */
   const handleReset = () => {
     setSettings(savedSettings);
   };

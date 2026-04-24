@@ -13,6 +13,8 @@ import { ResetPasswordScreen } from "@/screens/auth/reset-password-screen";
  * Sets up the logic for the password reset UI.
  * * Outcome: 
  * Validates the reset code from the URL and manages the password update state.
+ * @throws {never} Errors are handled through UI modal feedback.
+ * @Returns {React.JSX.Element} Reset-password UI with code and save handlers.
  */
 export default function ResetPasswordRoute() {
   
@@ -34,6 +36,8 @@ export default function ResetPasswordRoute() {
 
   /**
   * @summary Retrieves the user's email if the link works, otherwise it shows an error.
+  * @throws {never} Errors are handled through triggerModal.
+  * @Returns {void} Starts reset-code verification side effect.
   */
   useEffect(() => {
   
@@ -51,8 +55,11 @@ export default function ResetPasswordRoute() {
 
   /**
    * @summary Updates the password in the database and shows a success or error message.
-   * @param newPass The new password entered.
-   * @param confirmPass The second time the password was entered.
+   * @param newPass - The new password entered.
+   * @param confirmPass - The second time the password was entered.
+   * @param manualCode - Optional manually entered reset code.
+   * @throws {never} Errors are converted to modal feedback.
+   * @Returns {Promise<void>} Resolves when password reset attempt completes.
    */
   const handleSave = async (newPass: string, confirmPass: string, manualCode?: string) => {
     
@@ -85,9 +92,11 @@ export default function ResetPasswordRoute() {
   };
 
   /**
-   *@summary Fills the popup with the message and makes it visible.
-   *@param msg The text to show the user.
-   *@param success If the task worked or not.
+   * @summary Fills the popup with the message and makes it visible.
+   * @param msg - The text to show the user.
+   * @param success - Whether the operation succeeded.
+   * @throws {never} Pure state update does not throw.
+   * @Returns {void} Opens feedback modal with message state.
    */
   const triggerModal = (msg: string, success: boolean) => {
     setModalMessage(msg);
@@ -97,6 +106,8 @@ export default function ResetPasswordRoute() {
 
   /**
   * @summary Hides the popup and, if the password was saved, sends the user back to the login screen.
+  * @throws {never} Pure state/navigation update does not throw.
+  * @Returns {void} Closes modal and conditionally redirects.
   */ 
   const handleCloseModal = () => {
     setModalVisible(false);

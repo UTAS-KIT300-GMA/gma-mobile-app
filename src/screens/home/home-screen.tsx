@@ -31,6 +31,14 @@ type HomeUIProps = {
 
 const MATCH_PERCENTAGE = [0.6, 0.25, 0.15]; // Tags , Location, Time
 
+/**
+ * @summary Renders home feed sections (featured, for-you, random) from scored events.
+ * @param events - Approved events list from context.
+ * @param loading - Loading state for refresh and initial data.
+ * @param onRefresh - Pull-to-refresh callback.
+ * @throws {never} UI delegates route actions and refresh handling externally.
+ * @Returns {React.JSX.Element} Home feed screen.
+ */
 export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   const { userDoc } = useAuthUser();
   const { coords: userCoords, locationError } = useAppLocation();
@@ -119,6 +127,13 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
     };
   }, [events, userCoords, userDoc?.selectedTags]);
 
+  /**
+   * @summary Renders a horizontal event section with title and cards.
+   * @param title - Section heading text.
+   * @param data - Events to display in the horizontal list.
+   * @throws {never} Pure render helper does not throw.
+   * @Returns {React.JSX.Element} Horizontal section block.
+   */
   const renderHorizontalSection = (title: string, data: EventDoc[]) => (
     <View style={styles.horizontalSection}>
       <Text style={styles.sectionTitle}>{title}</Text>

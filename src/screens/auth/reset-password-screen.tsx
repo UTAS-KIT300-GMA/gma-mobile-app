@@ -23,6 +23,8 @@ import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
  * @param modalVisible - Controls the visibility of the result feedback modal.
  * @param modalMessage - The message to display inside the feedback modal.
  * @param onCloseModal - Callback invoked when the modal OK button is pressed.
+ * @throws {never} UI delegates save/error handling to parent callbacks.
+ * @Returns {React.JSX.Element} Reset-password form and result modal.
  */
 export function ResetPasswordScreen({
   oobCode,
@@ -34,6 +36,7 @@ export function ResetPasswordScreen({
   modalMessage,
   onCloseModal,
 }: any) {
+  // Stores reset-password input values for submission.
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [codeInput, setCodeInput] = useState("");

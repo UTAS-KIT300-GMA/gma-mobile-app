@@ -39,6 +39,7 @@ export const auth = getAuth(); // Stores Auth instance in the auth var to initia
 // handles database operations (read/write data).
 export const db = getFirestore(); // handles database operations (read/write data).
 
+// Maps Firebase auth error codes to user-facing messages.
 export const ERROR_MESSAGES: Record<string, string> = {
   "auth/email-already-in-use": "This email is already registered.",
   "auth/invalid-email": "The email address is invalid.",
@@ -63,6 +64,8 @@ export interface RegisterData {
  * @summary Logs in the user with email and password and checks if their email is verified.
  * @param email - The user's email address.
  * @param pass - The user's password.
+ * @throws {Error} Throws when Firebase sign-in or reload fails.
+ * @Returns {Promise<{user: FirebaseAuthTypes.User | null; verified: boolean}>} Auth user snapshot and verification status.
  */
 export async function loginUser(email: string, pass: string) {
   // Signs the user in via Firebase Auth
@@ -81,6 +84,8 @@ export async function loginUser(email: string, pass: string) {
  * @param email - The user's email address.
  * @param password - The user's chosen password.
  * @param profile - The user's registration profile data (name, gender, date of birth).
+ * @throws {Error} Throws when auth creation, Firestore write, or rollback fails.
+ * @Returns {Promise<void>} Resolves when registration and profile creation complete.
  */
 export async function registerUser(
   email: string,
@@ -137,17 +142,20 @@ export type FacebookSignInProfile = {
 /**
  * @summary Ensures a Firestore user profile exists for a Google sign-in, creating it on first sign-in without overwriting an existing profile.
  * @param googleUser - Optional Google profile data used to populate first/last name and photo.
+ * @throws {Error} Throws when no signed-in user exists or Firestore write fails.
+ * @Returns {Promise<void>} Resolves when profile existence is guaranteed.
  */
 export async function ensureGoogleUserFirestoreProfile(
   googleUser?: GoogleSignInProfile,
 ): Promise<void> {
-  const user = auth.currentUser;
+  const user = auth.currentUser; // Holds the current authenticated Firebase user.
   if (!user) throw new Error("No signed-in user");
 
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
+  const userRef = doc(db, "users", user.uid); // References the Firestore user document.
+  const snap = await getDoc(userRef); // Stores the current Firestore user snapshot.
   if (snap.exists()) return;
 
+  // Stores normalized profile fields derived from auth/provider data.
   const email = (user.email ?? "").toLowerCase();
   let firstName = (googleUser?.givenName ?? "").trim();
   let lastName = (googleUser?.familyName ?? "").trim();
@@ -181,16 +189,19 @@ export async function ensureGoogleUserFirestoreProfile(
 /**
  * @summary Ensures a Firestore user profile exists for a Facebook sign-in, creating it on first sign-in and updating photo/provider on subsequent sign-ins.
  * @param facebookUser - Optional Facebook profile data used to populate first/last name and photo.
+ * @throws {Error} Throws when no signed-in user exists or Firestore read/write fails.
+ * @Returns {Promise<void>} Resolves when profile create/update is complete.
  */
 export async function ensureFacebookUserFirestoreProfile(
   facebookUser?: FacebookSignInProfile,
 ): Promise<void> {
-  const user = auth.currentUser;
+  const user = auth.currentUser; // Holds the current authenticated Firebase user.
   if (!user) throw new Error("No signed-in user");
 
-  const userRef = doc(db, "users", user.uid);
-  const snap = await getDoc(userRef);
+  const userRef = doc(db, "users", user.uid); // References the Firestore user document.
+  const snap = await getDoc(userRef); // Stores the current Firestore user snapshot.
 
+  // Stores normalized profile fields derived from auth/provider data.
   const email = (user.email ?? "").toLowerCase();
   let firstName = (facebookUser?.first_name ?? "").trim();
   let lastName = (facebookUser?.last_name ?? "").trim();
@@ -241,6 +252,8 @@ export async function ensureFacebookUserFirestoreProfile(
 /**
  * @summary Signs into Firebase Auth using a Google ID token obtained from @react-native-google-signin.
  * @param idToken - The ID token returned by the Google Sign-In SDK.
+ * @throws {Error} Throws when credential exchange or auth sign-in fails.
+ * @Returns {Promise<void>} Resolves when Google sign-in completes.
  */
 export async function signInWithGoogleIdToken(idToken: string) {
   const credential = GoogleAuthProvider.credential(idToken);
@@ -251,6 +264,8 @@ export async function signInWithGoogleIdToken(idToken: string) {
 /**
  * @summary Signs into Firebase Auth using a Facebook access token obtained from the Facebook SDK.
  * @param accessToken - The access token returned by the Facebook Login SDK.
+ * @throws {Error} Throws when credential exchange or auth sign-in fails.
+ * @Returns {Promise<void>} Resolves when Facebook sign-in completes.
  */
 export async function signInWithFacebookAccessToken(accessToken: string) {
   const credential = FacebookAuthProvider.credential(accessToken);
@@ -261,6 +276,8 @@ export async function signInWithFacebookAccessToken(accessToken: string) {
 /**
  * @summary Updates both Firebase Auth and the Firestore profile with the user's new email address.
  * @param newEmail - The new email address to apply.
+ * @throws {Error} Throws when no user is logged in or update operations fail.
+ * @Returns {Promise<void>} Resolves when both email updates complete.
  */
 export async function updateUserEmail(newEmail: string) {
   const user = auth.currentUser;
@@ -279,6 +296,8 @@ export async function updateUserEmail(newEmail: string) {
 
 /**
  * @summary Sends a new email verification link to the currently signed-in user's email address.
+ * @throws {Error} Throws when no current user exists or sending fails.
+ * @Returns {Promise<void>} Resolves when verification email is sent.
  */
 export async function resendVerificationEmail() {
   const user = auth.currentUser;
@@ -291,6 +310,8 @@ export async function resendVerificationEmail() {
 /**
  * @summary Sends a password reset email to the specified address via Firebase Auth.
  * @param email - The email address to send the reset link to.
+ * @throws {Error} Throws when Firebase rejects the reset email request.
+ * @Returns {Promise<void>} Resolves when reset email request is accepted.
  */
 export async function sendPasswordReset(email: string) {
   // Just send the default password reset email
@@ -300,6 +321,8 @@ export async function sendPasswordReset(email: string) {
 /**
  * @summary Verifies a password reset code from the email link and returns the associated email address.
  * @param oobCode - The unique action code extracted from the password reset email link.
+ * @throws {Error} Throws when the action code is invalid or expired.
+ * @Returns {Promise<string>} The email address tied to the reset code.
  */
 export async function getPasswordResetEmail(oobCode: string) {
   return await verifyPasswordResetCode(auth, oobCode);
@@ -309,6 +332,8 @@ export async function getPasswordResetEmail(oobCode: string) {
  * @summary Resets the user's password using the action code from the reset email link.
  * @param oobCode - The unique action code extracted from the password reset email link.
  * @param newPass - The new password to set for the account.
+ * @throws {Error} Throws when code verification or password update fails.
+ * @Returns {Promise<void>} Resolves when password reset completes.
  */
 export async function resetPasswordWithCode(oobCode: string, newPass: string) {
   return await confirmPasswordReset(auth, oobCode, newPass);
@@ -316,6 +341,8 @@ export async function resetPasswordWithCode(oobCode: string, newPass: string) {
 
 /**
  * @summary Reloads the current Firebase Auth user to get the latest profile data, including email verification status.
+ * @throws {Error} Throws when Firebase user reload fails.
+ * @Returns {Promise<FirebaseAuthTypes.User | null>} Reloaded current user or null if signed out.
  */
 export async function reloadUser() {
   const user = auth.currentUser;
@@ -326,6 +353,8 @@ export async function reloadUser() {
 
 /**
  * @summary Ends the user's active Firebase Auth session.
+ * @throws {Error} Throws when sign-out fails.
+ * @Returns {Promise<void>} Resolves when sign-out completes.
  */
 export async function logoutUser() {
   await signOut(auth);
@@ -334,6 +363,8 @@ export async function logoutUser() {
 /**
  * @summary Converts a Firebase error code into a user-friendly error message string.
  * @param e - The raw error caught from a Firebase function call.
+ * @throws {never} This helper does not throw.
+ * @Returns {string} Friendly error text for UI display.
  */
 export function getFriendlyError(e: any): string {
   return ERROR_MESSAGES[e?.code] ?? e?.message ?? "Something went wrong.";
@@ -341,7 +372,9 @@ export function getFriendlyError(e: any): string {
 
 /**
  * @summary listens for changes in the user's login status.
- * @param callback A function that runs whenever the user logs in or out.
+ * @param callback - A function that runs whenever the user logs in or out.
+ * @throws {never} This subscription setup does not throw synchronously.
+ * @Returns {void} Registers an auth listener and cleanup effect.
  */
 export function useAuthState(
   callback: (user: FirebaseAuthTypes.User | null) => void,

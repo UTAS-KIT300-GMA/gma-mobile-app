@@ -1,9 +1,8 @@
 import { Cloudinary } from "@cloudinary/url-gen";
 import { scale } from "@cloudinary/url-gen/actions/resize";
-import { Ionicons } from "@expo/vector-icons";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 const cld = new Cloudinary({
   cloud: {
@@ -18,11 +17,13 @@ interface Props {
 /**
  * @summary A specialized video playback component that leverages Cloudinary for on-the-fly optimization and `expo-video` for native performance.
  * @param publicId - The Cloudinary public identifier for the video asset to be streamed.
+ * @throws {never} Internal effects/logging handle non-fatal states.
+ * @Returns {React.JSX.Element} Video player surface with optional fallback.
  */
 const VideoPlayer: React.FC<Props> = ({ publicId }) => {
-  const [isPlaying, setIsPlaying] = useState(false);
 
-  
+    const [isPlaying, setIsPlaying] = useState(false); // Stores whether the video is currently playing for overlay state.
+
   useEffect(() => {
     /**
  * @summary Logs initialization metadata to the console for debugging deployment environments and asset loading.
@@ -31,24 +32,20 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
   }, [publicId]);
 
   /**
- * @summary Generates a performance-optimized streaming URL by enforcing low resolution (480p), high compression (eco mode), and automatic format selection.
+ * @summary Generates a performance-optimized streaming URL by enforcing low resolution (480p), high compression (eco-mode), and automatic format selection.
  * @param publicId - Dependency: Triggers a new URL generation if the video source ID is updated.
+ * @throws {never} URL builder returns empty string on invalid input.
+ * @Returns {string} Optimized streaming URL.
  */
   const optimizedUrl = useMemo(() => {
     if (!publicId?.trim()) return "";
     
     return cld.video(publicId)
-      // 1. Force the width to 480 pixels (Low Quality)
-      .resize(scale().width(480)) 
-      
-      // 2. Force high compression. 'eco' prioritizes a smaller file size over visual quality.
-      .quality("auto:eco") 
-      
-      // 3. Let Cloudinary pick the best efficient format (like webm for Android)
-      .format("auto") 
+      .resize(scale().width(480))    // Force Low Quality.
+      .quality("auto:eco")      // Force high compression.
+      .format("auto")          // Cloudinary pick efficient format.
       .toURL();
   }, [publicId]);
-
 
   const player = useVideoPlayer(optimizedUrl ?? "", (playerInstance) => {
     playerInstance.loop = false;
@@ -74,11 +71,6 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
   return () => sub.remove();
   }, [player, optimizedUrl, publicId]);
 
-  
-    
-
-    
-
   if (!optimizedUrl) {
     return (
       <View style={[styles.wrapper, styles.center]}>
@@ -95,14 +87,6 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
         nativeControls={true}
         contentFit="cover" 
       />
-      {/* Currently use Cloudinary native play button setting */}
-      {/* {!isPlaying && (
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => player.play()}>
-          <View style={styles.overlay}>
-            <Ionicons name="play" size={60} color="#fff" />
-          </View>
-        </Pressable>
-      )} */}
     </View>
   );
 };

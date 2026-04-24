@@ -11,6 +11,11 @@ import { auth, db } from "@/services/authService";
 import { EventDoc, Booking } from "@/types/type";
 import { BookedEventsUI } from "@/screens/profile/my-bookings-UI";
 
+/**
+ * @summary Loads the user's booking documents and joins them with event details for display.
+ * @throws {never} Errors are handled with alerts and guarded state updates.
+ * @Returns {React.JSX.Element} Booked-events UI container.
+ */
 export default function BookedEventsRoute() {
   const router = useRouter();
 
@@ -21,6 +26,11 @@ export default function BookedEventsRoute() {
   useEffect(() => {
     let mounted = true;
 
+    /**
+     * @summary Fetches event catalog and user booking rows from Firestore.
+     * @throws {never} Errors are caught and shown via alert.
+     * @Returns {Promise<void>} Resolves when booking data is loaded.
+     */
     const fetchData = async () => {
       setLoading(true);
 

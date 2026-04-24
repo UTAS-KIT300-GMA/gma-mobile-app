@@ -5,6 +5,11 @@ import React, { useCallback, useMemo, useState } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useEvents } from "@/context/GlobalContext";
 
+/**
+ * @summary Manages search form state and AI-assisted ranking for event search routes.
+ * @throws {never} Errors are handled with safe fallbacks.
+ * @Returns {React.JSX.Element} Search screen logic wrapper.
+ */
 export default function SearchScreenLogic() {
   // Stores the navigation tool in the router var.
   const router = useRouter();
@@ -18,6 +23,7 @@ export default function SearchScreenLogic() {
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   // Initialize the API with your key
+  // Stores API bootstrap objects for Gemini model access.
   const apiKey = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
   const model = useMemo(() => {
     if (!apiKey) return null;
@@ -41,12 +47,23 @@ export default function SearchScreenLogic() {
     useState<Record<InterestKey, boolean>>(initialTags);
 
   // Stores the function instruction in itoggleTag var.
+  /**
+   * @summary Toggles the selected state for a single interest tag.
+   * @param key - Interest tag key to toggle.
+   * @throws {never} Pure state update does not throw.
+   * @Returns {void} Updates selected tag map.
+   */
   const toggleTag = (key: InterestKey) => {
     // Logic: Copies the previous dictionary but flips the boolean of the clicked tag.
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
   // Stores the function instructions in the handleApply var.
+  /**
+   * @summary Applies current filters and navigates to search results.
+   * @throws {never} Navigation/state logic does not throw.
+   * @Returns {void} Pushes filtered search route when input exists.
+   */
   const handleApply = () => {
     const selectedTags = (Object.keys(selected) as InterestKey[]).filter(
       (k) => selected[k],
@@ -71,6 +88,11 @@ export default function SearchScreenLogic() {
   };
 
   // Stores the instruction for clearing all inputs in the handleReset var.
+  /**
+   * @summary Clears all query inputs and resets selected tags.
+   * @throws {never} Pure state update does not throw.
+   * @Returns {void} Resets search form state.
+   */
   const handleReset = () => {
     setQuery("");
     setLocation("");
@@ -79,6 +101,12 @@ export default function SearchScreenLogic() {
     setSelected(initialTags);
   };
 
+  /**
+   * @summary Parses a JSON array payload from model output text.
+   * @param text - Raw model response text.
+   * @throws {never} Parse errors are caught and return fallback.
+   * @Returns {string[]} Parsed array of string values.
+   */
   const parseJsonArray = (text: string): string[] => {
     try {
       // 1. Remove Markdown code blocks if present
@@ -101,6 +129,13 @@ export default function SearchScreenLogic() {
     }
   };
 
+  /**
+   * @summary Uses Gemini to rank the most relevant events for a user query.
+   * @param userQuery - Free-text query entered by the user.
+   * @param events - Candidate events to rank.
+   * @throws {never} Errors are caught and return empty results.
+   * @Returns {Promise<EventDoc[]>} Ranked subset of matching events.
+   */
   const onAiSearch = useCallback(async (userQuery: string, events: EventDoc[]) => {
     try {
       if (!userQuery.trim() || !model) return [];
@@ -133,6 +168,12 @@ export default function SearchScreenLogic() {
     }
   }, [model]);
 
+  /**
+   * @summary Runs AI search and routes to the results screen with ranked IDs.
+   * @param userQuery - Free-text query entered by the user.
+   * @throws {never} Navigation cleanup always runs.
+   * @Returns {Promise<void>} Resolves after AI search flow completes.
+   */
   const handleAiSearch = useCallback(async (userQuery: string) => {
     setIsAiLoading(true);
     try {

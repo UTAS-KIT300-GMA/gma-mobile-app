@@ -7,6 +7,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 
+/**
+ * @summary Loads an event, computes booking totals, and creates booking records for free events.
+ * @throws {never} Errors are handled with alerts and guarded returns.
+ * @Returns {React.JSX.Element} Booking UI container.
+ */
 export default function BookingRoute() {
   const router = useRouter();
   // Stores the  event ID passed from the previous screen in the eventId var.
@@ -55,6 +60,7 @@ export default function BookingRoute() {
 
   // Multiplies the ticket count var by the price var  and stores the result in totalPrice var.
   // Gets ticket prices safely from the event.
+  // Stores price values derived from event ticket pricing data.
   const memberPrice = event?.ticketPrices?.member ?? 0;
   const nonMemberPrice = event?.ticketPrices?.nonMember ?? 0;
 
@@ -68,6 +74,11 @@ export default function BookingRoute() {
   // This keeps pricing future-proof for later subscription logic.
 
   // Stores function instructions in the handleConfirmBooking var.
+  /**
+   * @summary Creates a booking document and navigates to confirmation.
+   * @throws {never} Errors are handled with user alerts.
+   * @Returns {Promise<void>} Resolves when booking flow finishes.
+   */
   const handleConfirmBooking = async () => {
     const user = auth.currentUser;
 

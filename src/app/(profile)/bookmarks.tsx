@@ -14,6 +14,8 @@ import { Alert } from "react-native";
 
 /**
    * @summary Displays a user's bookmarked events (saved events) from Firestore and automactically updates the UI when an user deletes or adds bookmark.
+   * @throws {never} Errors are handled with alerts and guarded state updates.
+   * @Returns {React.JSX.Element} Bookmarks UI with event and learning sections.
    */
 export default function BookmarksRoute() {
   
@@ -30,6 +32,11 @@ export default function BookmarksRoute() {
 
   useEffect(() => {
     let mounted = true;
+    /**
+     * @summary Loads events and learning content, then reconciles bookmark flags.
+     * @throws {never} Errors are caught and surfaced to the user.
+     * @Returns {Promise<void>} Resolves when fetch and state updates complete.
+     */
     const fetchData = async () => {
       setLoading(true);
       try {

@@ -23,6 +23,17 @@ interface Props {
   onBook: () => void;
 }
 
+/**
+ * @summary Renders event details UI with bookmark and booking actions.
+ * @param event - Event payload to display.
+ * @param loading - Loading state for event fetch.
+ * @param isBookmarked - Bookmark state for current event.
+ * @param onBookmark - Bookmark toggle callback.
+ * @param onBack - Back navigation callback.
+ * @param onBook - Booking action callback.
+ * @throws {never} UI delegates side effects to callbacks.
+ * @Returns {React.JSX.Element} Event detail screen.
+ */
 export default function EventDetailUI({
   event,
   loading,
@@ -41,6 +52,11 @@ export default function EventDetailUI({
   }
 
   // Converts the event type to a user-friendly text for display.
+  /**
+   * @summary Maps event type to a user-facing access label.
+   * @throws {never} Pure label helper does not throw.
+   * @Returns {string} Access text shown in UI.
+   */
   const getAccessText = () => {
     if (event.type === "free") {
       return "Free Event";

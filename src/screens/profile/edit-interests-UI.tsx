@@ -27,6 +27,15 @@ interface Props {
   initialInterests?: InterestKey[];
 }
 
+/**
+ * @summary Renders editable interest categories and saves updated selections.
+ * @param onSave - Callback invoked with selected interest keys.
+ * @param saving - Loading flag for save submission.
+ * @param userName - Optional user display name.
+ * @param initialInterests - Optional preselected interests.
+ * @throws {never} UI delegates persistence to parent callbacks.
+ * @Returns {React.JSX.Element} Edit-interests screen.
+ */
 export default function EditInterestsUI({
   onSave,
   saving,
@@ -56,10 +65,22 @@ export default function EditInterestsUI({
     return (Object.keys(selected) as InterestKey[]).filter((k) => selected[k]);
   }, [selected]);
 
+  /**
+   * @summary Toggles selected state for one interest key.
+   * @param key - Interest tag key to toggle.
+   * @throws {never} Pure state update does not throw.
+   * @Returns {void} Updates local selection map.
+   */
   const toggle = (key: InterestKey) => {
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  /**
+   * @summary Renders a selectable interest pill.
+   * @param key - Interest tag key to render.
+   * @throws {never} Pure render helper does not throw.
+   * @Returns {React.JSX.Element} Pill component.
+   */
   const renderPill = (key: InterestKey) => {
     const isActive = selected[key];
     return (

@@ -33,6 +33,25 @@ interface SearchScreenUIProps {
   onAiSearch: (userQuery: string) => void;
 }
 
+/**
+ * @summary Renders search filters, AI hinting, and apply/reset controls for event discovery.
+ * @param query - Search query text.
+ * @param setQuery - Query update callback.
+ * @param selected - Selected interest tag map.
+ * @param toggleTag - Tag toggle callback.
+ * @param location - Location filter text.
+ * @param setLocation - Location update callback.
+ * @param date - Selected date filter.
+ * @param setDate - Date update callback.
+ * @param showPicker - Date picker visibility state.
+ * @param setShowPicker - Date picker visibility setter.
+ * @param handleApply - Standard search apply callback.
+ * @param handleReset - Filter reset callback.
+ * @param isAiLoading - AI search loading state.
+ * @param onAiSearch - AI search callback.
+ * @throws {never} UI delegates side effects to callback props.
+ * @Returns {React.JSX.Element} Search form screen.
+ */
 export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
   query,
   setQuery,
@@ -49,6 +68,7 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
   isAiLoading,
   onAiSearch,
 }) => {
+  // Stores local toggle for collapsing/expanding interest pills.
   const [showInterests, setShowInterests] = React.useState(false);
 
   // Determine if the query looks like a natural sentence

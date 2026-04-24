@@ -22,6 +22,8 @@ import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
 /**
  * @summary Displays a password strength hint indicating whether the password meets the minimum length requirement.
  * @param password - The current password string entered by the user.
+ * @throws {never} Pure display helper does not throw.
+ * @Returns {React.JSX.Element | null} Password strength hint or null when empty.
  */
 function PasswordStrengthHint({ password }: { password: string }) {
   if (!password) return null;
@@ -51,12 +53,15 @@ interface RegisterUIProps {
  * @param onRegisterPress - Callback invoked with the collected email, password, and profile data when the register button is pressed.
  * @param onLoginPress - Callback to navigate back to the login screen.
  * @param loading - When true, disables submission and shows an activity indicator.
+ * @throws {never} Validation feedback is handled in UI alerts.
+ * @Returns {React.JSX.Element} Registration form screen.
  */
 export function RegisterScreen({
   onRegisterPress,
   onLoginPress,
   loading,
 }: RegisterUIProps) {
+  // Stores registration form field state and validation flags.
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -69,6 +74,11 @@ export function RegisterScreen({
   const [showPicker, setShowPicker] = useState(false);
   const [dateOfBirthError, setDateOfBirthError] = useState("");
 
+  /**
+   * @summary Validates registration inputs and forwards normalized payload to parent handler.
+   * @throws {never} Validation errors are shown through alerts/messages.
+   * @Returns {void} Submits form when valid.
+   */
   const handleSubmit = () => {
     if (!firstName || !lastName || !email || !password || !gender) {
       Alert.alert("Error", "Please fill in all fields.");
