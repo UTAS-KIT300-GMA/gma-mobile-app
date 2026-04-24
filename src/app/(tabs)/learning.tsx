@@ -3,18 +3,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { db } from "@/services/authService";
 import { LearningDoc } from "@/types/type";
-import { Cloudinary } from "@cloudinary/url-gen";
 import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { collection, getDocs } from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Alert, Linking } from "react-native";
-
-// Cloudinary instance (used for other transformations if needed later)
-const cld = new Cloudinary({
-  cloud: {
-    cloudName: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  },
-});
 
 export default function LearningRoute() {
   const [videos, setVideos] = useState<LearningDoc[]>([]);
@@ -134,25 +126,48 @@ export default function LearningRoute() {
    * @summary Generates a Cloudinary URL and opens the associated PDF resource in the system browser.
    * @param fileId - The Cloudinary public ID or direct filename for the asset.
    */
-  const handleFilePress = (fileId: string) => {
+  const resolveLearningPdfUrl = (fileId: string) => {
+    const value = fileId.trim();
+    if (!value) return "";
+
+    if (/^https?:\/\//i.test(value)) {
+      return value;
+    }
+
+    if (/^res\.cloudinary\.com\//i.test(value)) {
+      return `https://${value}`;
+    }
+
+    const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    if (!cloudName) return "";
+
+    const normalizedId = value.replace(/^\/+/, "").replace(/\.pdf$/i, "");
+    return `https://res.cloudinary.com/${cloudName}/raw/upload/${normalizedId}.pdf`;
+  };
+
+  const handleFilePress = async (fileId: string) => {
     if (!fileId) {
       Alert.alert("Error", "No file available.");
       return;
     }
 
-  
-    // SDK to ensure the URL is valid.
-    const fileUrl = fileId.toLowerCase().endsWith(".pdf")
-      ? cld.image(fileId).toURL()
-      : cld.image(fileId).format("pdf").toURL();
+    const fileUrl = resolveLearningPdfUrl(fileId);
+    if (!fileUrl) {
+      Alert.alert("Error", "Could not generate a valid file link.");
+      return;
+    }
 
-    console.log("Generated URL:", fileUrl);
-    
-
-    Linking.openURL(fileUrl).catch((err) => {
+    try {
+      const canOpen = await Linking.canOpenURL(fileUrl);
+      if (!canOpen) {
+        Alert.alert("Error", "This file link cannot be opened on this device.");
+        return;
+      }
+      await Linking.openURL(fileUrl);
+    } catch (err) {
       console.error("Open URL error:", err);
       Alert.alert("Error", "Could not open the file.");
-    });
+    }
   };
 
   return (
