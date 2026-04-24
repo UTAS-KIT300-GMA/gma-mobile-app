@@ -13,6 +13,14 @@ import { useAppLocation, useBookmarks, useEvents } from "@/context/GlobalContext
 import { DiscoveryScreenUI } from "@/screens/discovery/discovery-screen";
 import { EventDoc } from "@/types/type";
 
+/**
+ * @summary Calculates distance from user coordinates to an event location.
+ * @param event - Event containing optional location coordinates.
+ * @param userLat - User latitude.
+ * @param userLon - User longitude.
+ * @throws {never} Pure calculation does not throw.
+ * @Returns {number} Distance in kilometers or Infinity when coordinates are missing.
+ */
 function distanceToEventKm(
   event: EventDoc,
   userLat: number,
@@ -37,6 +45,11 @@ const CATEGORY_OPTIONS = [
   { key: "thrive", label: "Thrive" },
 ];
 
+/**
+ * @summary Filters, sorts, and maps discovery events with bookmark actions for the UI.
+ * @throws {never} Errors are handled through alert feedback.
+ * @Returns {React.JSX.Element} Discovery screen container.
+ */
 export default function DiscoveryScreen() {
   const router = useRouter();
   const [category, setCategory] = useState<string>("all");
@@ -102,7 +115,9 @@ export default function DiscoveryScreen() {
 
   /**
    * @summary Saves or removes an event from the user's bookmark sub collection.
-   * @param event The specific event data to be bookmarked or removed.
+   * @param event - The specific event data to be bookmarked or removed.
+   * @throws {never} Errors are handled with alert feedback.
+   * @Returns {Promise<void>} Resolves when bookmark toggle completes.
    */
   const handleBookmark = async (event: EventDoc) => {
     try {

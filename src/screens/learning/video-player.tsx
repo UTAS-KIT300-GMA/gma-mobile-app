@@ -18,8 +18,11 @@ interface Props {
 /**
  * @summary A specialized video playback component that leverages Cloudinary for on-the-fly optimization and `expo-video` for native performance.
  * @param publicId - The Cloudinary public identifier for the video asset to be streamed.
+ * @throws {never} Internal effects/logging handle non-fatal states.
+ * @Returns {React.JSX.Element} Video player surface with optional fallback.
  */
 const VideoPlayer: React.FC<Props> = ({ publicId }) => {
+  // Stores whether the video is currently playing for overlay state.
   const [isPlaying, setIsPlaying] = useState(false);
 
   
@@ -33,6 +36,8 @@ const VideoPlayer: React.FC<Props> = ({ publicId }) => {
   /**
  * @summary Generates a performance-optimized streaming URL by enforcing low resolution (480p), high compression (eco mode), and automatic format selection.
  * @param publicId - Dependency: Triggers a new URL generation if the video source ID is updated.
+ * @throws {never} URL builder returns empty string on invalid input.
+ * @Returns {string} Optimized streaming URL.
  */
   const optimizedUrl = useMemo(() => {
     if (!publicId?.trim()) return "";

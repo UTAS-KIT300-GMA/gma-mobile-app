@@ -14,6 +14,13 @@ a tab-based navigation structure.*/
 prop to determine if the tab is active and applies different styles accordingly. The `children` 
 prop allows you to pass in the actual icon component that should be rendered within the wrapper. 
 */
+/**
+ * @summary Wraps tab icons with active/inactive styling.
+ * @param focused - Whether the current tab is active.
+ * @param children - Icon element to render.
+ * @throws {never} Pure render helper does not throw.
+ * @Returns {React.JSX.Element} Styled icon wrapper.
+ */
 function TabBarIcon({
   focused,
   children,
@@ -35,6 +42,11 @@ including active and inactive tint colors, label styles, and overall tab bar sty
 - Each screen also has its own options for the title and icon, which are defined using 
 the `Ionicons` library for consistent and visually appealing icons. 
 */
+/**
+ * @summary Configures and renders the primary bottom-tab navigator.
+ * @throws {never} Pure layout rendering does not throw.
+ * @Returns {React.JSX.Element} Tabs navigator with icon mapping.
+ */
 export default function TabsLayout() {
   return (
     // The `Tabs` component is the main container for the tab navigation.

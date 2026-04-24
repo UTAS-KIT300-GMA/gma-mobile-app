@@ -41,6 +41,28 @@ interface DiscoveryProps {
   onOpenLocationSettings: () => void;
 }
 
+/**
+ * @summary Renders discovery event list UI with category filters, sort modal, and bookmark actions.
+ * @param filteredEvents - Events after filtering/sorting in route logic.
+ * @param loading - Combined loading state for events/bookmarks.
+ * @param bookmarkedIds - Map of bookmarked event IDs.
+ * @param onBookmark - Bookmark toggle callback.
+ * @param onCardPress - Event-card press callback.
+ * @param onRsvp - RSVP action callback.
+ * @param category - Active category key.
+ * @param setCategory - Category update callback.
+ * @param options - Category options for top pills.
+ * @param title - Screen title text.
+ * @param accessFilter - Active access filter.
+ * @param onSelectAccessFilter - Access filter change callback.
+ * @param sortOption - Active sort key.
+ * @param onSelectSort - Sort key change callback.
+ * @param isLocationOn - Whether device location is enabled.
+ * @param isLocationLoading - Location resolution loading state.
+ * @param onOpenLocationSettings - Callback to open system location settings.
+ * @throws {never} UI handles state updates via callbacks.
+ * @Returns {React.JSX.Element} Discovery screen UI.
+ */
 export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
   filteredEvents,
   loading,
@@ -60,6 +82,7 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
   isLocationLoading,
   onOpenLocationSettings,
 }) => {
+  // Stores local visibility state for the sort/filter modal.
   const [sortModalVisible, setSortModalVisible] = useState(false);
 
   return (
