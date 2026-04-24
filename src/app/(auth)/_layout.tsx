@@ -7,14 +7,17 @@
 import { Stack } from "expo-router";
 import React from "react";
 
+/**
+ * @summary Renders the auth stack configuration for authentication routes.
+ * @throws {never} Pure layout rendering does not throw.
+ * @Returns {React.JSX.Element} Auth navigator stack.
+ */
 export default function AuthLayout() {
   return (
     <Stack
       screenOptions={{
-        // Keeps the top navigation bar hidden for a clean, full-screen auth experience.
-        headerShown: false,
-        // A fade animation makes transitions between auth screens 
-        animation: "fade",
+        headerShown: false,  // Keeps the top navigation bar hidden for a clean, full-screen auth experience.
+        animation: "fade",  // A fade animation makes transitions between auth screens 
       }}
     />
   );

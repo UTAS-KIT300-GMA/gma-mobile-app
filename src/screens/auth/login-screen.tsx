@@ -28,6 +28,8 @@ interface Props {
  * @param loading - When true, disables inputs and shows an activity indicator.
  * @param onRegisterPress - Callback to navigate to the registration screen.
  * @param onForgotPress - Callback to navigate to the forgot-password screen.
+ * @throws {never} UI component delegates async handling to passed callbacks.
+ * @Returns {React.JSX.Element} Login form screen.
  */
 export const LoginScreen = ({
   onLogin,
@@ -36,6 +38,7 @@ export const LoginScreen = ({
   onRegisterPress,
   onForgotPress,
 }: Props) => {
+  // Stores login form field values.
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 

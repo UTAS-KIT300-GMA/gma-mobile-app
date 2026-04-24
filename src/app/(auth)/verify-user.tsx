@@ -11,6 +11,8 @@ import { VerifyUI } from "@/screens/auth/verify-user-screen"; // Adjust this imp
 
 /**
 * @summary Manages the user's email display and verification resends. Handles logout sessions to safely exit the verification flow. Holds user until their email is confirmed.
+* @throws {never} Errors are handled with user-facing alerts.
+* @Returns {React.JSX.Element} Verification UI with resend and logout actions.
 */
 export default function VerifyUserRoute() {
 
@@ -19,6 +21,8 @@ export default function VerifyUserRoute() {
   
    /** 
   * @summary Triggers the Firebase function to send a new email and shows a success alert.
+  * @throws {never} Errors are handled and shown through alerts.
+  * @Returns {Promise<void>} Resolves when resend attempt finishes.
   */
   const handleResend = async () => {
  
@@ -37,7 +41,9 @@ export default function VerifyUserRoute() {
   };
 
   /** 
-   *@summary Ends the Firebase session. The Layout will detect the state change and automatically boot the user back to landing screen.
+   * @summary Ends the Firebase session. The Layout will detect the state change and automatically boot the user back to landing screen.
+   * @throws {never} Errors are handled and shown through alerts.
+   * @Returns {Promise<void>} Resolves when logout attempt finishes.
    */
   const handleLogout = async () => {
   

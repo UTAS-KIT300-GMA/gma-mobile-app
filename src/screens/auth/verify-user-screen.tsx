@@ -18,6 +18,15 @@ interface VerifyUIProps {
   loading?: boolean;
 }
 
+/**
+ * @summary Renders the email verification holding screen with resend and cancel actions.
+ * @param onResend - Callback for requesting a new verification email.
+ * @param onLogout - Callback for cancel/logout action.
+ * @param email - User email displayed in the verification message.
+ * @param loading - Loading state for async verification actions.
+ * @throws {never} Action handlers are delegated to parent callbacks.
+ * @Returns {React.JSX.Element} Verification waiting screen.
+ */
 export const VerifyUI: React.FC<VerifyUIProps> = ({
   onResend,
   onLogout,

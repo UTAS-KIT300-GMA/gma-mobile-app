@@ -23,6 +23,12 @@ import {Alert} from "react-native";
 
 const webClientId = Constants.expoConfig?.extra?.googleWebClientId;
 
+/**
+ * @summary Extracts the Google ID token from a sign-in result payload.
+ * @param signInResult - Raw response object returned by Google sign-in.
+ * @throws {never} Pure extraction does not throw.
+ * @Returns {string | undefined} ID token when present.
+ */
 function getGoogleIdToken(signInResult: unknown): string | undefined {
   const r = signInResult as {
     data?: { idToken?: string };
@@ -31,6 +37,12 @@ function getGoogleIdToken(signInResult: unknown): string | undefined {
   return r?.data?.idToken ?? r?.idToken;
 }
 
+/**
+ * @summary Extracts a normalized Google user profile from sign-in data.
+ * @param signInResult - Raw response object returned by Google sign-in.
+ * @throws {never} Pure extraction does not throw.
+ * @Returns {{givenName?: string | null; familyName?: string | null; name?: string | null; photo?: string | null} | undefined} Parsed profile or undefined.
+ */
 function getGoogleUserProfile(signInResult: unknown) {
   const r = signInResult as {
     data?: { user?: GoogleSignInUser };
@@ -56,6 +68,8 @@ type GoogleSignInUser = {
 /**
  * @summary Sets up the logic for the login screen.
  * @description Prepares the login process and navigation, then shows the login screen UI to the user.
+ * @throws {never} Component logic handles async failures with alerts.
+ * @Returns {React.JSX.Element} Login UI container with auth handlers.
  */
 export default function LoginRoute() {
   const router = useRouter(); // Stores the navigation tool  to allow moving between screens.
@@ -70,6 +84,11 @@ export default function LoginRoute() {
     }
   }, []);
 
+  /**
+   * @summary Performs Facebook sign-in and ensures the Firestore profile is present.
+   * @throws {never} Errors are surfaced to users through alerts.
+   * @Returns {Promise<void>} Resolves when sign-in flow completes.
+   */
   const handleFacebookLogin = async () => {
     if (loading) return;
     setLoading(true);
@@ -128,6 +147,11 @@ export default function LoginRoute() {
     }
   };
 
+  /**
+   * @summary Performs Google sign-in and ensures the Firestore profile is present.
+   * @throws {never} Errors are surfaced to users through alerts.
+   * @Returns {Promise<void>} Resolves when sign-in flow completes.
+   */
   const handleGoogleLogin = async () => {
     if (loading) return;
     if (!webClientId) {
@@ -169,8 +193,10 @@ export default function LoginRoute() {
 
   /**
    * @summary Signs the user in. If they haven't verified their email, it shows a popup with options to resend the link or check their status.
-   * @param email The email the user typed in.
-   * @param password The password the user typed in.
+   * @param email - The email the user typed in.
+   * @param password - The password the user typed in.
+   * @throws {never} Errors are handled and shown in alerts.
+   * @Returns {Promise<void>} Resolves when login flow completes.
    */
   const handleLogin = async (email: string, password: string) => {
     if (loading) return; // Prevent multiple simultaneous login attempts
