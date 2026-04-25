@@ -14,7 +14,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuthUser, useAppLocation } from "@/context/GlobalContext";
-import { calculateHaversineDistance } from "@/components/utils";
+import { calculateHaversineDistance, logSelectContent } from "@/components/utils";
 import { EventDoc } from "@/types/type.ts";
 import analytics from '@react-native-firebase/analytics';
 
@@ -129,12 +129,10 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   }, [events, userCoords, userDoc?.selectedTags]);
 
   const handlePressRsvp = async (item: EventDoc) => {
-      // Custom Event Tracking
-      await analytics().logEvent("press_rsvp", {
-          event_id: item.id,
-          event_title: item.title,
-          event_category: item.category,
-          event_type: item.type,
+      await logSelectContent(analytics, {
+          content_type: "event",
+          item_id: item.id,
+          action: "rsvp_click",
       });
 
       router.push({
@@ -144,10 +142,9 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   }
 
   const handlePressCard = async (item: EventDoc) => {
-      // Custom Event Tracking
-      await analytics().logEvent("press_card", {
-          event_id: item.id,
-          event_title: item.title,
+      await logSelectContent(analytics, {
+          content_type: "event",
+          item_id: item.id,
           event_category: item.category,
           event_type: item.type,
       });

@@ -4,6 +4,8 @@ import { useRouter } from "expo-router";
 import React, { useCallback, useMemo, useState } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useEvents } from "@/context/GlobalContext";
+import analytics from "@react-native-firebase/analytics";
+import { logSearch } from "@/components/utils";
 
 /**
  * @summary Manages search form state and AI-assisted ranking for event search routes.
@@ -85,6 +87,11 @@ export default function SearchScreenLogic() {
         tags: selectedTags.join(","),
       },
     } as any);
+    if (query.trim()) {
+      void logSearch(analytics, {
+        search_term: query.trim(),
+      });
+    }
   };
 
   // Stores the instruction for clearing all inputs in the handleReset var.
@@ -187,6 +194,11 @@ export default function SearchScreenLogic() {
           aiIds: ids.join(","),
         },
       } as any);
+      if (userQuery.trim()) {
+        void logSearch(analytics, {
+          search_term: userQuery.trim(),
+        });
+      }
     } finally {
       setIsAiLoading(false);
     }

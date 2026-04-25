@@ -10,6 +10,8 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
+import analytics from "@react-native-firebase/analytics";
+import { logSelectContent } from "@/components/utils";
 
 /**
  * @summary Loads event details and bookmark state, then binds detail actions for the event UI.
@@ -94,7 +96,14 @@ export default function EventDetailScreen() {
     try {
       // If already saved, delete the doc. If not, create a new one with a timestamp.
       if (wasBookmarked) await deleteDoc(bookmarkRef);
-      else await setDoc(bookmarkRef, { eventId, savedAt: serverTimestamp() });
+      else {
+        await setDoc(bookmarkRef, { eventId, savedAt: serverTimestamp() });
+        void logSelectContent(analytics, {
+          content_type: "event",
+          item_id: eventId,
+          action: "bookmark",
+        });
+      }
     } catch (e) {
       // If the database fails, roll back the local isBookmarked store to its original state.
       setIsBookmarked(wasBookmarked);
@@ -138,6 +147,11 @@ export default function EventDetailScreen() {
       pathname: "/event/booking",
       params: { eventId: event.id },
     } as any);
+    void logSelectContent(analytics, {
+      content_type: "event",
+      item_id: event.id,
+      action: "book_click",
+    });
   }
 
   return (

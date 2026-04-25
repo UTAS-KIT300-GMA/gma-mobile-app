@@ -7,8 +7,9 @@
 import { useRouter } from "expo-router";
 import React, { useMemo, useState } from "react";
 import { Alert } from "react-native";
+import analytics from "@react-native-firebase/analytics";
 
-import { calculateHaversineDistance } from "@/components/utils";
+import { calculateHaversineDistance, logSelectContent } from "@/components/utils";
 import { useAppLocation, useBookmarks, useEvents } from "@/context/GlobalContext";
 import { DiscoveryScreenUI } from "@/screens/discovery/discovery-screen";
 import { EventDoc } from "@/types/type";
@@ -246,13 +247,28 @@ export default function DiscoveryScreen() {
           bookmarkedIds={bookmarkedIds}
           onBookmark={handleBookmark}
           onCardPress={(item: EventDoc) => {
+            void logSelectContent(analytics, {
+              content_type: "event",
+              item_id: item.id,
+            });
             router.push({ pathname: "/event/event-details", params: { id: item.id } } as any);
           }}
           onRsvp={(item: EventDoc) => {
+            void logSelectContent(analytics, {
+              content_type: "event",
+              item_id: item.id,
+              action: "rsvp_click",
+            });
             router.push({ pathname: "/event/booking", params: { eventId: item.id } } as any);
           }}
           category={category}
-          setCategory={setCategory}
+          setCategory={(nextCategory) => {
+            void logSelectContent(analytics, {
+              content_type: "category",
+              item_id: nextCategory,
+            });
+            setCategory(nextCategory);
+          }}
           options={CATEGORY_OPTIONS}
           sortOption={sortOption}
           onSelectSort={handleSelectSort}

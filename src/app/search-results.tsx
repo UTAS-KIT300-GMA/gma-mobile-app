@@ -14,7 +14,8 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import { useEvents } from "@/context/GlobalContext";
-import { getParentCategoryFromTagName } from "@/components/utils";
+import { getParentCategoryFromTagName, logSelectContent } from "@/components/utils";
+import analytics from "@react-native-firebase/analytics";
 
 /** 
 search-results.tsx
@@ -261,12 +262,21 @@ export default function SearchResultsLogic() {
       bookmarkedIds={bookmarkedIds}
       onBookmark={handleBookmark}
       onCardPress={(item: EventDoc) => {
+        void logSelectContent(analytics, {
+          content_type: "event",
+          item_id: item.id,
+        });
         router.push({
           pathname: "/event/event-details",
           params: { id: item.id },
         } as any);
       }}
       onRsvp={(item: EventDoc) => {
+        void logSelectContent(analytics, {
+          content_type: "event",
+          item_id: item.id,
+          action: "rsvp_click",
+        });
         router.push({
           pathname: "/event/event-details",
           params: { id: item.id },

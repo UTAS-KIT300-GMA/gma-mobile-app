@@ -6,13 +6,15 @@
  */
 
 import { auth, applyActionCode } from "@/services/authService";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
 import React, { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, View, Alert } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { GlobalProvider } from "@/context/GlobalContext";
+import analytics from "@react-native-firebase/analytics";
+import { buildScreenTrackingNames, logScreenView } from "@/components/utils";
 
 /**
  * @summary Applies app-wide navigation guards and renders the root stack only when auth and routing state are synchronized.
@@ -30,6 +32,7 @@ export default function RootLayout() {
   
   // Stores current navigation segments and router helpers.
   const segments = useSegments() as string[];
+  const pathname = usePathname();
   const router = useRouter();
 
   /**
@@ -149,6 +152,15 @@ export default function RootLayout() {
       }
     }
   }, [user, initializing, isProfileValidated, isHandlingLink, initialLinkChecked, routeInfo, router]); 
+
+  useEffect(() => {
+    if (!pathname) return;
+    const { screen_name, screen_class } = buildScreenTrackingNames(pathname);
+    void logScreenView(analytics, {
+      screen_name,
+      screen_class,
+    });
+  }, [pathname]);
 
   // --- THE GATEKEEPER: THE FLICKER KILLER ---
   /**
