@@ -16,6 +16,7 @@ import { colors } from "@/theme/ThemeProvider";
 import { useAuthUser, useAppLocation } from "@/context/GlobalContext";
 import { calculateHaversineDistance } from "@/components/utils";
 import { EventDoc } from "@/types/type.ts";
+import analytics from '@react-native-firebase/analytics';
 
 export type RecommendedEvent = EventDoc & {
   finalScore: number;
@@ -128,6 +129,14 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   }, [events, userCoords, userDoc?.selectedTags]);
 
   const handlePressRsvp = async (item: EventDoc) => {
+      // Custom Event Tracking
+      await analytics().logEvent("press_rsvp", {
+          event_id: item.id,
+          event_title: item.title,
+          event_category: item.category,
+          event_type: item.type,
+      });
+
       router.push({
           pathname: "/event/booking",
           params: { eventId: item.id },
@@ -135,6 +144,14 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   }
 
   const handlePressCard = async (item: EventDoc) => {
+      // Custom Event Tracking
+      await analytics().logEvent("press_card", {
+          event_id: item.id,
+          event_title: item.title,
+          event_category: item.category,
+          event_type: item.type,
+      });
+
       router.push({
           pathname: "/event/event-details",
           params: { id: item.id },
