@@ -1,6 +1,7 @@
 import {EVENT_CATEGORIES, EventDoc} from "@/types/type.ts";
 import * as ExpoLinking from "expo-linking";
 import * as Location from "expo-location";
+import analytics from "@react-native-firebase/analytics";
 import { Platform, Linking as RNLinking } from "react-native";
 
 /**
@@ -210,4 +211,113 @@ export async function fetchLocationCoordinatesWithOptions(
       return { coords: DEFAULT_LOCATION_COORDS };
     }
   }
+}
+
+type AnalyticsFactory = typeof analytics;
+
+type SelectContentParams = {
+  content_type: string;
+  item_id?: string;
+  [key: string]: string | number | boolean | undefined;
+};
+
+type ScreenViewParams = {
+  screen_name: string;
+  screen_class: string;
+};
+
+type SearchParams = {
+  search_term: string;
+};
+
+/**
+ * @summary Logs a content selection interaction for GA4 content reports.
+ */
+export async function logSelectContent(
+  analyticsFactory: AnalyticsFactory,
+  params: SelectContentParams,
+) {
+  try {
+    await analyticsFactory().logSelectContent(params as any);
+  } catch (error) {
+    console.log("Analytics logSelectContent failed:", error);
+  }
+}
+
+/**
+ * @summary Logs a screen view used for engagement metrics.
+ */
+export async function logScreenView(
+  analyticsFactory: AnalyticsFactory,
+  params: ScreenViewParams,
+) {
+  try {
+    await analyticsFactory().logScreenView(params);
+  } catch (error) {
+    console.log("Analytics logScreenView failed:", error);
+  }
+}
+
+/**
+ * @summary Associates analytics events with the signed-in user.
+ */
+export async function setUserId(
+  analyticsFactory: AnalyticsFactory,
+  userId: string | null,
+) {
+  try {
+    await analyticsFactory().setUserId(userId);
+  } catch (error) {
+    console.log("Analytics setUserId failed:", error);
+  }
+}
+
+/**
+ * @summary Sets custom analytics user properties for segmentation.
+ */
+export async function setUserProperties(
+  analyticsFactory: AnalyticsFactory,
+  properties: Record<string, string>,
+) {
+  try {
+    await analyticsFactory().setUserProperties(properties);
+  } catch (error) {
+    console.log("Analytics setUserProperties failed:", error);
+  }
+}
+
+/**
+ * @summary Logs free-text search intent.
+ */
+export async function logSearch(
+  analyticsFactory: AnalyticsFactory,
+  params: SearchParams,
+) {
+  try {
+    await analyticsFactory().logSearch(params);
+  } catch (error) {
+    console.log("Analytics logSearch failed:", error);
+  }
+}
+
+/**
+ * @summary Converts a route pathname to stable analytics screen identifiers.
+ */
+export function buildScreenTrackingNames(pathname: string): ScreenViewParams {
+  const cleanPath = pathname.replace(/^\//, "") || "root";
+  const segments = cleanPath
+    .split("/")
+    .filter(Boolean)
+    .map((segment) => segment.replace(/[()]/g, ""))
+    .filter((segment) => segment.length > 0);
+  const rawName = segments.length > 0 ? segments.join("_") : "root";
+  const screen_name = rawName
+    .split(/[-_]/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+  return {
+    screen_name,
+    screen_class: `${screen_name}Screen`,
+  };
 }
