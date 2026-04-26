@@ -1,7 +1,6 @@
 import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
-import analytics from "@react-native-firebase/analytics";
 
 
 import { auth, db, doc, logoutUser, getDoc } from "@/services/authService"; 
@@ -135,7 +134,7 @@ export default function ProfileRoute() {
       onBack={() => router.back()}
       // Uses router.push to allow sub-screens like 'payment' to stack on top.
       onNavigate={(path: string) => {
-        void logSelectContent(analytics, {
+        void logSelectContent(null, {
           content_type: "profile",
           item_id: path,
         });

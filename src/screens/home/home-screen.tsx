@@ -14,9 +14,8 @@ import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuthUser, useAppLocation } from "@/context/GlobalContext";
-import { calculateHaversineDistance, logSelectContent } from "@/components/utils";
+import {calculateHaversineDistance, logCustomEvent} from "@/components/utils";
 import { EventDoc } from "@/types/type.ts";
-import analytics from '@react-native-firebase/analytics';
 
 export type RecommendedEvent = EventDoc & {
   finalScore: number;
@@ -129,7 +128,7 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   }, [events, userCoords, userDoc?.selectedTags]);
 
   const handlePressRsvp = async (item: EventDoc) => {
-      await logSelectContent(analytics, {
+      await logCustomEvent(null, 'event_rsvp', {
           content_type: "event",
           item_id: item.id,
           action: "rsvp_click",
@@ -142,7 +141,7 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
   }
 
   const handlePressCard = async (item: EventDoc) => {
-      await logSelectContent(analytics, {
+      await logCustomEvent(null, 'event_card_press', {
           content_type: "event",
           item_id: item.id,
           event_category: item.category,

@@ -1,3 +1,4 @@
+import { logCustomEvent } from "@/components/utils";
 import EventDetailUI from "@/screens/event/event-details-UI"; // Default import will clean up other screens later.
 import { auth, db } from "@/services/authService";
 import {
@@ -10,8 +11,6 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
-import analytics from "@react-native-firebase/analytics";
-import { logSelectContent } from "@/components/utils";
 
 /**
  * @summary Loads event details and bookmark state, then binds detail actions for the event UI.
@@ -98,7 +97,7 @@ export default function EventDetailScreen() {
       if (wasBookmarked) await deleteDoc(bookmarkRef);
       else {
         await setDoc(bookmarkRef, { eventId, savedAt: serverTimestamp() });
-        void logSelectContent(analytics, {
+        void logCustomEvent(null, 'event_bookmark', {
           content_type: "event",
           item_id: eventId,
           action: "bookmark",
@@ -147,7 +146,7 @@ export default function EventDetailScreen() {
       pathname: "/event/booking",
       params: { eventId: event.id },
     } as any);
-    void logSelectContent(analytics, {
+    void logCustomEvent(null, 'event_book_click', {
       content_type: "event",
       item_id: event.id,
       action: "book_click",

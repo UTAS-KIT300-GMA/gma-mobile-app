@@ -5,7 +5,7 @@
  * and Onboarding completion to ensure users are always in the correct app section.
  */
 
-import { auth, applyActionCode } from "@/services/authService";
+import { applyActionCode, auth } from "@/services/authService";
 import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
 import React, { useEffect, useState, useMemo } from "react";
@@ -13,7 +13,6 @@ import { ActivityIndicator, View, Alert } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { GlobalProvider } from "@/context/GlobalContext";
-import analytics from "@react-native-firebase/analytics";
 import { buildScreenTrackingNames, logScreenView } from "@/components/utils";
 
 /**
@@ -156,7 +155,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (!pathname) return;
     const { screen_name, screen_class } = buildScreenTrackingNames(pathname);
-    void logScreenView(analytics, {
+    void logScreenView(null, {
       screen_name,
       screen_class,
     });

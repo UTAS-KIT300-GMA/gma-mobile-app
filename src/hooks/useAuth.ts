@@ -8,7 +8,6 @@ import { onIdTokenChanged, FirebaseAuthTypes } from "@react-native-firebase/auth
 import { useEffect, useState, useMemo } from "react";
 import { auth, doc, db } from "@/services/authService";
 import { onSnapshot } from "@react-native-firebase/firestore";
-import analytics from "@react-native-firebase/analytics";
 import {
   setUserId,
   setUserProperties,
@@ -50,7 +49,7 @@ export function useAuth() {
       // CHECK 1: No user found 
       if (!currentUser) {
         if (!isMounted) return;
-        void setUserId(analytics, null);
+        void setUserId(null, null);
         setUser(null);
         setIsProfileValidated(false);
         setInitializing(false);
@@ -69,7 +68,7 @@ export function useAuth() {
       // CHECK 3: User is Logged In AND Verified
       // Set the user first, but keep initializing = true until Firestore responds.
       if (isMounted) setUser(currentUser);
-      void setUserId(analytics, currentUser.uid);
+      void setUserId(null, currentUser.uid);
 
       const userRef = doc(db, "users", currentUser.uid);
 
@@ -94,7 +93,7 @@ export function useAuth() {
           typeof data?.role === "string" && data.role.trim().length > 0
             ? data.role.trim().toLowerCase()
             : "user";
-        void setUserProperties(analytics, {
+        void setUserProperties(null, {
           user_type: userType,
           preferred_category: firstCategory,
           has_active_tickets: "false", // Later on, could send a Cloud Message (Push Notification) to join an upcoming event.

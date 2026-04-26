@@ -1,8 +1,6 @@
 import {EVENT_CATEGORIES, EventDoc} from "@/types/type.ts";
-import * as ExpoLinking from "expo-linking";
 import * as Location from "expo-location";
-import analytics from "@react-native-firebase/analytics";
-import { Platform, Linking as RNLinking } from "react-native";
+import { getApp } from '@react-native-firebase/app';
 
 /**
  * @summary Formats a Firebase Timestamp or date string into a human-readable date and time string.
@@ -213,12 +211,22 @@ export async function fetchLocationCoordinatesWithOptions(
   }
 }
 
-type AnalyticsFactory = typeof analytics;
+type AnalyticsFactory = any; // Keep for backward compatibility
 
 type SelectContentParams = {
   content_type: string;
   item_id?: string;
-  [key: string]: string | number | boolean | undefined;
+  // Remove invalid parameters that cause validation errors
+  // event_category and action are not valid for select_content event
+};
+
+// Custom event parameters for bookmark and category actions
+type CustomEventParams = {
+  content_type: string;
+  item_id?: string;
+  action?: string;
+  event_category?: string;
+  event_type?: string;
 };
 
 type ScreenViewParams = {
@@ -238,9 +246,39 @@ export async function logSelectContent(
   params: SelectContentParams,
 ) {
   try {
-    await analyticsFactory().logSelectContent(params as any);
+    // Use the new modular SDK pattern
+    const { getAnalytics, logEvent } = await import('@react-native-firebase/analytics');
+    const analyticsInstance = getAnalytics(getApp());
+    await logEvent(analyticsInstance, 'select_content', {
+      content_type: params.content_type,
+      item_id: params.item_id,
+    });
   } catch (error) {
     console.log("Analytics logSelectContent failed:", error);
+  }
+}
+
+/**
+ * @summary Logs custom events with additional parameters like action and category.
+ */
+export async function logCustomEvent(
+  analyticsFactory: AnalyticsFactory,
+  eventName: string,
+  params: CustomEventParams,
+) {
+  try {
+    // Use the new modular SDK pattern
+    const { getAnalytics, logEvent } = await import('@react-native-firebase/analytics');
+    const analyticsInstance = getAnalytics(getApp());
+    await logEvent(analyticsInstance, eventName, {
+      content_type: params.content_type,
+      item_id: params.item_id,
+      action: params.action,
+      event_category: params.event_category,
+      event_type: params.event_type,
+    });
+  } catch (error) {
+    console.log(`Analytics logCustomEvent (${eventName}) failed:`, error);
   }
 }
 
@@ -252,7 +290,13 @@ export async function logScreenView(
   params: ScreenViewParams,
 ) {
   try {
-    await analyticsFactory().logScreenView(params);
+    // Use the new modular SDK pattern
+    const { getAnalytics, logEvent } = await import('@react-native-firebase/analytics');
+    const analyticsInstance = getAnalytics(getApp());
+    await logEvent(analyticsInstance, 'screen_view', {
+      screen_name: params.screen_name,
+      screen_class: params.screen_class,
+    });
   } catch (error) {
     console.log("Analytics logScreenView failed:", error);
   }
@@ -266,7 +310,10 @@ export async function setUserId(
   userId: string | null,
 ) {
   try {
-    await analyticsFactory().setUserId(userId);
+    // Use the new modular SDK pattern
+    const { getAnalytics, setUserId } = await import('@react-native-firebase/analytics');
+    const analyticsInstance = getAnalytics(getApp());
+    await setUserId(analyticsInstance, userId);
   } catch (error) {
     console.log("Analytics setUserId failed:", error);
   }
@@ -280,7 +327,10 @@ export async function setUserProperties(
   properties: Record<string, string>,
 ) {
   try {
-    await analyticsFactory().setUserProperties(properties);
+    // Use the new modular SDK pattern
+    const { getAnalytics, setUserProperties } = await import('@react-native-firebase/analytics');
+    const analyticsInstance = getAnalytics(getApp());
+    await setUserProperties(analyticsInstance, properties);
   } catch (error) {
     console.log("Analytics setUserProperties failed:", error);
   }
@@ -294,7 +344,12 @@ export async function logSearch(
   params: SearchParams,
 ) {
   try {
-    await analyticsFactory().logSearch(params);
+    // Use the new modular SDK pattern
+    const { getAnalytics, logEvent } = await import('@react-native-firebase/analytics');
+    const analyticsInstance = getAnalytics(getApp());
+    await logEvent(analyticsInstance, 'search', {
+      search_term: params.search_term,
+    });
   } catch (error) {
     console.log("Analytics logSearch failed:", error);
   }
