@@ -15,6 +15,9 @@ export type UserDoc = {
     | FirebaseFirestoreTypes.FieldValue
     | FirebaseFirestoreTypes.Timestamp
     | null;
+  /** FCM device tokens (web + Android); same shape as the partner portal. */
+  fcmTokens?: string[];
+  fcmTokenUpdatedAt?: FirebaseFirestoreTypes.Timestamp;
   // Optional fields used by social providers
   photoURL?: string;
   authProvider?: "google" | "facebook" | "password" | string;

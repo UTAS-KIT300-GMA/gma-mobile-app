@@ -22,7 +22,11 @@
         "ACCESS_FINE_LOCATION",
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_LOCATION",
+<<<<<<< HEAD
         "com.android.vending.BILLING"
+=======
+        "POST_NOTIFICATIONS"
+>>>>>>> 242040f (feat: integrate Firebase Cloud Messaging for push notifications.)
       ],
       "googleServicesFile": "./google-services.json",
       "intentFilters": [
