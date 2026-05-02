@@ -4,6 +4,7 @@
  */
 import messaging from "@react-native-firebase/messaging";
 import {
+  arrayRemove,
   arrayUnion,
   doc,
   getDoc,
@@ -53,4 +54,28 @@ export async function registerUserFcmToken(userId: string): Promise<void> {
     fcmTokens: arrayUnion(token),
     fcmTokenUpdatedAt: serverTimestamp(),
   });
+}
+
+/**
+ * Removes the current device token from FCM and from `users/{userId}.fcmTokens`.
+ */
+export async function unregisterUserFcmToken(userId: string): Promise<void> {
+  if (Platform.OS !== "android") return;
+
+  try {
+    const token = await messaging().getToken();
+    await messaging().deleteToken();
+    if (!token) return;
+
+    const userRef = doc(db, "users", userId);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) return;
+
+    await updateDoc(userRef, {
+      fcmTokens: arrayRemove(token),
+      fcmTokenUpdatedAt: serverTimestamp(),
+    });
+  } catch (e) {
+    console.warn("[FCM] unregisterUserFcmToken failed:", e);
+  }
 }
