@@ -70,7 +70,7 @@
     "babel-plugin-module-resolver": "^5.0.3",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "firebase-admin": "^10.3.0",
+    "firebase-admin": "^13.8.0",
     "typescript": "^5.9.3"
   },
   "private": true,
@@ -78,6 +78,9 @@
     "protobufjs": "^7.2.4",
     "jsonwebtoken": "^9.0.2",
     "@grpc/grpc-js": "^1.10.1",
-    "@google-cloud/firestore": "^6.1.0"
+    "@google-cloud/firestore": "^6.1.0",
+    "postcss": "^8.5.10",
+    "http-proxy-agent": "^7.0.2",
+    "uuid": "^14.0.0"
   }
 }
