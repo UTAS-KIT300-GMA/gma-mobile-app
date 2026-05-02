@@ -1,9 +1,15 @@
 import { AppHeader } from "@/components/AppHeader";
 import { useAppLocation } from "@/context/GlobalContext";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserNotificationSettings } from "@/hooks/useUserNotificationSettings";
+import { db, doc } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
+import type { NotificationSettings } from "@/types/notificationSettings";
+import { updateDoc } from "@react-native-firebase/firestore";
 import { useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Linking,
   Pressable,
@@ -15,35 +21,25 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-type NotificationSettings = {
-  emailNotification: boolean;
-  pushNotification: boolean;
-  smsNotification: boolean;
-  specialOffers: boolean;
-  productUpdate: boolean;
-  paymentReminder: boolean;
-};
-
 type ToggleRowProps = {
   label: string;
   value: boolean;
   onValueChange: (value: boolean) => void;
+  disabled?: boolean;
 };
 
-/**
- * @summary Renders one settings row with label and switch control.
- * @param label - Row label text.
- * @param value - Current switch value.
- * @param onValueChange - Callback when switch value changes.
- * @throws {never} Pure render helper does not throw.
- * @Returns {React.JSX.Element} Toggle row element.
- */
-function ToggleRow({ label, value, onValueChange }: ToggleRowProps) {
+function ToggleRow({
+  label,
+  value,
+  onValueChange,
+  disabled,
+}: ToggleRowProps) {
   return (
     <View style={styles.rowCard}>
       <Text style={styles.rowLabel}>{label}</Text>
       <Switch
         value={value}
+        disabled={disabled}
         onValueChange={onValueChange}
         trackColor={{ false: "#D9D9D9", true: colors.primary }}
         thumbColor="#ffffff"
@@ -53,208 +49,168 @@ function ToggleRow({ label, value, onValueChange }: ToggleRowProps) {
   );
 }
 
-const defaultSettings: NotificationSettings = {
-  emailNotification: true,
-  pushNotification: true,
-  smsNotification: false,
-  specialOffers: true,
-  productUpdate: false,
-  paymentReminder: true,
-};
 /**
  * @summary Renders location-permission status and quick link to system settings.
- * @throws {never} Side effects are limited to refresh and system intent.
- * @Returns {React.JSX.Element} Location settings card.
  */
 export function LocationSettingsScreen() {
-  // Pull directly from your Global Context
   const { isLocationOn, locationError, refreshLocation } = useAppLocation();
 
-  /** * useFocusEffect ensures that every time the user
-   * navigates back to this screen, we check the state.
-   */
   useFocusEffect(
-      useCallback(() => {
-        refreshLocation();
-      }, [refreshLocation])
+    useCallback(() => {
+      refreshLocation();
+    }, [refreshLocation]),
   );
 
-  /**
-   * @summary Opens system location settings so users can enable/disable location access.
-   * @throws {never} Platform intent call does not throw synchronously.
-   * @Returns {void} Triggers settings intent.
-   */
   const handleLocationToggle = () => {
     Linking.sendIntent("android.settings.LOCATION_SOURCE_SETTINGS");
   };
 
   return (
-      <SafeAreaView style={Lstyles.safe}>
-        
-          <View style={Lstyles.section}>
-            <Text style={Lstyles.sectionTitle}>Privacy & Permissions</Text>
+    <View>
+      <View style={Lstyles.section}>
+        <Text style={Lstyles.sectionTitle}>Privacy & Permissions</Text>
 
-            <View style={Lstyles.rowCard}>
-              <View style={Lstyles.labelContainer}>
-                <Text style={Lstyles.rowLabel}>Share My Location</Text>
-                <Text style={Lstyles.subLabel}>
-                  {isLocationOn
-                      ? "Your location is available for distance sorting."
-                      : locationError || "Location sharing is disabled in system settings."}
-                </Text>
-              </View>
-
-              <Switch
-                  value={isLocationOn}
-                  onValueChange={handleLocationToggle}
-                  trackColor={{ false: "#D9D9D9", true: colors.primary }}
-                  thumbColor="#ffffff"
-              />
-            </View>
-          </View>
-
-          <View style={Lstyles.infoBox}>
-            <Text style={Lstyles.infoText}>
-              To protect your privacy, manage location permissions directly in system settings.
+        <View style={Lstyles.rowCard}>
+          <View style={Lstyles.labelContainer}>
+            <Text style={Lstyles.rowLabel}>Share My Location</Text>
+            <Text style={Lstyles.subLabel}>
+              {isLocationOn
+                ? "Your location is available for distance sorting."
+                : locationError ||
+                  "Location sharing is disabled in system settings."}
             </Text>
           </View>
-        
-      </SafeAreaView>
+
+          <Switch
+            value={isLocationOn}
+            onValueChange={handleLocationToggle}
+            trackColor={{ false: "#D9D9D9", true: colors.primary }}
+            thumbColor="#ffffff"
+          />
+        </View>
+      </View>
+
+      <View style={Lstyles.infoBox}>
+        <Text style={Lstyles.infoText}>
+          To protect your privacy, manage location permissions directly in system
+          settings.
+        </Text>
+      </View>
+    </View>
   );
 }
+
 /**
- * @summary Renders notification preference toggles with save/reset controls.
- * @throws {never} UI operations use local state and alerts only.
- * @Returns {React.JSX.Element} Notification settings screen.
+ * @summary Notification preferences stored on `users/{uid}.notificationSettings`.
  */
 export default function NotificationSettingsScreen() {
-  // Stores current editable settings and last-saved settings snapshots.
-  const [settings, setSettings] =
-    useState<NotificationSettings>(defaultSettings);
+  const { user } = useAuth();
+  const uid = user?.uid;
+  const { settings, loading } = useUserNotificationSettings();
+  const [savingKey, setSavingKey] = useState<string | null>(null);
 
-  const [savedSettings, setSavedSettings] =
-    useState<NotificationSettings>(defaultSettings);
-
-  const hasChanges = useMemo(() => {
-    return JSON.stringify(settings) !== JSON.stringify(savedSettings);
-  }, [settings, savedSettings]);
-
-  /**
-   * @summary Updates one notification setting field.
-   * @param key - Settings key to update.
-   * @param value - New boolean value.
-   * @throws {never} Pure state update does not throw.
-   * @Returns {void} Updates settings state.
-   */
-  const handleToggle = (key: keyof NotificationSettings, value: boolean) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+  const persist = async (
+    key: keyof NotificationSettings,
+    value: boolean,
+  ) => {
+    if (!uid) {
+      Alert.alert("Sign in required", "Sign in to change notification settings.");
+      return;
+    }
+    const next: NotificationSettings = { ...settings, [key]: value };
+    setSavingKey(key);
+    try {
+      await updateDoc(doc(db, "users", uid), {
+        notificationSettings: next,
+      });
+    } catch (e) {
+      console.warn("[notificationSettings] save failed:", e);
+      Alert.alert("Error", "Could not save your preference. Try again.");
+    } finally {
+      setSavingKey(null);
+    }
   };
 
-  /**
-   * @summary Saves current settings as the new baseline snapshot.
-   * @throws {never} Uses local state and alert feedback only.
-   * @Returns {void} Persists settings in component state.
-   */
-  const handleSave = () => {
-    setSavedSettings(settings);
-    Alert.alert("Success", "Notification settings saved.");
-  };
-
-  /**
-   * @summary Resets unsaved changes back to last saved settings.
-   * @throws {never} Pure state restore does not throw.
-   * @Returns {void} Restores settings snapshot.
-   */
-  const handleReset = () => {
-    setSettings(savedSettings);
-  };
-
-  
+  const busy = loading || savingKey !== null;
 
   return (
     <SafeAreaView style={styles.safe}>
       <AppHeader title="Settings" showBack />
-      
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <LocationSettingsScreen
-        />
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>General Notifications</Text>
 
-          <ToggleRow
-            label="Email Notification"
-            value={settings.emailNotification}
-            onValueChange={(value) => handleToggle("emailNotification", value)}
-          />
-
-          <ToggleRow
-            label="Push Notification"
-            value={settings.pushNotification}
-            onValueChange={(value) => handleToggle("pushNotification", value)}
-          />
-
-          <ToggleRow
-            label="SMS Notification"
-            value={settings.smsNotification}
-            onValueChange={(value) => handleToggle("smsNotification", value)}
-          />
+      {!uid ? (
+        <View style={styles.centered}>
+          <Text style={styles.hint}>
+            Sign in to manage notification preferences.
+          </Text>
         </View>
+      ) : (
+        <ScrollView
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {loading ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color={colors.primary} />
+              <Text style={styles.loadingText}>Loading preferences…</Text>
+            </View>
+          ) : null}
 
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Promotional Notifications</Text>
+          <LocationSettingsScreen />
 
-          <ToggleRow
-            label="Special Offers Notification"
-            value={settings.specialOffers}
-            onValueChange={(value) => handleToggle("specialOffers", value)}
-          />
-
-          <ToggleRow
-            label="Product Update"
-            value={settings.productUpdate}
-            onValueChange={(value) => handleToggle("productUpdate", value)}
-          />
-
-          <ToggleRow
-            label="Payment Reminder"
-            value={settings.paymentReminder}
-            onValueChange={(value) => handleToggle("paymentReminder", value)}
-          />
-        </View>
-
-        <View style={styles.actionContainer}>
-          <Pressable
-            style={[
-              styles.saveButton,
-              !hasChanges && styles.saveButtonDisabled,
-            ]}
-            onPress={hasChanges ? handleSave : undefined}
-          >
-            <Text
-              style={[
-                styles.saveButtonText,
-                !hasChanges && styles.saveButtonTextDisabled,
-              ]}
-            >
-              Save Changes
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>General Notifications</Text>
+            <Text style={styles.syncHint}>
+              Changes save to your account automatically.
             </Text>
-          </Pressable>
 
-          <Pressable onPress={hasChanges ? handleReset : undefined}>
-            <Text
-              style={[styles.resetText, !hasChanges && styles.actionDisabled]}
-            >
-              Reset
-            </Text>
-          </Pressable>
-        </View>
-      </ScrollView>
+            <ToggleRow
+              label="Email Notification"
+              value={settings.emailNotification}
+              disabled={busy}
+              onValueChange={(v) => void persist("emailNotification", v)}
+            />
+
+            <ToggleRow
+              label="Push Notification"
+              value={settings.pushNotification}
+              disabled={busy}
+              onValueChange={(v) => void persist("pushNotification", v)}
+            />
+
+            <ToggleRow
+              label="SMS Notification"
+              value={settings.smsNotification}
+              disabled={busy}
+              onValueChange={(v) => void persist("smsNotification", v)}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Promotional Notifications</Text>
+
+            <ToggleRow
+              label="Special Offers Notification"
+              value={settings.specialOffers}
+              disabled={busy}
+              onValueChange={(v) => void persist("specialOffers", v)}
+            />
+
+            <ToggleRow
+              label="Product Update"
+              value={settings.productUpdate}
+              disabled={busy}
+              onValueChange={(v) => void persist("productUpdate", v)}
+            />
+
+            <ToggleRow
+              label="Payment Reminder"
+              value={settings.paymentReminder}
+              disabled={busy}
+              onValueChange={(v) => void persist("paymentReminder", v)}
+            />
+          </View>
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }
@@ -270,6 +226,26 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     gap: 28,
   },
+  centered: {
+    flex: 1,
+    padding: 24,
+    justifyContent: "center",
+  },
+  hint: {
+    fontSize: 15,
+    color: colors.darkGrey,
+    textAlign: "center",
+  },
+  loadingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 8,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: colors.darkGrey,
+  },
   section: {
     gap: 12,
   },
@@ -277,6 +253,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: colors.textOnSecondary,
+    marginBottom: 4,
+  },
+  syncHint: {
+    fontSize: 13,
+    color: "#666",
     marginBottom: 4,
   },
   rowCard: {
@@ -299,45 +280,16 @@ const styles = StyleSheet.create({
     color: colors.textOnSecondary,
     paddingRight: 16,
   },
-  actionContainer: {
-    marginTop: 8,
-    alignItems: "center",
-    gap: 14,
-  },
-  saveButton: {
-  width: "100%",
-  backgroundColor: colors.saveBtnColor,
-  borderRadius: 14,
-  paddingVertical: 14,
-  alignItems: "center",
-  justifyContent: "center",
-},
-  saveButtonDisabled: {
-    backgroundColor: "#D9D9D9",
-  },
-  saveButtonText: {
-  color: colors.saveBtnTextColor,
-  fontSize: 16,
-  fontWeight: "700",
-},
-  saveButtonTextDisabled: {
-    color: "#F5F5F5",
-  },
-  resetText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: colors.primary,
-  },
-  actionDisabled: {
-    opacity: 0.4,
-  },
 });
 
 const Lstyles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: "#ffffff" },
-  content: { paddingHorizontal: 20, paddingTop: 24, gap: 28 },
   section: { gap: 12 },
-  sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.textOnSecondary },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: colors.textOnSecondary,
+  },
   rowCard: {
     minHeight: 80,
     backgroundColor: "#FFFFFF",
@@ -360,7 +312,12 @@ const Lstyles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: "#E9ECEF"
+    borderColor: "#E9ECEF",
   },
-  infoText: { fontSize: 14, color: "#666", lineHeight: 20, textAlign: "center" }
+  infoText: {
+    fontSize: 14,
+    color: "#666",
+    lineHeight: 20,
+    textAlign: "center",
+  },
 });

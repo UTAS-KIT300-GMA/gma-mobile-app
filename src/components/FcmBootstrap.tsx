@@ -1,16 +1,20 @@
 /**
  * Registers Android FCM after auth + profile gate, handles opens and foreground alerts.
  */
-import { registerUserFcmToken } from "@/services/fcmService";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserNotificationSettings } from "@/hooks/useUserNotificationSettings";
+import {
+  registerUserFcmToken,
+  unregisterUserFcmToken,
+} from "@/services/fcmService";
 import {
   parseNotificationKind,
   type NotificationKind,
 } from "@/types/notificationKinds";
 import messaging from "@react-native-firebase/messaging";
 import { router } from "expo-router";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Alert, Platform } from "react-native";
-import { useAuth } from "@/hooks/useAuth";
 
 function alertText(value: unknown, fallback: string): string {
   if (typeof value === "string") return value;
@@ -23,12 +27,14 @@ const KINDS_NAVIGATE_TO_EVENT: ReadonlySet<NotificationKind> = new Set([
   "event_cancelled",
   "event_date_changed",
   "event_approval_result",
+  "event_recommended",
 ]);
 
 /** Foreground Alert gets Dismiss + View event (same UX as cancel). */
 const KINDS_ALERT_WITH_VIEW_EVENT: ReadonlySet<NotificationKind> = new Set([
   "event_cancelled",
   "event_date_changed",
+  "event_recommended",
 ]);
 
 function navigateFromPushData(data: Record<string, string> | undefined) {
@@ -50,6 +56,16 @@ function navigateFromPushData(data: Record<string, string> | undefined) {
  */
 export function FcmBootstrap() {
   const { user, isProfileValidated } = useAuth();
+  const { settings: notifSettings, loading: notifLoading } =
+    useUserNotificationSettings();
+
+  const prefsRef = useRef(notifSettings);
+  prefsRef.current = notifSettings;
+
+  const pushOn =
+    !notifLoading && notifSettings.pushNotification === true;
+  const pushOnRef = useRef(pushOn);
+  pushOnRef.current = pushOn;
 
   useEffect(() => {
     if (Platform.OS !== "android") return;
@@ -58,19 +74,24 @@ export function FcmBootstrap() {
     const ready =
       !!uid && user.emailVerified && isProfileValidated === true;
 
-    if (!ready) {
+    if (!ready || notifLoading) {
       return;
     }
 
     void (async () => {
       try {
-        await registerUserFcmToken(uid);
+        if (pushOn) {
+          await registerUserFcmToken(uid);
+        } else {
+          await unregisterUserFcmToken(uid);
+        }
       } catch (e) {
-        console.warn("[FCM] registerUserFcmToken failed:", e);
+        console.warn("[FCM] register/unregister failed:", e);
       }
     })();
 
     const unsubRefresh = messaging().onTokenRefresh(async () => {
+      if (!uid || !pushOnRef.current) return;
       try {
         await registerUserFcmToken(uid);
       } catch (e) {
@@ -81,7 +102,13 @@ export function FcmBootstrap() {
     return () => {
       unsubRefresh();
     };
-  }, [user?.uid, user?.emailVerified, isProfileValidated]);
+  }, [
+    user?.uid,
+    user?.emailVerified,
+    isProfileValidated,
+    notifLoading,
+    pushOn,
+  ]);
 
   useEffect(() => {
     if (Platform.OS !== "android") return;
@@ -113,6 +140,8 @@ export function FcmBootstrap() {
     if (Platform.OS !== "android") return;
 
     const unsub = messaging().onMessage(async (remoteMessage) => {
+      if (!prefsRef.current.pushNotification) return;
+
       const title = alertText(
         remoteMessage.notification?.title ?? remoteMessage.data?.title,
         "Notification",
@@ -124,6 +153,14 @@ export function FcmBootstrap() {
 
       const data = remoteMessage.data as Record<string, string> | undefined;
       const kind = data ? parseNotificationKind(data.kind) : null;
+
+      if (
+        kind === "event_recommended" &&
+        !prefsRef.current.specialOffers
+      ) {
+        return;
+      }
+
       const eventId = data?.eventId;
 
       const open = () => navigateFromPushData(data);

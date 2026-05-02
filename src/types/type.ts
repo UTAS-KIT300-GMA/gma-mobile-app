@@ -1,4 +1,5 @@
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import type { NotificationSettings } from "./notificationSettings";
 
 export type Category = "all" | "connect" | "grow" | "thrive";
 
@@ -18,6 +19,8 @@ export type UserDoc = {
   /** FCM device tokens (web + Android); same shape as the partner portal. */
   fcmTokens?: string[];
   fcmTokenUpdatedAt?: FirebaseFirestoreTypes.Timestamp;
+  /** Member app notification toggles. */
+  notificationSettings?: NotificationSettings;
   // Optional fields used by social providers
   photoURL?: string;
   authProvider?: "google" | "facebook" | "password" | string;

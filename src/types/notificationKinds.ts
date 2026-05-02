@@ -8,7 +8,8 @@ export type NotificationKind =
   | "event_submitted_for_review"
   | "event_approval_result"
   | "event_cancelled"
-  | "event_date_changed";
+  | "event_date_changed"
+  | "event_recommended";
 
 const ALLOWED: readonly NotificationKind[] = [
   "partner_approval_result",
@@ -16,6 +17,7 @@ const ALLOWED: readonly NotificationKind[] = [
   "event_approval_result",
   "event_cancelled",
   "event_date_changed",
+  "event_recommended",
 ] as const;
 
 /**
