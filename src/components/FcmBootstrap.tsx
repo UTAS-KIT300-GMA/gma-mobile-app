@@ -2,7 +2,10 @@
  * Registers Android FCM after auth + profile gate, handles opens and foreground alerts.
  */
 import { registerUserFcmToken } from "@/services/fcmService";
-import { parseNotificationKind } from "@/types/notificationKinds";
+import {
+  parseNotificationKind,
+  type NotificationKind,
+} from "@/types/notificationKinds";
 import messaging from "@react-native-firebase/messaging";
 import { router } from "expo-router";
 import { useEffect } from "react";
@@ -15,20 +18,25 @@ function alertText(value: unknown, fallback: string): string {
   return String(value);
 }
 
+/** FCM `data.kind` values that deep-link to event details when `eventId` is set. */
+const KINDS_NAVIGATE_TO_EVENT: ReadonlySet<NotificationKind> = new Set([
+  "event_cancelled",
+  "event_date_changed",
+  "event_approval_result",
+]);
+
+/** Foreground Alert gets Dismiss + View event (same UX as cancel). */
+const KINDS_ALERT_WITH_VIEW_EVENT: ReadonlySet<NotificationKind> = new Set([
+  "event_cancelled",
+  "event_date_changed",
+]);
+
 function navigateFromPushData(data: Record<string, string> | undefined) {
   if (!data) return;
   const kind = parseNotificationKind(data.kind);
   const eventId = typeof data.eventId === "string" ? data.eventId : undefined;
 
-  if (kind === "event_cancelled" && eventId) {
-    router.push({
-      pathname: "/event/event-details",
-      params: { id: eventId },
-    } as any);
-    return;
-  }
-
-  if (kind === "event_approval_result" && eventId) {
+  if (kind && eventId && KINDS_NAVIGATE_TO_EVENT.has(kind)) {
     router.push({
       pathname: "/event/event-details",
       params: { id: eventId },
@@ -120,7 +128,11 @@ export function FcmBootstrap() {
 
       const open = () => navigateFromPushData(data);
 
-      if (kind === "event_cancelled" && eventId) {
+      if (
+        kind &&
+        eventId &&
+        KINDS_ALERT_WITH_VIEW_EVENT.has(kind)
+      ) {
         Alert.alert(title, body, [
           { text: "Dismiss", style: "cancel" },
           { text: "View event", onPress: open },
