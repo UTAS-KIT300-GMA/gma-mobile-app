@@ -14,6 +14,7 @@ export default ({ config }) => {
         },
       ],
       "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
       "expo-build-properties",
       "expo-video", // ✅ ADD THIS LINE
     ],

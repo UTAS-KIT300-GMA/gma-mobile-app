@@ -13,6 +13,7 @@ import { ActivityIndicator, View, Alert } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { GlobalProvider } from "@/context/GlobalContext";
+import { FcmBootstrap } from "@/components/FcmBootstrap";
 import { buildScreenTrackingNames, logScreenView } from "@/components/utils";
 
 /**
@@ -209,6 +210,7 @@ export default function RootLayout() {
   // Once loading is complete and routing is confirmed, render the actual navigation stack.
   return (
       <GlobalProvider>
+        <FcmBootstrap />
         <Stack screenOptions={{ headerShown: false }} />
       </GlobalProvider>
   )
