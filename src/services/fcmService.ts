@@ -1,6 +1,6 @@
 /**
  * Android FCM registration using the same Firestore fields as the web portal:
- * `fcmTokens` (arrayUnion) and `fcmTokenUpdatedAt` (server time).
+ * fcmTokens  and fcmTokenUpdatedAt.
  */
 import messaging from "@react-native-firebase/messaging";
 import {
