@@ -1,5 +1,5 @@
 import { formatDateTime } from "@/components/utils";
-import { BookingScreenUI } from "@/screens/event/booking-UI";
+import { BookingScreenUI, DIETARY_PRESET_LABELS } from "@/screens/event/booking-UI";
 import { auth, db } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
 import { addDoc, collection, doc, getDoc, serverTimestamp } from "@react-native-firebase/firestore";
@@ -22,6 +22,27 @@ export default function BookingRoute() {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [tickets, setTickets] = useState(1);
+  const [dietaryTags, setDietaryTags] = useState<string[]>([]);
+  const [dietaryOtherSelected, setDietaryOtherSelected] = useState(false);
+  const [dietaryOtherNote, setDietaryOtherNote] = useState("");
+
+  const presetLabels = DIETARY_PRESET_LABELS as readonly string[];
+
+  const toggleDietaryTag = (label: string) => {
+    if (!presetLabels.includes(label)) return;
+    setDietaryTags((prev) =>
+      prev.includes(label) ? prev.filter((x) => x !== label) : [...prev, label],
+    );
+  };
+
+  const toggleDietaryOther = () => {
+    setDietaryOtherSelected((prev) => {
+      if (prev) {
+        setDietaryOtherNote("");
+      }
+      return !prev;
+    });
+  };
 
   useEffect(() => {
     async function loadEvent() {
@@ -101,6 +122,18 @@ export default function BookingRoute() {
     // Disables button actions during save.
     setProcessing(true);
     try {
+      const otherTrim = dietaryOtherNote.trim();
+      const summaryParts: string[] = [...dietaryTags];
+      if (dietaryOtherSelected) {
+        summaryParts.push(otherTrim ? `Other: ${otherTrim}` : "Other");
+      }
+      const dietarySummary = summaryParts.length ? summaryParts.join(", ") : "";
+
+      const dietaryFields: Record<string, unknown> = {};
+      if (dietaryTags.length) dietaryFields.dietaryTags = [...dietaryTags];
+      if (dietaryOtherSelected && otherTrim) dietaryFields.dietaryOtherNote = otherTrim;
+      if (dietarySummary) dietaryFields.dietaryRequirements = dietarySummary;
+
       // Defines the path to the user's private 'bookings' sub-collection.
       const userBookingsRef = collection(db, "users", user.uid, "bookings");
 
@@ -112,14 +145,14 @@ export default function BookingRoute() {
         totalPaid: totalPrice,
         status: "confirmed",
         createdAt: serverTimestamp(),
-        
+        ...(Object.keys(dietaryFields).length ? dietaryFields : {}),
         event: {
           title: event.title,
           image: event.image,
           dateTime: event.dateTime,
           address: event.address,
         },
-    });
+      });
 
       // Uses the router tool to replace the screen with the confirmation screen.
       // Passes the booking details as params to the next screen.
@@ -166,6 +199,12 @@ export default function BookingRoute() {
       onIncreaseTickets={() => setTickets((t) => t + 1)}
       onDecreaseTickets={() => setTickets((t) => (t > 1 ? t - 1 : 1))}
       onConfirm={handleConfirmBooking}
+      dietaryTags={dietaryTags}
+      onToggleDietaryTag={toggleDietaryTag}
+      dietaryOtherSelected={dietaryOtherSelected}
+      onToggleDietaryOther={toggleDietaryOther}
+      dietaryOtherNote={dietaryOtherNote}
+      onChangeDietaryOtherNote={setDietaryOtherNote}
     />
   );
 

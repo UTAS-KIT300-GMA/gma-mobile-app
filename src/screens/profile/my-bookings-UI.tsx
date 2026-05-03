@@ -13,6 +13,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+/**
+ * @summary Single line for booked-event footer from stored dietary fields.
+ */
+function dietaryDisplayText(item: Booking): string | undefined {
+  if (item.dietaryRequirements?.trim()) return item.dietaryRequirements.trim();
+  const tags = item.dietaryTags ?? [];
+  const other = item.dietaryOtherNote?.trim();
+  const parts = [...tags];
+  if (other) parts.push(`Other: ${other}`);
+  return parts.length ? parts.join(", ") : undefined;
+}
+
 interface BookedEventsUIProps {
   events: Booking[];
   loading: boolean;
@@ -43,7 +55,9 @@ export const BookedEventsUI = ({
    * @throws {never} Pure render helper does not throw.
    * @Returns {React.JSX.Element} Booking row element.
    */
-  const renderItem = ({ item }: { item: Booking }) => (
+  const renderItem = ({ item }: { item: Booking }) => {
+    const dietaryLine = dietaryDisplayText(item);
+    return (
     <View>
       <EventCard
         key={item.id}
@@ -83,11 +97,20 @@ export const BookedEventsUI = ({
                 {item.createdAt?.toDate?.()?.toLocaleDateString?.() || "N/A"}
               </Text>
             </View>
+            {dietaryLine ? (
+              <View style={styles.ticketInfoRow}>
+                <Text style={styles.infoLabel}>Dietary</Text>
+                <Text style={[styles.infoValue, styles.infoValuePlain]}>
+                  {dietaryLine}
+                </Text>
+              </View>
+            ) : null}
           </View>
         }
       />
     </View>
   );
+  };
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -147,6 +170,10 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     textTransform: "capitalize",
     marginLeft: 8,
+  },
+  infoValuePlain: {
+    textTransform: "none",
+    flex: 1,
   },
 
   listPadding: { padding: 16 },
