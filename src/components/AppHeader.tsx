@@ -78,13 +78,14 @@ export function AppHeader({
       limit(50),
     );
 
+    // Set up the Firestore listener and update unread count on snapshot changes
     const unsub = onSnapshot(
       q,
       (snap) => setUnreadCount(snap.size),
       () => setUnreadCount(0),
     );
     return () => unsub();
-  }, [showBack, userDoc]);
+  }, [userDoc, showBack]);
 
   /**
    * @summary Navigates to the profile screen or calls the provided onPressProfile override.
@@ -243,6 +244,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
 
+  // Separate style for notification button to allow for badge positioning
   notiButton: {
     width: 34,
     height: 34,
@@ -272,11 +274,14 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     lineHeight: 10,
   },
+
+  // Styles for profile avatar image and circle background
   avatarImage: {
     width: 28,
     height: 28,
     borderRadius: 14,
   },
+
   profileCircle: {
     width: 30,
     height: 30,
