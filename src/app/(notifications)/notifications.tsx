@@ -41,30 +41,43 @@ type NotificationItem = {
   data?: Record<string, string>;
 };
 
-/** Partner / admin portal kinds — member app inbox does not show these. */
-const MEMBER_APP_EXCLUDED_KINDS = new Set([
-  "partner_approval_result",
-  "event_submitted_for_review",
-  "event_approval_result",
-]);
-
 function isVisibleInMemberInbox(
   kind: string,
   specialOffersEnabled: boolean,
+  upcomingRemindersEnabled: boolean,
 ): boolean {
-  if (!kind) return true;
-  if (MEMBER_APP_EXCLUDED_KINDS.has(kind)) return false;
   if (kind === "event_recommended" && !specialOffersEnabled) return false;
+  if (
+    (kind === "event_reminder_2days" || kind === "event_reminder_1day") &&
+    !upcomingRemindersEnabled
+  )
+    return false;
   return true;
 }
 
+/**
+ * Maps Firestore notification document fields to display properties, including:
+ * - `type`: Categorised for display styling.
+ * - `time`: Formatted relative time string.
+ * - `data`: Safely parsed custom data object.
+ * Handles missing or malformed fields with defaults to ensure UI stability.
+ * @param id - Firestore document ID.
+ * @param data - Firestore document data.
+ * @returns Mapped notification item for UI rendering.
+ */
 function kindToDisplayType(kind: string | undefined): NotificationType {
   switch (kind) {
     case "event_recommended":
       return "recommendation";
+    case "event_booking_confirmed":
+    case "subscription_confirmed":
+    case "subscription_cancelled":
     case "event_cancelled":
       return "booking";
     case "event_date_changed":
+    case "event_details_changed":
+    case "event_reminder_2days":
+    case "event_reminder_1day":
       return "reminder";
     default:
       return "reminder";
@@ -252,11 +265,12 @@ export default function NotificationsScreen() {
       notifQuery,
       (snap) => {
         const specialOn = notifSettings.specialOffers === true;
+        const remindersOn = notifSettings.upcomingEventReminders === true;
         const rows: NotificationItem[] = snap.docs
           .map((d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
             const raw = d.data() as Record<string, unknown>;
             const kind = typeof raw.kind === "string" ? raw.kind : "";
-            if (!isVisibleInMemberInbox(kind, specialOn)) return null;
+            if (!isVisibleInMemberInbox(kind, specialOn, remindersOn)) return null;
             return mapDocToItem(d.id, raw);
           })
           .filter(
@@ -272,7 +286,7 @@ export default function NotificationsScreen() {
     );
 
     return () => unsubscribe();
-  }, [uid, notifSettings.specialOffers]);
+  }, [uid, notifSettings.specialOffers, notifSettings.upcomingEventReminders]);
 
   const unreadCount = notifications.filter((item) => !item.read).length;
 
