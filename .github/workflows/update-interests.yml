@@ -4,6 +4,9 @@ on:
 #    - cron: '0 0 * * 0' # Run every Sunday at 0H 0M
   workflow_dispatch: # Allows manual trigger
 
+permissions:
+  contents: read
+
 jobs:
   analyze-and-update:
     runs-on: ubuntu-latest
