@@ -1,7 +1,16 @@
-import { colors } from "@/theme/ThemeProvider";
 import { useUser } from "@/hooks/useUser";
+import { auth, db } from "@/services/authService";
+import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
+import {
+  collection,
+  limit,
+  onSnapshot,
+  query,
+  where,
+} from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { NotificationIcon, ProfileIcon } from "../../assets/icons";
 
@@ -40,6 +49,42 @@ export function AppHeader({
 }) {
   const router = useRouter();
   const { userDoc } = useUser();
+
+  // State to track the count of unread notifications for badge display
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  /**
+   * @summary Sets up a real-time listener for unread notifications when the header is mounted and whenever the user document changes.
+   * If `showBack` is true, it does not set up the listener and resets the unread count to 0, as the back header layout does not show notifications.
+   *
+   */
+  useEffect(() => {
+    if (showBack) {
+      setUnreadCount(0);
+      return;
+    }
+    // Check if user is logged in and has a uid before setting up Firestore listener
+    // Listens to the user's notifications collection for unread notifications and updates the badge count in real-time
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      setUnreadCount(0);
+      return;
+    }
+
+    // Query to listen for unread notifications for the current user, limited to 50 for performance
+    const q = query(
+      collection(db, "users", uid, "notifications"),
+      where("read", "==", false),
+      limit(50),
+    );
+
+    const unsub = onSnapshot(
+      q,
+      (snap) => setUnreadCount(snap.size),
+      () => setUnreadCount(0),
+    );
+    return () => unsub();
+  }, [showBack, userDoc]);
 
   /**
    * @summary Navigates to the profile screen or calls the provided onPressProfile override.
@@ -93,25 +138,25 @@ export function AppHeader({
   };
 
   // Back Header Layout for subscreens
- if (showBack) {
-  return (
-    <View style={styles.backContainer}>
-      <Pressable
-        onPress={handleBackPress}
-        style={styles.backButton}
-        hitSlop={10}
-      >
-        <Ionicons name="chevron-back" size={28} color={colors.primary} />
-      </Pressable>
+  if (showBack) {
+    return (
+      <View style={styles.backContainer}>
+        <Pressable
+          onPress={handleBackPress}
+          style={styles.backButton}
+          hitSlop={10}
+        >
+          <Ionicons name="chevron-back" size={28} color={colors.primary} />
+        </Pressable>
 
-      <View style={styles.titleWrapper} pointerEvents="none">
-        <Text style={styles.backTitle}>{title}</Text>
+        <View style={styles.titleWrapper} pointerEvents="none">
+          <Text style={styles.backTitle}>{title}</Text>
+        </View>
+
+        <View style={styles.backRightPlaceholder} />
       </View>
-
-      <View style={styles.backRightPlaceholder} />
-    </View>
-  );
-}
+    );
+  }
 
   return (
     <View style={styles.mainContainer}>
@@ -123,10 +168,17 @@ export function AppHeader({
             accessibilityRole="button"
             accessibilityLabel="Notifications"
             onPress={handleNotificationPress}
-            style={styles.iconButton}
+            style={styles.notiButton}
             hitSlop={10}
           >
             <NotificationIcon width={24} height={24} />
+            {unreadCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>
+                  {unreadCount > 9 ? "9+" : String(unreadCount)}
+                </Text>
+              </View>
+            )}
           </Pressable>
 
           <Pressable
@@ -138,7 +190,10 @@ export function AppHeader({
           >
             <View style={styles.profileCircle}>
               {userDoc?.photoURL ? (
-                <Image source={{ uri: userDoc.photoURL }} style={styles.avatarImage} />
+                <Image
+                  source={{ uri: userDoc.photoURL }}
+                  style={styles.avatarImage}
+                />
               ) : (
                 <ProfileIcon width={18} height={18} />
               )}
@@ -164,13 +219,13 @@ const styles = StyleSheet.create({
   },
 
   mainTitle: {
-  color: colors.primary,
-  fontSize: 32,
-  fontWeight: "900",
-  letterSpacing: 0.2,
-  marginLeft: 4,
-  marginTop: 4,
-},
+    color: colors.primary,
+    fontSize: 32,
+    fontWeight: "900",
+    letterSpacing: 0.2,
+    marginLeft: 4,
+    marginTop: 4,
+  },
 
   actions: {
     flexDirection: "row",
@@ -186,6 +241,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 999,
     overflow: "hidden",
+  },
+
+  notiButton: {
+    width: 34,
+    height: 34,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 999,
+  },
+
+  badge: {
+    position: "absolute",
+    top: 0,
+    right: 0,
+    minWidth: 15,
+    height: 15,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: colors.textOnPrimary,
+  },
+
+  badgeText: {
+    color: colors.textOnPrimary,
+    fontSize: 8,
+    fontWeight: "700",
+    lineHeight: 10,
   },
   avatarImage: {
     width: 28,
@@ -206,37 +291,37 @@ const styles = StyleSheet.create({
 
   // Back header layout for subscreens with back button and optional check icons for actions like marking notifications as read or clearing notifications
   backContainer: {
-  height: 90,
-  paddingHorizontal: 16,
-  paddingTop: 16,
-  backgroundColor: colors.textOnPrimary,
-  flexDirection: "row",
-  alignItems: "center",
-  borderBottomWidth: 1,
-  borderBottomColor: colors.lightGrey,
-},
+    height: 90,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    backgroundColor: colors.textOnPrimary,
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.lightGrey,
+  },
 
- backButton: {
-  width: 40,
-  height: 40,
-  justifyContent: "center",
-  alignItems: "center",
-  zIndex: 3,
-},
-titleWrapper: {
-  flex: 1,
-  alignItems: "center",
-  justifyContent: "center",
-},
-backTitle: {
-  fontSize: 24,
-  fontWeight: "700",
-  color: colors.primary,
-  textAlign: "center",
-},
-backRightPlaceholder: {
-  width: 40,
-},
+  backButton: {
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 3,
+  },
+  titleWrapper: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: colors.primary,
+    textAlign: "center",
+  },
+  backRightPlaceholder: {
+    width: 40,
+  },
   headerActions: {
     position: "absolute",
     right: 16,
