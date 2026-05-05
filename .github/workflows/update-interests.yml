@@ -1,0 +1,22 @@
+name: Update User Interests
+on:
+#  schedule:
+#    - cron: '0 0 * * 0' # Run every Sunday at 0H 0M
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  analyze-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Auth with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Run Analysis Script
+        run: |
+          # You can use a Node.js or Python script here
+          node scripts/process-interests.js
