@@ -12,7 +12,6 @@ import {
   ActivityIndicator,
   Alert,
   Linking,
-  Pressable,
   ScrollView,
   StyleSheet,
   Switch,
@@ -309,15 +308,15 @@ const Lstyles = StyleSheet.create({
   subLabel: { fontSize: 13, color: "#666", marginTop: 4 },
   infoBox: {
     backgroundColor: "#F8F9FA",
-    padding: 16,
+    padding: 14,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#E9ECEF",
   },
   infoText: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: 13,
+    color: colors.darkGrey,
     lineHeight: 20,
-    textAlign: "center",
+    textAlign: "left",
   },
 });
