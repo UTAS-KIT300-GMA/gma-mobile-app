@@ -1,7 +1,7 @@
 name: Update User Interests
 on:
 #  schedule:
-#    - cron: '0 0 * * 0' # Run every Sunday at 0H 0M
+#    - cron: '0 0 * * 6' # Run every Saturday
   workflow_dispatch: # Allows manual trigger
 
 permissions:
@@ -14,6 +14,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+
       - name: Auth with Google Cloud
         uses: google-github-actions/auth@v2
         with:
@@ -21,5 +30,5 @@ jobs:
 
       - name: Run Analysis Script
         run: |
-          # You can use a Node.js or Python script here
-          node scripts/process-interests.js
+          npm install tsx
+          npx tsx scripts/process-interests.ts
