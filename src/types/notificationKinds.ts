@@ -4,20 +4,26 @@
  * If you add a kind, add it to both.
  */
 export type NotificationKind =
-  | "partner_approval_result"
-  | "event_submitted_for_review"
-  | "event_approval_result"
   | "event_cancelled"
   | "event_date_changed"
-  | "event_recommended";
+  | "event_recommended"
+  | "event_booking_confirmed"
+  | "subscription_confirmed"
+  | "subscription_cancelled"
+  | "event_reminder_2days"
+  | "event_reminder_1day"
+  | "event_details_changed";
 
 const ALLOWED: readonly NotificationKind[] = [
-  "partner_approval_result",
-  "event_submitted_for_review",
-  "event_approval_result",
   "event_cancelled",
   "event_date_changed",
   "event_recommended",
+  "event_booking_confirmed",
+  "subscription_confirmed",
+  "subscription_cancelled",
+  "event_reminder_2days",
+  "event_reminder_1day",
+  "event_details_changed",
 ] as const;
 
 /**

@@ -9,6 +9,7 @@ export type NotificationSettings = {
   specialOffers: boolean;
   productUpdate: boolean;
   paymentReminder: boolean;
+  upcomingEventReminders: boolean;
 };
 
 export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
@@ -18,6 +19,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
   specialOffers: true,
   productUpdate: false,
   paymentReminder: true,
+  upcomingEventReminders: true,
 };
 
 function readBool(
@@ -42,5 +44,6 @@ export function mergeNotificationSettings(raw: unknown): NotificationSettings {
     specialOffers: readBool(o, "specialOffers", d.specialOffers),
     productUpdate: readBool(o, "productUpdate", d.productUpdate),
     paymentReminder: readBool(o, "paymentReminder", d.paymentReminder),
+    upcomingEventReminders: readBool(o, "upcomingEventReminders", d.upcomingEventReminders),
   };
 }
