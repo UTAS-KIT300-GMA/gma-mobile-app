@@ -71,9 +71,13 @@ export function RegisterScreen({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
   const [gender, setGender] = useState<"Male" | "Female" | "Other" | "">("");
   const [agreed, setAgreed] = useState(false);
   const [emailTouched, setEmailTouched] = useState(false);
+
+  const passwordsMatch = password === confirmPassword;
 
   // Date Picker States
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
@@ -99,7 +103,7 @@ const validatePassword = (password: string) => {
    * @Returns {void} Submits form when valid.
    */
   const handleSubmit = () => {
-    if (!firstName || !lastName || !email || !password || !gender) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword || !gender) {
       Alert.alert("Error", "Please fill in all fields.");
       return;
     }
@@ -118,6 +122,11 @@ const validatePassword = (password: string) => {
 
     if (!dateOfBirth) {
       setDateOfBirthError("Please select your date of birth.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
       return;
     }
 
@@ -275,6 +284,30 @@ const validatePassword = (password: string) => {
             onChangeText={setPassword}
           />
           <PasswordStrengthHint password={password} />
+
+          <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              placeholderTextColor={colors.darkGrey}
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={(text) => {
+                setConfirmPassword(text);
+                setConfirmPasswordTouched(true);
+              }}
+          />
+
+          {confirmPasswordTouched && !passwordsMatch && (
+              <Text style={[styles.passwordHint, styles.hintInvalid]}>
+                Passwords do not match
+              </Text>
+          )}
+
+          {confirmPasswordTouched && passwordsMatch && password.length > 0 && (
+              <Text style={[styles.passwordHint, styles.hintValid]}>
+                ✓ Passwords match
+              </Text>
+          )}
 
           <TouchableOpacity
             style={styles.checkboxRow}
