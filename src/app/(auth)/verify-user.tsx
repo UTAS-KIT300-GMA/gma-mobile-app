@@ -4,10 +4,10 @@
  * Handles user interactions for resending verification emails and logging out, 
  * holding the user in place until their email status is confirmed.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { Alert } from "react-native";
-import { auth, resendVerificationEmail, logoutUser, getFriendlyError } from "@/services/authService";
+import { Alert, AppState } from "react-native";
+import { auth, resendVerificationEmail, logoutUser, getFriendlyError, reloadUser } from "@/services/authService";
 import { VerifyUI } from "@/screens/auth/verify-user-screen"; // Adjust this import to match your folder structure
 
 /**
@@ -19,7 +19,45 @@ export default function VerifyUserRoute() {
   const router = useRouter();
 
   const [loading, setLoading] = useState(false);                     // Stores true/false value to track network requests.
+  const [hasNavigatedToOnboarding, setHasNavigatedToOnboarding] = useState(false);
   const userEmail = auth.currentUser?.email ?? "your email address"; // Safely extracts the user's email to pass to the UI.
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const refreshVerificationStatus = async () => {
+      try {
+        if (!auth.currentUser) return;
+        await reloadUser();
+        if (auth.currentUser?.emailVerified && !hasNavigatedToOnboarding) {
+          setHasNavigatedToOnboarding(true);
+          router.replace("/(onboarding)");
+        }
+      } catch (error) {
+        // Silent refresh: background checks should not surface noisy alerts.
+        console.warn("Verification status refresh failed:", error);
+      }
+    };
+
+    const intervalId = setInterval(() => {
+      if (!isMounted) return;
+      void refreshVerificationStatus();
+    }, 4000);
+
+    const appStateSubscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active" && isMounted) {
+        void refreshVerificationStatus();
+      }
+    });
+
+    void refreshVerificationStatus();
+
+    return () => {
+      isMounted = false;
+      clearInterval(intervalId);
+      appStateSubscription.remove();
+    };
+  }, [hasNavigatedToOnboarding, router]);
   
    /** 
   * @summary Triggers the Firebase function to send a new email and shows a success alert.
