@@ -223,6 +223,12 @@ export type Booking = {
   totalPaid: number;
   status: string;
   createdAt: FirebaseFirestoreTypes.Timestamp;
+  /** Human-readable summary for display (and legacy rows). */
+  dietaryRequirements?: string;
+  /** Preset dietary tags chosen at booking (e.g. Vegan, Halal). */
+  dietaryTags?: string[];
+  /** Free-text when "Other" was selected. */
+  dietaryOtherNote?: string;
 
   event: {
     title: string;

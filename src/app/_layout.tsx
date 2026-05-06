@@ -5,14 +5,15 @@
  * and Onboarding completion to ensure users are always in the correct app section.
  */
 
-import { auth, applyActionCode } from "@/services/authService";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { applyActionCode, auth, reloadUser } from "@/services/authService";
+import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
 import React, { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, View, Alert } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { GlobalProvider } from "@/context/GlobalContext";
+import { buildScreenTrackingNames, logScreenView } from "@/components/utils";
 
 /**
  * @summary Applies app-wide navigation guards and renders the root stack only when auth and routing state are synchronized.
@@ -30,6 +31,7 @@ export default function RootLayout() {
   
   // Stores current navigation segments and router helpers.
   const segments = useSegments() as string[];
+  const pathname = usePathname();
   const router = useRouter();
 
   /**
@@ -39,6 +41,7 @@ export default function RootLayout() {
     inAuthGroup: segments.includes("(auth)"),
     inOnboardingGroup: segments.includes("(onboarding)"),
     isOnVerifyScreen: segments.includes("verify-user"),
+    isOnLandingScreen: segments.includes("landing"),
     isResetPassword: segments.includes("reset-password"),
     isOnInvalidPath: segments.some(seg => seg.includes("__")), // Detects Firebase internal paths
     segmentKey: segments.join("/"),
@@ -57,30 +60,52 @@ export default function RootLayout() {
       if (!url) return;
 
       const parsedUrl = Linking.parse(url);
+      const queryParams = parsedUrl.queryParams ?? {};
+      const isFirebaseActionPath = parsedUrl.path === "__/auth/action";
+      const isFirebaseLinksPath = parsedUrl.path === "__/auth/links";
+      const isVerificationFallbackPath = parsedUrl.path?.includes("verification-success");
+      const mode = typeof queryParams.mode === "string" ? queryParams.mode : undefined;
+      const oobCode = typeof queryParams.oobCode === "string" ? queryParams.oobCode : undefined;
 
-      // Checks if the incoming link is the Firebase action route.
-      if (parsedUrl.path === "__/auth/action") {
+      // Firebase sometimes nests the auth action URL inside a "link" query param.
+      let nestedMode: string | undefined;
+      let nestedOobCode: string | undefined;
+      const nestedLink = typeof queryParams.link === "string" ? queryParams.link : undefined;
+      if (nestedLink) {
+        const nestedParsed = Linking.parse(nestedLink);
+        const nestedParams = nestedParsed.queryParams ?? {};
+        nestedMode = typeof nestedParams.mode === "string" ? nestedParams.mode : undefined;
+        nestedOobCode = typeof nestedParams.oobCode === "string" ? nestedParams.oobCode : undefined;
+      }
+
+      const effectiveMode = mode ?? nestedMode;
+      const effectiveOobCode = oobCode ?? nestedOobCode;
+      const isAuthActionLink =
+        isFirebaseActionPath ||
+        (isFirebaseLinksPath && !!effectiveMode && !!effectiveOobCode) ||
+        (isVerificationFallbackPath && !!effectiveMode && !!effectiveOobCode);
+
+      // Handles Firebase auth action links from both default and fallback URL shapes.
+      if (isAuthActionLink) {
         setIsHandlingLink(true); // 🛑 LOCK UI: Prevents navigation race conditions
         
         try {
-          const { mode, oobCode } = parsedUrl.queryParams ?? {};
-
           // Handles the Email Verification flow.
-          if (mode === "verifyEmail" && typeof oobCode === "string") {
-              await applyActionCode(auth, oobCode);
+          if (effectiveMode === "verifyEmail" && typeof effectiveOobCode === "string") {
+              await applyActionCode(auth, effectiveOobCode);
               
               if (auth.currentUser) {
                 // Forces the local user object to refresh its verified status.
                 // The useAuth hook (using onIdTokenChanged) will detect this and update state.
-                await auth.currentUser.reload();
+                await reloadUser();
                 Alert.alert("Success", "Your email has been verified!"); 
               }
           } 
           
           // Handles the Password Reset flow.
-          else if (mode === "resetPassword" && typeof oobCode === "string") {
+          else if (effectiveMode === "resetPassword" && typeof effectiveOobCode === "string") {
             // Routes the user to the reset password screen, passing the code.
-            router.replace(`/(auth)/reset-password?oobCode=${oobCode}`);
+            router.replace(`/(auth)/reset-password?oobCode=${effectiveOobCode}`);
           }
         } catch (error: any) {
           console.error("Deep Link Processing failed:", error);
@@ -128,7 +153,7 @@ export default function RootLayout() {
 
     // CASE B: Unverified email
     if (!user.emailVerified) {
-      if (!routeInfo.isOnVerifyScreen) {
+      if (!routeInfo.isOnVerifyScreen && !routeInfo.isOnLandingScreen) {
         router.replace("/(auth)/verify-user"); 
       }
       return;
@@ -150,6 +175,15 @@ export default function RootLayout() {
     }
   }, [user, initializing, isProfileValidated, isHandlingLink, initialLinkChecked, routeInfo, router]); 
 
+  useEffect(() => {
+    if (!pathname) return;
+    const { screen_name, screen_class } = buildScreenTrackingNames(pathname);
+    void logScreenView(null, {
+      screen_name,
+      screen_class,
+    });
+  }, [pathname]);
+
   // --- THE GATEKEEPER: THE FLICKER KILLER ---
   /**
    * @summary Determines if the router is physically in the correct location based on current Auth state.
@@ -161,7 +195,7 @@ export default function RootLayout() {
     !routeInfo.isOnInvalidPath &&
     (
       (!user && routeInfo.inAuthGroup) || 
-      (user && !user.emailVerified && routeInfo.isOnVerifyScreen) ||
+      (user && !user.emailVerified && (routeInfo.isOnVerifyScreen || routeInfo.isOnLandingScreen)) ||
       (user && user.emailVerified && isProfileValidated === false && routeInfo.inOnboardingGroup) ||
       (user && user.emailVerified && isProfileValidated === true && !routeInfo.inAuthGroup && !routeInfo.inOnboardingGroup)
     );

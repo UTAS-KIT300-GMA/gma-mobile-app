@@ -14,7 +14,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { EventCard } from "@/components/EventCard";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuthUser, useAppLocation } from "@/context/GlobalContext";
-import { calculateHaversineDistance } from "@/components/utils";
+import {calculateHaversineDistance, logCustomEvent} from "@/components/utils";
 import { EventDoc } from "@/types/type.ts";
 
 export type RecommendedEvent = EventDoc & {
@@ -127,6 +127,33 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
     };
   }, [events, userCoords, userDoc?.selectedTags]);
 
+  const handlePressRsvp = async (item: EventDoc) => {
+      await logCustomEvent(null, 'event_rsvp', {
+          content_type: "event",
+          item_id: item.id,
+          action: "rsvp_click",
+      });
+
+      router.push({
+          pathname: "/event/booking",
+          params: { eventId: item.id },
+      } as any)
+  }
+
+  const handlePressCard = async (item: EventDoc) => {
+      await logCustomEvent(null, 'event_card_press', {
+          content_type: "event",
+          item_id: item.id,
+          event_category: item.category,
+          event_type: item.type,
+      });
+
+      router.push({
+          pathname: "/event/event-details",
+          params: { id: item.id },
+      } as any)
+  }
+
   /**
    * @summary Renders a horizontal event section with title and cards.
    * @param title - Section heading text.
@@ -148,18 +175,8 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
             <EventCard
               key={`random-${item.id}`}
               event={item}
-              onPressRsvp={() =>
-                router.push({
-                  pathname: "/event/booking",
-                  params: { eventId: item.id },
-                } as any)
-              }
-              onPressCard={() =>
-                router.push({
-                  pathname: "/event/event-details",
-                  params: { id: item.id },
-                } as any)
-              }
+              onPressRsvp={() => handlePressRsvp(item)}
+              onPressCard={() => handlePressCard(item)}
             />
           </View>
         )}
@@ -209,18 +226,8 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
             <EventCard
               key={`random-${item.id}`}
               event={item}
-              onPressRsvp={() =>
-                router.push({
-                  pathname: "/event/booking",
-                  params: { eventId: item.id },
-                } as any)
-              }
-              onPressCard={() =>
-                router.push({
-                  pathname: "/event/event-details",
-                  params: { id: item.id },
-                } as any)
-              }
+              onPressRsvp={() => handlePressRsvp(item)}
+              onPressCard={() => handlePressCard(item)}
             />
           </View>
         )}
@@ -238,18 +245,8 @@ export default function HomeUI({ events, loading, onRefresh }: HomeUIProps) {
                   <EventCard
                     key={`random-${item.id}`}
                     event={item}
-                    onPressRsvp={() =>
-                      router.push({
-                        pathname: "/event/booking",
-                        params: { eventId: item.id },
-                      } as any)
-                    }
-                    onPressCard={() =>
-                      router.push({
-                        pathname: "/event/event-details",
-                        params: { id: item.id },
-                      } as any)
-                    }
+                    onPressRsvp={() => handlePressRsvp(item)}
+                    onPressCard={() => handlePressCard(item)}
                   />
                 </View>
               ))}

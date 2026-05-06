@@ -13,7 +13,10 @@ export default ({ config }) => {
           scheme: "fb2197146364354785",
         },
       ],
-      "expo-video", // ✅ ADD THIS LINE
+      "@react-native-firebase/app",
+      "expo-build-properties",
+      "expo-video",
+      "expo-web-browser",
     ],
   };
 };

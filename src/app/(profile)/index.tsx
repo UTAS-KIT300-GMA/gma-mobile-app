@@ -6,6 +6,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { auth, db, doc, logoutUser, getDoc } from "@/services/authService"; 
 
 import ProfileUI from "@/screens/profile/profile-UI"; 
+import { logSelectContent } from "@/components/utils";
 
 // Stores the structure of the user doc (profile) in a interface.
 interface UserProfile {
@@ -132,7 +133,13 @@ export default function ProfileRoute() {
       onLogout={handleLogout}
       onBack={() => router.back()}
       // Uses router.push to allow sub-screens like 'payment' to stack on top.
-      onNavigate={(path: string) => router.push(path as any)}
+      onNavigate={(path: string) => {
+        void logSelectContent(null, {
+          content_type: "profile",
+          item_id: path,
+        });
+        router.push(path as any);
+      }}
     />
   );
 }

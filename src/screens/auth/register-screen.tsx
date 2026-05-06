@@ -8,6 +8,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -19,6 +20,21 @@ import {
 } from "react-native";
 import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
 
+/** Placeholder until GMA publishes live legal pages. Replace with production URLs. */
+export const GMA_TERMS_AND_CONDITIONS_URL =
+  "https://example.com/gma-terms-and-conditions";
+export const GMA_PRIVACY_POLICY_URL =
+  "https://example.com/gma-privacy-policy";
+
+async function openExternalUrl(url: string) {
+  const supported = await Linking.canOpenURL(url);
+  if (supported) {
+    await Linking.openURL(url);
+  } else {
+    Alert.alert("Unable to open link", "Please try again later.");
+  }
+}
+
 /**
  * @summary Displays a password strength hint indicating whether the password meets the minimum length requirement.
  * @param password - The current password string entered by the user.
@@ -27,7 +43,12 @@ import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
  */
 function PasswordStrengthHint({ password }: { password: string }) {
   if (!password) return null;
-  const isValid = password.length >= 8;
+  const isValid = password.length >= 10 &&
+  password.length <= 64 &&
+  /[A-Z]/.test(password) &&
+  /[a-z]/.test(password) &&
+  /[0-9]/.test(password) &&
+  /[^A-Za-z0-9]/.test(password);
   return (
     <Text
       style={[
@@ -37,7 +58,7 @@ function PasswordStrengthHint({ password }: { password: string }) {
     >
       {isValid
         ? "✓ Password strong"
-        : `${8 - password.length} more characters needed`}
+        : "Password must be 10-64 characters with uppercase, lowercase, number & special character"}
     </Text>
   );
 }
@@ -66,22 +87,52 @@ export function RegisterScreen({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
   const [gender, setGender] = useState<"Male" | "Female" | "Other" | "">("");
   const [agreed, setAgreed] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const passwordsMatch = password === confirmPassword;
 
   // Date Picker States
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [dateOfBirthError, setDateOfBirthError] = useState("");
+  const validateEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
+const validatePassword = (password: string) => {
+  return (
+    password.length >= 10 &&
+    password.length <= 64 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+};
   /**
    * @summary Validates registration inputs and forwards normalized payload to parent handler.
    * @throws {never} Validation errors are shown through alerts/messages.
    * @Returns {void} Submits form when valid.
    */
   const handleSubmit = () => {
-    if (!firstName || !lastName || !email || !password || !gender) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword || !gender) {
       Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+
+    if (!validateEmail(email.trim())) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      Alert.alert(
+      "Invalid Password",
+      "Password must be 10-64 characters and include uppercase, lowercase, number, and special character.");
       return;
     }
 
@@ -90,10 +141,15 @@ export function RegisterScreen({
       return;
     }
 
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+
     if (!agreed) {
       Alert.alert(
         "Required",
-        "You must agree to the terms and privacy policy."
+        "Please confirm you agree to GMA's Terms and Conditions and Privacy Policy.",
       );
       return;
     }
@@ -223,9 +279,18 @@ export function RegisterScreen({
             placeholderTextColor={colors.darkGrey}
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+            setEmail(text);
+            setEmailTouched(true);
+            }}
             autoCapitalize="none"
           />
+
+        {emailTouched && !validateEmail(email) && (
+          <Text style={[styles.passwordHint, styles.hintInvalid]}>
+           Email must include @ and . with no spaces
+          </Text>
+        )}
           <TextInput
             style={styles.input}
             placeholder="Password"
@@ -236,22 +301,38 @@ export function RegisterScreen({
           />
           <PasswordStrengthHint password={password} />
 
-          <TouchableOpacity
-            style={styles.checkboxRow}
-            onPress={() => setAgreed(!agreed)}
-          >
-            <Ionicons
-              name={agreed ? "checkbox" : "square-outline"}
-              size={20}
-              color={colors.primary}
-            />
+          <View style={styles.checkboxRow}>
+            <TouchableOpacity
+              onPress={() => setAgreed(!agreed)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: agreed }}
+            >
+              <Ionicons
+                name={agreed ? "checkbox" : "square-outline"}
+                size={20}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
 
-            {/*The text next to the checkbox includes links to the terms and privacy policy, to be updated */}
             <Text style={styles.checkboxText}>
-              I agree to <Text style={styles.linkText}>GMA Terms</Text> &{" "}
-              <Text style={styles.linkText}>Privacy Policy</Text>
+              I agree to GMA's{" "}
+              <Text
+                style={styles.linkText}
+                onPress={() => void openExternalUrl(GMA_TERMS_AND_CONDITIONS_URL)}
+              >
+                Terms and Conditions
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={styles.linkText}
+                onPress={() => void openExternalUrl(GMA_PRIVACY_POLICY_URL)}
+              >
+                Privacy Policy
+              </Text>
+              .
             </Text>
-          </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={styles.primaryButton}
@@ -430,9 +511,9 @@ const styles = StyleSheet.create({
 
   checkboxRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     margin: 10,
-    gap: 8,
+    gap: 10,
   },
 
   checkbox: {
@@ -458,8 +539,9 @@ const styles = StyleSheet.create({
   },
 
   linkText: {
-    color: colors.saveBtnTextColor,
+    color: colors.primary,
     fontSize: 13,
+    fontWeight: "600",
     textDecorationLine: "underline",
   },
 });
