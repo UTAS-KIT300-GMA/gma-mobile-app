@@ -31,13 +31,15 @@ export default function BookingConfirmedRoute() {
     eventId: (params.eventId as string) || "",
     type: (params.type as string) || "event",
   };
-
+  const isMembership = bookingDetails.ticketType === "Membership";
   return (
     // Passes the bookingDetails values and navigation instructions to the confirmation-screen.
     <BookingConfirmedUI
       details={bookingDetails}
-      // !!Need to add a booking sub screen for profile!!
-      onGoToBookings={() => router.replace("/(profile)/booked-events" as any)}
+      onGoToBookings={() =>
+          isMembership
+              ? router.replace("/(profile)/membership" as any)
+              : router.replace("/(profile)/booked-events" as any)}
       // Navigates to the event details screen using the eventId
       // from the bookingDetails.
       onViewDetails={() =>
