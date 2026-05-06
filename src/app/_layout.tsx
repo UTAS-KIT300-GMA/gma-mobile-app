@@ -41,6 +41,7 @@ export default function RootLayout() {
     inAuthGroup: segments.includes("(auth)"),
     inOnboardingGroup: segments.includes("(onboarding)"),
     isOnVerifyScreen: segments.includes("verify-user"),
+    isOnLandingScreen: segments.includes("landing"),
     isResetPassword: segments.includes("reset-password"),
     isOnInvalidPath: segments.some(seg => seg.includes("__")), // Detects Firebase internal paths
     segmentKey: segments.join("/"),
@@ -130,7 +131,7 @@ export default function RootLayout() {
 
     // CASE B: Unverified email
     if (!user.emailVerified) {
-      if (!routeInfo.isOnVerifyScreen) {
+      if (!routeInfo.isOnVerifyScreen && !routeInfo.isOnLandingScreen) {
         router.replace("/(auth)/verify-user"); 
       }
       return;
@@ -172,7 +173,7 @@ export default function RootLayout() {
     !routeInfo.isOnInvalidPath &&
     (
       (!user && routeInfo.inAuthGroup) || 
-      (user && !user.emailVerified && routeInfo.isOnVerifyScreen) ||
+      (user && !user.emailVerified && (routeInfo.isOnVerifyScreen || routeInfo.isOnLandingScreen)) ||
       (user && user.emailVerified && isProfileValidated === false && routeInfo.inOnboardingGroup) ||
       (user && user.emailVerified && isProfileValidated === true && !routeInfo.inAuthGroup && !routeInfo.inOnboardingGroup)
     );

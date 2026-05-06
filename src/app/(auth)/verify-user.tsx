@@ -5,6 +5,7 @@
  * holding the user in place until their email status is confirmed.
  */
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { Alert } from "react-native";
 import { auth, resendVerificationEmail, logoutUser, getFriendlyError } from "@/services/authService";
 import { VerifyUI } from "@/screens/auth/verify-user-screen"; // Adjust this import to match your folder structure
@@ -15,6 +16,7 @@ import { VerifyUI } from "@/screens/auth/verify-user-screen"; // Adjust this imp
 * @Returns {React.JSX.Element} Verification UI with resend and logout actions.
 */
 export default function VerifyUserRoute() {
+  const router = useRouter();
 
   const [loading, setLoading] = useState(false);                     // Stores true/false value to track network requests.
   const userEmail = auth.currentUser?.email ?? "your email address"; // Safely extracts the user's email to pass to the UI.
@@ -45,12 +47,13 @@ export default function VerifyUserRoute() {
    * @throws {never} Errors are handled and shown through alerts.
    * @Returns {Promise<void>} Resolves when logout attempt finishes.
    */
-  const handleLogout = async () => {
+  const handleCancel = async () => {
   
     setLoading(true); // Shows the loading spinner for the logout process.
     
     try {
       await logoutUser();
+      router.replace("/(auth)/landing");
     } catch (e: any) {
       console.error("Logout error:", e);
       Alert.alert("Error", getFriendlyError(e));
@@ -64,7 +67,7 @@ export default function VerifyUserRoute() {
     <VerifyUI 
       email={userEmail}
       onResend={handleResend}
-      onLogout={handleLogout}
+      onCancel={handleCancel}
       loading={loading}
     />
   );
