@@ -22,9 +22,19 @@ export default function VerifyUserRoute() {
   const [hasNavigatedToOnboarding, setHasNavigatedToOnboarding] = useState(false);
   const userEmail = auth.currentUser?.email ?? "your email address"; // Safely extracts the user's email to pass to the UI.
 
+  /**
+   * @summary Starts verification-state listeners (interval + app foreground) so cross-device email verification is detected and routed to onboarding.
+   * @throws {never} Internal refresh errors are caught and logged as warnings.
+   * @Returns {void} Registers polling/subscription and cleans them up on unmount or dependency change.
+   */
   useEffect(() => {
     let isMounted = true;
 
+    /**
+     * @summary Reloads the Firebase user and redirects to onboarding once email verification is detected.
+     * @throws {never} Errors are caught internally to avoid interrupting the verification screen.
+     * @Returns {Promise<void>} Resolves after refresh and optional navigation complete.
+     */
     const refreshVerificationStatus = async () => {
       try {
         if (!auth.currentUser) return;
