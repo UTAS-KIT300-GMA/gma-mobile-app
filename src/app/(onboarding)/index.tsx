@@ -68,44 +68,8 @@ export default function ProfileSetupRoute() {
    * @throws {never} Errors are handled and surfaced in alerts.
    * @Returns {Promise<void>} Resolves when save flow completes.
    */
-  const uploadProfileImage = async (localUri: string): Promise<string> => {
-    const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    const uploadPreset = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+  const handleSave = async (selectedTags: InterestKey[]) => {
 
-    if (!cloudName || !uploadPreset) {
-      throw new Error("Cloudinary config missing. Add cloud name and upload preset.");
-    }
-
-    const formData = new FormData();
-    formData.append("file", {
-      uri: localUri,
-      type: "image/jpeg",
-      name: "profile.jpg",
-    } as any);
-    formData.append("upload_preset", uploadPreset);
-    formData.append("folder", "profile_photos");
-
-    const response = await fetch(
-      `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
-      {
-        method: "POST",
-        body: formData,
-      },
-    );
-
-    const payload = await response.json();
-    if (!response.ok || !payload?.secure_url) {
-      throw new Error(payload?.error?.message ?? "Image upload failed");
-    }
-
-    return String(payload.secure_url);
-  };
-
-  const handleSave = async (
-    selectedTags: InterestKey[],
-    profileImageUri?: string,
-  ) => {
-    
     if (saving) return; // If value is true, the function stops to prevent double-writes.
 
     // Checks the login status to make sure the user hasn't timed out before saving.
@@ -127,10 +91,6 @@ export default function ProfileSetupRoute() {
         selectedTags: selectedTags,
         onboardingComplete: true,
       };
-
-      if (profileImageUri) {
-        updates.photoURL = await uploadProfileImage(profileImageUri);
-      }
 
       await updateDoc(userRef, updates);
 

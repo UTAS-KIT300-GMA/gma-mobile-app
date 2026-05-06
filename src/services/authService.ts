@@ -52,6 +52,17 @@ export const ERROR_MESSAGES: Record<string, string> = {
   "auth/too-many-requests": "Too many attempts. Try again later.",
 };
 
+// Uses one verification-link config for web fallback and Android app redirect.
+const VERIFICATION_ACTION_CODE_SETTINGS = {
+  url: "https://kit300-p4-gma.web.app/verification-success",
+  handleCodeInApp: true,
+  android: {
+    packageName: "com.gma.connect",
+    installApp: false,
+    minimumVersion: "1",
+  },
+};
+
 // Defines the structure of the data required to register a new user.
 export interface RegisterData {
   firstName: string;
@@ -112,7 +123,7 @@ export async function registerUser(
     });
 
     // Send verification email
-    await sendEmailVerification(user);
+    await sendEmailVerification(user, VERIFICATION_ACTION_CODE_SETTINGS);
 
     // Rollback Auth account if Firestore write fails
   } catch (e) {
@@ -258,7 +269,7 @@ export async function ensureFacebookUserFirestoreProfile(
 export async function signInWithGoogleIdToken(idToken: string) {
   const credential = GoogleAuthProvider.credential(idToken);
   await signInWithCredential(auth, credential);
-  await reload(auth.currentUser!);
+  await reloadUser();
 }
 
 /**
@@ -270,7 +281,7 @@ export async function signInWithGoogleIdToken(idToken: string) {
 export async function signInWithFacebookAccessToken(accessToken: string) {
   const credential = FacebookAuthProvider.credential(accessToken);
   await signInWithCredential(auth, credential);
-  await reload(auth.currentUser!);
+  await reloadUser();
 }
 
 /**
@@ -303,8 +314,8 @@ export async function resendVerificationEmail() {
   const user = auth.currentUser;
   if (!user) throw new Error("auth/no-current-user");
 
-  // Just send the default email
-  await sendEmailVerification(user);
+  // Reuses the same config so verification links work across Android and web fallback.
+  await sendEmailVerification(user, VERIFICATION_ACTION_CODE_SETTINGS);
 }
 
 /**

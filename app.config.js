@@ -15,7 +15,8 @@ export default ({ config }) => {
       ],
       "@react-native-firebase/app",
       "expo-build-properties",
-      "expo-video", // ✅ ADD THIS LINE
+      "expo-video",
+      "expo-web-browser",
     ],
   };
 };

@@ -13,7 +13,7 @@ import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
 
 interface VerifyUIProps {
   onResend: () => void;
-  onLogout: () => void;
+  onCancel: () => void;
   email: string;
   loading?: boolean;
 }
@@ -21,7 +21,7 @@ interface VerifyUIProps {
 /**
  * @summary Renders the email verification holding screen with resend and cancel actions.
  * @param onResend - Callback for requesting a new verification email.
- * @param onLogout - Callback for cancel/logout action.
+ * @param onCancel - Callback for cancel action.
  * @param email - User email displayed in the verification message.
  * @param loading - Loading state for async verification actions.
  * @throws {never} Action handlers are delegated to parent callbacks.
@@ -29,7 +29,7 @@ interface VerifyUIProps {
  */
 export const VerifyUI: React.FC<VerifyUIProps> = ({
   onResend,
-  onLogout,
+  onCancel,
   email,
   loading,
 }) => {
@@ -53,7 +53,7 @@ export const VerifyUI: React.FC<VerifyUIProps> = ({
         {/* Logout Button in Top Left */}
         <TouchableOpacity
           style={styles.logoutBtn}
-          onPress={onLogout}
+          onPress={onCancel}
           disabled={loading}
         >
           <Ionicons name="log-out-outline" size={24} color={colors.textOnPrimary} />

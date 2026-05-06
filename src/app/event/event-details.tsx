@@ -1,13 +1,9 @@
 import { logCustomEvent } from "@/components/utils";
+import { useBookmarks } from "@/context/GlobalContext";
 import EventDetailUI from "@/screens/event/event-details-UI"; // Default import will clean up other screens later.
-import { auth, db } from "@/services/authService";
-import {
-  deleteDoc,
-  doc,
-  getDoc,
-  serverTimestamp,
-  setDoc,
-} from "@react-native-firebase/firestore";
+import { db } from "@/services/authService";
+import { EventDoc } from "@/types/type";
+import { doc, getDoc } from "@react-native-firebase/firestore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
@@ -18,16 +14,21 @@ import { Alert } from "react-native";
  * @Returns {React.JSX.Element} Event details screen container.
  */
 export default function EventDetailScreen() {
+  // Stores the navigation tool to allow moving between screens.
   const router = useRouter();
-  // Catches the unique event ID from the navigation parameters.
-  // Stores it in the eventId var.
+  // Catches the unique event ID from the navigation parameters and stores it in the eventId var.
   const { id } = useLocalSearchParams();
   const eventId = id as string;
 
-  // Stores the fetched event details, bookmark status, and loading state in vars.
-  const [event, setEvent] = useState<any>(null);
-  const [isBookmarked, setIsBookmarked] = useState(false);
+  // Bookmark UI uses the same global bookmark map + toggle as EventCard / discovery (users/{uid}/bookmarks).
+  const { bookmarkedIds, toggleBookmark } = useBookmarks();
+
+  // Stores the fetched event payload from Firestore and loading state.
+  const [event, setEvent] = useState<EventDoc | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Whether this event id appears in bookmarkedIds (keeps Profile Bookmarks list in sync with detail screen).
+  const isBookmarked = eventId ? !!bookmarkedIds[eventId] : false;
 
   useEffect(() => {
     let mounted = true;
@@ -56,17 +57,7 @@ export default function EventDetailScreen() {
             id: eventSnap.id,
             ...data,
             type: derivedType,
-          });
-        }
-
-        const uid = auth.currentUser?.uid;
-        if (uid && mounted) {
-          // Checks the user's private 'bookmarks' collection for this specific event ID.
-          const bookmarkSnap = await getDoc(
-            doc(db, "users", uid, "bookmarks", eventId),
-          );
-          // Stores the true/false result in the isBookmarked var.
-          setIsBookmarked(bookmarkSnap.exists());
+          } as EventDoc);
         }
       } catch (e) {
         console.error(e);
@@ -80,34 +71,26 @@ export default function EventDetailScreen() {
     };
   }, [eventId]);
 
-  // Stores the function instructions for handleBookmark var.
+  // Stores the function instructions for the handleBookmark var.
   /**
-   * @summary Toggles bookmark state for the current event with optimistic UI.
-   * @throws {never} Errors are handled with rollback and alert.
-   * @Returns {Promise<void>} Resolves when bookmark write attempt completes.
+   * @summary Toggles bookmark for the current event using global toggleBookmark (same as event cards).
+   * @throws {never} Errors are handled with alert feedback.
+   * @Returns {Promise<void>} Resolves when bookmark toggle completes.
    */
   const handleBookmark = async () => {
-    const uid = auth.currentUser?.uid;
-    if (!uid) return;
-    const bookmarkRef = doc(db, "users", uid, "bookmarks", eventId);
-    const wasBookmarked = isBookmarked;
-    setIsBookmarked(!wasBookmarked);
+    if (!event) return;
     try {
-      // If already saved, delete the doc. If not, create a new one with a timestamp.
-      if (wasBookmarked) await deleteDoc(bookmarkRef);
-      else {
-        await setDoc(bookmarkRef, { eventId, savedAt: serverTimestamp() });
-        void logCustomEvent(null, 'event_bookmark', {
+      const wasBookmarked = !!bookmarkedIds[event.id];
+      await toggleBookmark(event);
+      if (!wasBookmarked) {
+        void logCustomEvent(null, "event_bookmark", {
           content_type: "event",
-          item_id: eventId,
+          item_id: event.id,
           action: "bookmark",
         });
       }
     } catch (e) {
-      // If the database fails, roll back the local isBookmarked store to its original state.
-      setIsBookmarked(wasBookmarked);
-      console.error(e)
-      Alert.alert("Error", "Could not update bookmark.", );
+      Alert.alert("Error", "Could not update bookmark.");
     }
   };
 
@@ -129,30 +112,30 @@ export default function EventDetailScreen() {
    * @Returns {void} Navigates to booking when allowed.
    */
   const handleBook = () => {
-    
     if (!event?.id) {
       Alert.alert("Error", "Event booking is not available.");
       return;
     }
-    
+
     if (event.type !== "free") {
       Alert.alert(
-          "Subscribers Only",
-          "This event is available to subscribed members only.",
+        "Subscribers Only",
+        "This event is available to subscribed members only.",
       );
       return;
     }
-     router.push({
+    router.push({
       pathname: "/event/booking",
       params: { eventId: event.id },
     } as any);
-    void logCustomEvent(null, 'event_book_click', {
+    void logCustomEvent(null, "event_book_click", {
       content_type: "event",
       item_id: event.id,
       action: "book_click",
     });
-  }
+  };
 
+  // Passes the event, loading state, bookmark flags, and action handlers to the event-details UI.
   return (
     <EventDetailUI
       event={event}

@@ -8,6 +8,7 @@ import {
   Alert,
   Image,
   KeyboardAvoidingView,
+  Linking,
   Platform,
   Pressable,
   ScrollView,
@@ -18,6 +19,21 @@ import {
   View,
 } from "react-native";
 import { Defs, RadialGradient, Rect, Stop, Svg } from "react-native-svg";
+
+/** Placeholder until GMA publishes live legal pages. Replace with production URLs. */
+export const GMA_TERMS_AND_CONDITIONS_URL =
+  "https://example.com/gma-terms-and-conditions";
+export const GMA_PRIVACY_POLICY_URL =
+  "https://example.com/gma-privacy-policy";
+
+async function openExternalUrl(url: string) {
+  const supported = await Linking.canOpenURL(url);
+  if (supported) {
+    await Linking.openURL(url);
+  } else {
+    Alert.alert("Unable to open link", "Please try again later.");
+  }
+}
 
 /**
  * @summary Displays a password strength hint indicating whether the password meets the minimum length requirement.
@@ -133,7 +149,7 @@ const validatePassword = (password: string) => {
     if (!agreed) {
       Alert.alert(
         "Required",
-        "You must agree to the terms and privacy policy."
+        "Please confirm you agree to GMA's Terms and Conditions and Privacy Policy.",
       );
       return;
     }
@@ -285,46 +301,38 @@ const validatePassword = (password: string) => {
           />
           <PasswordStrengthHint password={password} />
 
-          <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor={colors.darkGrey}
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={(text) => {
-                setConfirmPassword(text);
-                setConfirmPasswordTouched(true);
-              }}
-          />
+          <View style={styles.checkboxRow}>
+            <TouchableOpacity
+              onPress={() => setAgreed(!agreed)}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: agreed }}
+            >
+              <Ionicons
+                name={agreed ? "checkbox" : "square-outline"}
+                size={20}
+                color={colors.primary}
+              />
+            </TouchableOpacity>
 
-          {confirmPasswordTouched && !passwordsMatch && (
-              <Text style={[styles.passwordHint, styles.hintInvalid]}>
-                Passwords do not match
-              </Text>
-          )}
-
-          {confirmPasswordTouched && passwordsMatch && password.length > 0 && (
-              <Text style={[styles.passwordHint, styles.hintValid]}>
-                ✓ Passwords match
-              </Text>
-          )}
-
-          <TouchableOpacity
-            style={styles.checkboxRow}
-            onPress={() => setAgreed(!agreed)}
-          >
-            <Ionicons
-              name={agreed ? "checkbox" : "square-outline"}
-              size={20}
-              color={colors.primary}
-            />
-
-            {/*The text next to the checkbox includes links to the terms and privacy policy, to be updated */}
             <Text style={styles.checkboxText}>
-              I agree to <Text style={styles.linkText}>GMA Terms</Text> &{" "}
-              <Text style={styles.linkText}>Privacy Policy</Text>
+              I agree to GMA's{" "}
+              <Text
+                style={styles.linkText}
+                onPress={() => void openExternalUrl(GMA_TERMS_AND_CONDITIONS_URL)}
+              >
+                Terms and Conditions
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={styles.linkText}
+                onPress={() => void openExternalUrl(GMA_PRIVACY_POLICY_URL)}
+              >
+                Privacy Policy
+              </Text>
+              .
             </Text>
-          </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={styles.primaryButton}
@@ -503,9 +511,9 @@ const styles = StyleSheet.create({
 
   checkboxRow: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     margin: 10,
-    gap: 8,
+    gap: 10,
   },
 
   checkbox: {
@@ -531,8 +539,9 @@ const styles = StyleSheet.create({
   },
 
   linkText: {
-    color: colors.saveBtnTextColor,
+    color: colors.primary,
     fontSize: 13,
+    fontWeight: "600",
     textDecorationLine: "underline",
   },
 });

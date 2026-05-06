@@ -6,12 +6,25 @@ import React from "react";
 import {
     ActivityIndicator,
     Image,
+    ScrollView,
     StyleSheet,
     Text,
+    TextInput,
     TouchableOpacity,
     View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+/** Preset labels shown as checkboxes (excluding Other). */
+export const DIETARY_PRESET_LABELS = [
+  "Vegan",
+  "Vegetarian",
+  "Gluten-free",
+  "Dairy-free",
+  "Nut allergy",
+  "Halal",
+  "Kosher",
+] as const;
 
 export interface BookingUIProps {
   event: any;
@@ -23,6 +36,12 @@ export interface BookingUIProps {
   onIncreaseTickets: () => void;
   onDecreaseTickets: () => void;
   onConfirm: () => void;
+  dietaryTags: string[];
+  onToggleDietaryTag: (label: string) => void;
+  dietaryOtherSelected: boolean;
+  onToggleDietaryOther: () => void;
+  dietaryOtherNote: string;
+  onChangeDietaryOtherNote: (value: string) => void;
 }
 
 /**
@@ -36,6 +55,12 @@ export interface BookingUIProps {
  * @param onIncreaseTickets - Increment ticket callback.
  * @param onDecreaseTickets - Decrement ticket callback.
  * @param onConfirm - Confirm booking callback.
+ * @param dietaryTags - Selected preset dietary labels.
+ * @param onToggleDietaryTag - Toggles a preset dietary checkbox.
+ * @param dietaryOtherSelected - Whether "Other" is selected.
+ * @param onToggleDietaryOther - Toggles the Other checkbox.
+ * @param dietaryOtherNote - Free-text when Other is selected.
+ * @param onChangeDietaryOtherNote - Updates Other text.
  * @throws {never} UI delegates actions to callbacks.
  * @Returns {React.JSX.Element} Booking checkout screen.
  */
@@ -49,6 +74,12 @@ export const BookingScreenUI: React.FC<BookingUIProps> = ({
   onIncreaseTickets,
   onDecreaseTickets,
   onConfirm,
+  dietaryTags,
+  onToggleDietaryTag,
+  dietaryOtherSelected,
+  onToggleDietaryOther,
+  dietaryOtherNote,
+  onChangeDietaryOtherNote,
 }) => {
   if (loading || !event) {
     return (
@@ -79,7 +110,12 @@ export const BookingScreenUI: React.FC<BookingUIProps> = ({
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <AppHeader title="Checkout" showBack onPressBack={onBack} />
 
-      <View style={styles.container}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator
+      >
         {/* Event Summary Card */}
         <View style={styles.summaryCard}>
           <Image
@@ -122,6 +158,54 @@ export const BookingScreenUI: React.FC<BookingUIProps> = ({
           </View>
         </View>
 
+        {/* Dietary requirements — ScrollView keeps rows below the fold reachable */}
+        <View style={styles.dietarySection}>
+          <Text style={styles.sectionTitle}>Dietary requirements (optional)</Text>
+          {DIETARY_PRESET_LABELS.map((label) => {
+            const checked = dietaryTags.includes(label);
+            return (
+              <TouchableOpacity
+                key={label}
+                style={styles.checkboxRow}
+                onPress={() => onToggleDietaryTag(label)}
+                activeOpacity={0.7}
+              >
+                <Ionicons
+                  name={checked ? "checkbox" : "square-outline"}
+                  size={24}
+                  color={colors.primary}
+                />
+                <Text style={styles.checkboxLabel}>{label}</Text>
+              </TouchableOpacity>
+            );
+          })}
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={onToggleDietaryOther}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={dietaryOtherSelected ? "checkbox" : "square-outline"}
+              size={24}
+              color={colors.primary}
+            />
+            <Text style={styles.checkboxLabel}>Other</Text>
+          </TouchableOpacity>
+          {dietaryOtherSelected ? (
+            <TextInput
+              style={styles.dietaryInput}
+              placeholder="Describe your dietary needs"
+              placeholderTextColor={colors.darkGrey}
+              multiline
+              numberOfLines={3}
+              maxLength={300}
+              value={dietaryOtherNote}
+              onChangeText={onChangeDietaryOtherNote}
+              textAlignVertical="top"
+            />
+          ) : null}
+        </View>
+
         {/* Total Price */}
         <View style={styles.totalSection}>
           <Text style={styles.totalLabel}>Total Price</Text>
@@ -129,7 +213,7 @@ export const BookingScreenUI: React.FC<BookingUIProps> = ({
             {isFreeEvent ? "Free" : `$${totalPrice.toFixed(2)}`}
           </Text>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Confirm Button */}
       <View style={styles.bottomBar}>
@@ -159,9 +243,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  container: {
+  scroll: {
     flex: 1,
+  },
+  scrollContent: {
     padding: 20,
+    paddingBottom: 28,
   },
   summaryCard: {
     flexDirection: "row",
@@ -228,6 +315,37 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     width: 40,
     textAlign: "center",
+  },
+  dietarySection: {
+    backgroundColor: colors.textOnPrimary,
+    borderRadius: 15,
+    padding: 20,
+    elevation: 1,
+    alignItems: "stretch",
+    marginBottom: 30,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.lightGrey,
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    color: colors.saveBtnTextColor,
+    flex: 1,
+  },
+  dietaryInput: {
+    minHeight: 88,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: colors.lightGrey,
+    borderRadius: 12,
+    padding: 12,
+    fontSize: 16,
+    color: colors.saveBtnTextColor,
   },
   totalSection: {
     flexDirection: "row",
