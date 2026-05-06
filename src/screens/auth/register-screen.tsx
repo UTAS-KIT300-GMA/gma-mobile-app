@@ -43,7 +43,12 @@ async function openExternalUrl(url: string) {
  */
 function PasswordStrengthHint({ password }: { password: string }) {
   if (!password) return null;
-  const isValid = password.length >= 8;
+  const isValid = password.length >= 10 &&
+  password.length <= 64 &&
+  /[A-Z]/.test(password) &&
+  /[a-z]/.test(password) &&
+  /[0-9]/.test(password) &&
+  /[^A-Za-z0-9]/.test(password);
   return (
     <Text
       style={[
@@ -53,7 +58,7 @@ function PasswordStrengthHint({ password }: { password: string }) {
     >
       {isValid
         ? "✓ Password strong"
-        : `${8 - password.length} more characters needed`}
+        : "Password must be 10-64 characters with uppercase, lowercase, number & special character"}
     </Text>
   );
 }
@@ -82,27 +87,62 @@ export function RegisterScreen({
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [confirmPasswordTouched, setConfirmPasswordTouched] = useState(false);
   const [gender, setGender] = useState<"Male" | "Female" | "Other" | "">("");
   const [agreed, setAgreed] = useState(false);
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const passwordsMatch = password === confirmPassword;
 
   // Date Picker States
   const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showPicker, setShowPicker] = useState(false);
   const [dateOfBirthError, setDateOfBirthError] = useState("");
+  const validateEmail = (email: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
 
+const validatePassword = (password: string) => {
+  return (
+    password.length >= 10 &&
+    password.length <= 64 &&
+    /[A-Z]/.test(password) &&
+    /[a-z]/.test(password) &&
+    /[0-9]/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+};
   /**
    * @summary Validates registration inputs and forwards normalized payload to parent handler.
    * @throws {never} Validation errors are shown through alerts/messages.
    * @Returns {void} Submits form when valid.
    */
   const handleSubmit = () => {
-    if (!firstName || !lastName || !email || !password || !gender) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword || !gender) {
       Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+
+    if (!validateEmail(email.trim())) {
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      return;
+    }
+
+    if (!validatePassword(password)) {
+      Alert.alert(
+      "Invalid Password",
+      "Password must be 10-64 characters and include uppercase, lowercase, number, and special character.");
       return;
     }
 
     if (!dateOfBirth) {
       setDateOfBirthError("Please select your date of birth.");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
       return;
     }
 
@@ -239,9 +279,18 @@ export function RegisterScreen({
             placeholderTextColor={colors.darkGrey}
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={(text) => {
+            setEmail(text);
+            setEmailTouched(true);
+            }}
             autoCapitalize="none"
           />
+
+        {emailTouched && !validateEmail(email) && (
+          <Text style={[styles.passwordHint, styles.hintInvalid]}>
+           Email must include @ and . with no spaces
+          </Text>
+        )}
           <TextInput
             style={styles.input}
             placeholder="Password"
