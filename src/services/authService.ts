@@ -57,7 +57,7 @@ const VERIFICATION_ACTION_CODE_SETTINGS = {
   url: "https://kit300-p4-gma.web.app/verification-success",
   handleCodeInApp: true,
   android: {
-    packageName: "com.gma.connect",
+    packageName: "com.gma.grow",
     installApp: false,
     minimumVersion: "1",
   },
