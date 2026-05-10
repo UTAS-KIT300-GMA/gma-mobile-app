@@ -111,12 +111,28 @@ export default function BookingRoute() {
       return Alert.alert("Error", "Event booking is not available.");
     }
 
-    // Blocks paid/subscriber-only events for now.
+    // Paid events: collect dietary info here, then complete payment on the Stripe screen.
     if (!isFreeEvent) {
-  return Alert.alert(
-        "Subscribers Only",
-        "This event is available to subscribed members only.",
-      );
+      const otherTrim = dietaryOtherNote.trim();
+      router.push({
+        pathname: "/event/payment",
+        params: {
+          type: "event",
+          title: event.title,
+          price: totalPrice.toFixed(2),
+          ticketType: "Paid event",
+          time: event.dateTime ? formatDateTime(event.dateTime) : "Time TBD",
+          location: event.address || "Location TBD",
+          ticketCount: String(tickets),
+          image: event.image || "",
+          eventId: event.id,
+          benefits: "",
+          dietaryTags: JSON.stringify(dietaryTags),
+          dietaryOtherSelected: dietaryOtherSelected ? "1" : "0",
+          dietaryOtherNote: otherTrim,
+        },
+      } as any);
+      return;
     }
 
     // Disables button actions during save.
