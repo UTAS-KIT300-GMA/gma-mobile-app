@@ -17,6 +17,7 @@ export default ({ config }) => {
       "expo-build-properties",
       "expo-video",
       "expo-web-browser",
+      "react-native-iap"
     ],
   };
 };
