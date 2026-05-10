@@ -12,7 +12,7 @@
     },
     "android": {
       "package": "com.gma.grow",
-      "versionCode": 4,
+      "versionCode": 5,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/gma-app-logo.png",
         "backgroundColor": "#FBF0E4"

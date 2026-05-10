@@ -1,16 +1,9 @@
 import { AppHeader } from "@/components/AppHeader";
 import { auth, db, doc, serverTimestamp, updateDoc } from "@/services/authService";
-import {
-  BillingOfferOption,
-  buyMembershipOption,
-  closeBillingConnection,
-  fetchMembershipOfferOptions,
-  initBillingConnection,
-  startMembershipPurchaseListeners,
-} from "@/services/membershipBilling";
 import { colors } from "@/theme/ThemeProvider";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
+import { ErrorCode, useIAP } from "react-native-iap";
 import {
   ActivityIndicator,
   Alert,
@@ -22,46 +15,132 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-/**
- * @summary Displays available membership plans and starts subscription checkout.
- * @throws {never} User actions are handled by navigation/alerts.
- * @Returns {React.JSX.Element} Membership plan selection screen.
- */
+type BillingOfferOption = {
+  productId: string;
+  title: string;
+  description: string;
+  displayPrice: string;
+  durationLabel: string;
+  offerToken?: string;
+  offerId?: string;
+  basePlanId?: string;
+  tags: string[];
+};
+
+const MEMBERSHIP_SUBSCRIPTION_SKUS = [
+  process.env.EXPO_PUBLIC_PLAY_SUBSCRIPTION_MONTHLY_SKU,
+  process.env.EXPO_PUBLIC_PLAY_SUBSCRIPTION_YEARLY_SKU,
+  process.env.EXPO_PUBLIC_PLAY_SUBSCRIPTION_PREPAID_SKU,
+].filter((value): value is string => !!value?.trim());
+
 export default function MembershipPlansScreen() {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<"free" | "premium">("premium");
-  const [loading, setLoading] = useState(true);
   const [buying, setBuying] = useState(false);
-  const [options, setOptions] = useState<BillingOfferOption[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedOptionKey, setSelectedOptionKey] = useState<string>("");
+
+  const { connected, subscriptions, fetchProducts, requestPurchase, finishTransaction } =
+    useIAP({
+      onPurchaseSuccess: async (purchase) => {
+        try {
+          const uid = auth.currentUser?.uid;
+          if (uid) {
+            await updateDoc(doc(db, "users", uid), {
+              role: "member",
+              membershipStatus: "active",
+              membershipProvider: "google_play",
+              membershipSku: String(purchase?.productId ?? ""),
+              membershipPurchaseToken: String(
+                purchase?.purchaseToken ?? purchase?.transactionId ?? "",
+              ),
+              membershipUpdatedAt: serverTimestamp(),
+            });
+          }
+          await finishTransaction({ purchase, isConsumable: false } as any);
+          Alert.alert("Membership activated", "Your premium access is now active.", [
+            { text: "OK", onPress: () => router.replace("/(profile)/membership" as any) },
+          ]);
+        } catch (e) {
+          const message =
+            e instanceof Error ? e.message : "Failed to activate your membership.";
+          Alert.alert("Purchase error", message);
+        } finally {
+          setBuying(false);
+        }
+      },
+      onPurchaseError: (error) => {
+        const code = String(error?.code ?? "");
+        const cancelled =
+          code === ErrorCode.UserCancelled ||
+          code === "E_USER_CANCELLED" ||
+          code === "user-cancelled";
+        if (!cancelled) {
+          Alert.alert("Purchase error", String(error?.message ?? "Purchase failed."));
+        }
+        setBuying(false);
+      },
+      onError: (error) => {
+        Alert.alert("Billing unavailable", error.message);
+        setLoading(false);
+      },
+    });
+
+  const options = useMemo<BillingOfferOption[]>(() => {
+    const normalized: BillingOfferOption[] = [];
+    subscriptions.forEach((sub: any) => {
+      const productId = String(sub?.id ?? sub?.productId ?? "");
+      if (!productId) return;
+      const title = String(sub?.title ?? "GMA Premium").replace(/\s+\(.*\)$/, "").trim();
+      const description = String(sub?.description ?? "");
+      const offerDetails = Array.isArray(sub?.subscriptionOfferDetailsAndroid)
+        ? sub.subscriptionOfferDetailsAndroid
+        : [];
+
+      if (!offerDetails.length) {
+        normalized.push({
+          productId,
+          title,
+          description,
+          displayPrice: String(sub?.displayPrice ?? sub?.localizedPrice ?? "Check Play Store"),
+          durationLabel: "Standard",
+          tags: [],
+        });
+        return;
+      }
+
+      offerDetails.forEach((offer: any) => {
+        const phases = Array.isArray(offer?.pricingPhases?.pricingPhaseList)
+          ? offer.pricingPhases.pricingPhaseList
+          : [];
+        const firstPhase = phases[0] ?? {};
+        normalized.push({
+          productId,
+          title,
+          description,
+          displayPrice: String(firstPhase?.formattedPrice ?? "Check Play Store"),
+          durationLabel: String(firstPhase?.billingPeriod ?? "Subscription"),
+          offerToken: offer?.offerToken ? String(offer.offerToken) : undefined,
+          offerId: offer?.offerId ? String(offer.offerId) : undefined,
+          basePlanId: offer?.basePlanId ? String(offer.basePlanId) : undefined,
+          tags: Array.isArray(offer?.offerTags)
+            ? offer.offerTags.map((tag: unknown) => String(tag))
+            : [],
+        });
+      });
+    });
+    return normalized;
+  }, [subscriptions]);
 
   useEffect(() => {
     let mounted = true;
-    let stopListeners: (() => void) | null = null;
-    const setup = async () => {
+    const load = async () => {
+      if (!connected) return;
       try {
-        await initBillingConnection();
-        stopListeners = startMembershipPurchaseListeners(
-          () => {
-            setBuying(false);
-            Alert.alert("Membership activated", "Your premium access is now active.", [
-              { text: "OK", onPress: () => router.replace("/(profile)/membership" as any) },
-            ]);
-          },
-          (message) => {
-            setBuying(false);
-            Alert.alert("Purchase error", message);
-          },
-        );
-        const loadedOptions = await fetchMembershipOfferOptions();
-        if (!mounted) return;
-        setOptions(loadedOptions);
-        if (loadedOptions.length > 0) {
-          const first = loadedOptions[0];
-          setSelectedOptionKey(
-            `${first.productId}::${first.offerToken ?? "standard"}`,
-          );
-        }
+        await fetchProducts({
+          skus: MEMBERSHIP_SUBSCRIPTION_SKUS,
+          type: "subs",
+        });
       } catch (e) {
         const message =
           e instanceof Error ? e.message : "Unable to load Play subscription plans.";
@@ -70,13 +149,17 @@ export default function MembershipPlansScreen() {
         if (mounted) setLoading(false);
       }
     };
-    void setup();
+    void load();
     return () => {
       mounted = false;
-      stopListeners?.();
-      closeBillingConnection();
     };
-  }, [router]);
+  }, [connected, fetchProducts]);
+
+  useEffect(() => {
+    if (!options.length || selectedOptionKey) return;
+    const first = options[0];
+    setSelectedOptionKey(`${first.productId}::${first.offerToken ?? "standard"}`);
+  }, [options, selectedOptionKey]);
 
   const selectedOption = useMemo(
     () =>
@@ -88,49 +171,63 @@ export default function MembershipPlansScreen() {
     [options, selectedOptionKey],
   );
 
-/**
- * @summary Navigates to payment with the selected membership payload.
- * @throws {never} Navigation call does not throw synchronously.
- * @Returns {void} Opens payment route.
- */
-const handleSubscribe = async () => {
-  if (selectedPlan === "free") {
-    try {
-      const uid = auth.currentUser?.uid;
-      if (uid) {
-        await updateDoc(doc(db, "users", uid), {
-          role: "general",
-          membershipStatus: "inactive",
-          membershipUpdatedAt: serverTimestamp(),
-        });
+  const handleSubscribe = async () => {
+    if (selectedPlan === "free") {
+      try {
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          await updateDoc(doc(db, "users", uid), {
+            role: "general",
+            membershipStatus: "inactive",
+            membershipUpdatedAt: serverTimestamp(),
+          });
+        }
+        Alert.alert("Free plan", "You are now using the free tier.");
+        router.replace("/(profile)/membership" as any);
+      } catch (e) {
+        const message =
+          e instanceof Error ? e.message : "Unable to switch to the free plan.";
+        Alert.alert("Update failed", message);
       }
-      Alert.alert("Free plan", "You are now using the free tier.");
-      router.replace("/(profile)/membership" as any);
-    } catch (e) {
-      const message =
-        e instanceof Error ? e.message : "Unable to switch to the free plan.";
-      Alert.alert("Update failed", message);
+      return;
     }
-    return;
-  }
 
-  if (!selectedOption) {
-    Alert.alert(
-      "No plan selected",
-      "No Play Billing plan is available yet. Configure subscription products in Google Play Console and app env SKU values.",
-    );
-    return;
-  }
+    if (!selectedOption) {
+      Alert.alert(
+        "No plan selected",
+        "No Play Billing plan is available yet. Configure subscription products in Google Play Console and app env SKU values.",
+      );
+      return;
+    }
 
-  setBuying(true);
-  try {
-    await buyMembershipOption(selectedOption);
-  } catch (e) {
-    setBuying(false);
-    const message = e instanceof Error ? e.message : "Unable to start purchase flow.";
-    Alert.alert("Checkout failed", message);
-  }
-};
+    setBuying(true);
+    try {
+      await requestPurchase({
+        request: {
+          apple: { sku: selectedOption.productId },
+          google: {
+            skus: [selectedOption.productId],
+            ...(selectedOption.offerToken
+              ? {
+                  subscriptionOffers: [
+                    {
+                      sku: selectedOption.productId,
+                      offerToken: selectedOption.offerToken,
+                    },
+                  ],
+                }
+              : {}),
+          },
+        } as any,
+        type: "subs",
+      });
+    } catch (e) {
+      setBuying(false);
+      const message = e instanceof Error ? e.message : "Unable to start purchase flow.";
+      Alert.alert("Checkout failed", message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <AppHeader
@@ -140,7 +237,6 @@ const handleSubscribe = async () => {
       />
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Free Plan */}
         <Pressable
           style={[
             styles.planCard,
@@ -155,7 +251,6 @@ const handleSubscribe = async () => {
           <Text style={styles.planDesc}>Access learning content</Text>
         </Pressable>
 
-        {/* Premium Plan */}
         <Pressable
           style={[
             styles.planCard,
@@ -175,7 +270,11 @@ const handleSubscribe = async () => {
           {loading ? (
             <View style={styles.loaderWrap}>
               <ActivityIndicator color={colors.primary} />
-              <Text style={styles.planDesc}>Loading available subscriptions...</Text>
+              <Text style={styles.planDesc}>
+                {connected
+                  ? "Loading available subscriptions..."
+                  : "Connecting to Google Play Billing..."}
+              </Text>
             </View>
           ) : (
             <View style={styles.offerList}>
@@ -209,7 +308,6 @@ const handleSubscribe = async () => {
           )}
         </Pressable>
 
-        {/* Subscribe Button */}
         <Pressable
           style={[styles.subscribeButton, buying && { opacity: 0.65 }]}
           onPress={handleSubscribe}
@@ -224,12 +322,11 @@ const handleSubscribe = async () => {
           </Text>
         </Pressable>
 
-        {/* Learn More */}
         <Pressable
           onPress={() =>
             Alert.alert(
               "Plan Details",
-              "Premium gives you early access, discounts, and priority booking."
+              "Premium gives you early access, discounts, and priority booking.",
             )
           }
         >
@@ -268,13 +365,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: colors.primary,
-  },
-  badge: {
-    backgroundColor: "#E9C34F",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    fontSize: 12,
   },
   loaderWrap: {
     marginTop: 10,
