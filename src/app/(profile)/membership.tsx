@@ -1,9 +1,12 @@
 import { AppHeader } from "@/components/AppHeader";
+import { useUser } from "@/hooks/useUser";
 import { colors } from "@/theme/ThemeProvider";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  Linking,
   Modal,
   Pressable,
   ScrollView,
@@ -20,7 +23,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
  */
 export default function MembershipScreen() {
   const router = useRouter();
+  const { userDoc, loading } = useUser();
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const isMember = userDoc?.role === "member";
+  const membershipStatus = userDoc?.membershipStatus ?? (isMember ? "active" : "inactive");
+  const membershipSku = userDoc?.membershipSku ?? "Not set";
+  const membershipUpdatedAt = userDoc?.membershipUpdatedAt;
 
   /**
    * @summary Confirms subscription cancellation and navigates back.
@@ -29,16 +37,20 @@ export default function MembershipScreen() {
    */
   const handleCancelSave = () => {
     setShowCancelModal(false);
-    Alert.alert(
-      "Subscription Cancelled",
-      "Your plan has been cancelled. A confirmation email will be sent.",
-      [
-        {
-          text: "OK",
-          onPress: () => router.back(),
+    Alert.alert("Manage subscription", "You can cancel in Google Play subscription settings.", [
+      {
+        text: "Open Google Play",
+        onPress: async () => {
+          const url = "https://play.google.com/store/account/subscriptions";
+          const supported = await Linking.canOpenURL(url);
+          if (supported) await Linking.openURL(url);
         },
-      ]
-    );
+      },
+      {
+        text: "Close",
+        style: "cancel",
+      },
+    ]);
   };
 
   return (
@@ -54,9 +66,23 @@ export default function MembershipScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.planCard}>
-          <Text style={styles.planTitle}>Current Plan: GMA Premium</Text>
-          <Text style={styles.planMeta}>Status: Active</Text>
-          <Text style={styles.planMeta}>Next Renewal: 10/06/2026</Text>
+          <Text style={styles.planTitle}>
+            Current Plan: {isMember ? "GMA Premium" : "Free"}
+          </Text>
+          {loading ? (
+            <ActivityIndicator color={colors.primary} />
+          ) : (
+            <>
+              <Text style={styles.planMeta}>Status: {membershipStatus}</Text>
+              <Text style={styles.planMeta}>SKU: {membershipSku}</Text>
+              <Text style={styles.planMeta}>
+                Last Updated:{" "}
+                {membershipUpdatedAt?.toDate
+                  ? membershipUpdatedAt.toDate().toLocaleDateString()
+                  : "N/A"}
+              </Text>
+            </>
+          )}
         </View>
 
         <View style={styles.benefitsCard}>
@@ -70,14 +96,16 @@ export default function MembershipScreen() {
           style={styles.primaryButton}
           onPress={() => router.push("/(profile)/membership-plans")}
         >
-          <Text style={styles.primaryButtonText}>Change plan</Text>
+          <Text style={styles.primaryButtonText}>
+            {isMember ? "Change / Upgrade plan" : "See premium plans"}
+          </Text>
         </Pressable>
 
         <Pressable
           style={styles.secondaryButton}
           onPress={() => setShowCancelModal(true)}
         >
-          <Text style={styles.secondaryButtonText}>Cancel subscription</Text>
+          <Text style={styles.secondaryButtonText}>Manage subscription</Text>
         </Pressable>
 
         <Pressable
