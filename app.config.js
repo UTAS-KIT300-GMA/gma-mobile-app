@@ -17,6 +17,14 @@ export default ({ config }) => {
       "expo-build-properties",
       "expo-video",
       "expo-web-browser",
+      "react-native-iap",
+      [
+        "@stripe/stripe-react-native",
+        {
+          merchantIdentifier: process.env.EXPO_PUBLIC_STRIPE_MERCHANT_IDENTIFIER,
+          enableGooglePay: true,
+        },
+      ],
     ],
   };
 };

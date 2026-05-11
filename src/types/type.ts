@@ -18,6 +18,11 @@ export type UserDoc = {
   // Optional fields used by social providers
   photoURL?: string;
   authProvider?: "google" | "facebook" | "password" | string;
+  membershipStatus?: "active" | "inactive" | "paused" | string;
+  membershipProvider?: "google_play" | string;
+  membershipSku?: string;
+  membershipPurchaseToken?: string;
+  membershipUpdatedAt?: FirebaseFirestoreTypes.Timestamp | null;
 };
 
 export type EventDoc = {

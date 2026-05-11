@@ -7,6 +7,7 @@ import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { collection, getDocs } from "@react-native-firebase/firestore";
 import React, { useEffect, useState } from "react";
 import { Alert, Linking } from "react-native";
+import {useUser} from "@/hooks/useUser.ts";
 
 /**
  * @summary Loads learning content, bookmark state, and file/open handlers for the learning UI.
@@ -25,7 +26,10 @@ export default function LearningRoute() {
   const { bookmarkedIds, toggleBookmark, isLoading: isBookmarksLoading } =
     useBookmarks();
   // Holds authenticated user context for access-aware behavior.
-  const { user } = useAuth();
+  const { userDoc } = useUser();
+
+  // Placeholder subscription entitlement flag.
+  const isSubscriber = userDoc?.membershipStatus === "active";
 
   useEffect(() => {
     /**
@@ -97,9 +101,6 @@ export default function LearningRoute() {
 
     loadContent();
   }, [bookmarkedIds]);
-
-  // Placeholder subscription entitlement flag.
-  const isSubscriber = false;
 
   /**
    * @summary Toggles the bookmark status for a specific video asset.

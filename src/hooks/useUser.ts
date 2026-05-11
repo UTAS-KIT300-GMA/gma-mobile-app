@@ -60,6 +60,21 @@ export function useUser(): UseUserState {
           photoURL: typeof data.photoURL === "string" ? data.photoURL : undefined,
           authProvider:
             typeof data.authProvider === "string" ? data.authProvider : undefined,
+          membershipStatus:
+            typeof data.membershipStatus === "string"
+              ? data.membershipStatus
+              : undefined,
+          membershipProvider:
+            typeof data.membershipProvider === "string"
+              ? data.membershipProvider
+              : undefined,
+          membershipSku:
+            typeof data.membershipSku === "string" ? data.membershipSku : undefined,
+          membershipPurchaseToken:
+            typeof data.membershipPurchaseToken === "string"
+              ? data.membershipPurchaseToken
+              : undefined,
+          membershipUpdatedAt: (data.membershipUpdatedAt as any) ?? null,
         });
         setLoading(false);
       },

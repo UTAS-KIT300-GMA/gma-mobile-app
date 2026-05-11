@@ -6,10 +6,15 @@
  */
 
 import { applyActionCode, auth, reloadUser } from "@/services/authService";
+import {
+  STRIPE_MERCHANT_IDENTIFIER,
+  STRIPE_PUBLISHABLE_KEY,
+} from "@/config/stripe";
 import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
 import React, { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, View, Alert } from "react-native";
+import { StripeProvider } from "@stripe/stripe-react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { GlobalProvider } from "@/context/GlobalContext";
@@ -231,8 +236,14 @@ export default function RootLayout() {
 
   // Once loading is complete and routing is confirmed, render the actual navigation stack.
   return (
+    <StripeProvider
+      publishableKey={STRIPE_PUBLISHABLE_KEY}
+      urlScheme="gmamobile"
+      merchantIdentifier={STRIPE_MERCHANT_IDENTIFIER}
+    >
       <GlobalProvider>
         <Stack screenOptions={{ headerShown: false }} />
       </GlobalProvider>
-  )
+    </StripeProvider>
+  );
 }
