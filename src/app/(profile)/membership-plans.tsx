@@ -59,7 +59,7 @@ export default function MembershipPlansScreen() {
           }
           await finishTransaction({ purchase, isConsumable: false } as any);
           Alert.alert("Membership activated", "Your premium access is now active.", [
-            { text: "OK", onPress: () => router.replace("/(profile)/membership" as any) },
+            { text: "OK", onPress: () => router.back() },
           ]);
         } catch (e) {
           const message =
@@ -183,7 +183,11 @@ export default function MembershipPlansScreen() {
           });
         }
         Alert.alert("Free plan", "You are now using the free tier.");
-        router.replace("/(profile)/membership" as any);
+        if (router.canGoBack()) {
+          router.back();
+        } else {
+          router.replace("/(profile)/membership");
+        }
       } catch (e) {
         const message =
           e instanceof Error ? e.message : "Unable to switch to the free plan.";
@@ -226,7 +230,7 @@ export default function MembershipPlansScreen() {
         await finishTransaction({ purchase: existingPurchase, isConsumable: false } as any);
 
         Alert.alert("Access Restored", "We found an active subscription. Your premium access is restored.");
-        router.replace("/(profile)/membership" as any);
+        router.back()
         setBuying(false);
         return; // Exit here, do not call requestPurchase
       }
