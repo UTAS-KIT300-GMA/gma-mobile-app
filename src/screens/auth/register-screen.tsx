@@ -141,7 +141,7 @@ const validatePassword = (password: string) => {
       return;
     }
 
-    if (password !== confirmPassword) {
+    if (!passwordsMatch) {
       Alert.alert("Error", "Passwords do not match.");
       return;
     }
@@ -300,6 +300,24 @@ const validatePassword = (password: string) => {
             onChangeText={setPassword}
           />
           <PasswordStrengthHint password={password} />
+
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            placeholderTextColor={colors.darkGrey}
+            secureTextEntry
+            value={confirmPassword}
+            onChangeText={(text) => {
+              setConfirmPassword(text);
+              setConfirmPasswordTouched(true);
+            }}
+          />
+
+          {confirmPasswordTouched && !passwordsMatch ? (
+            <Text style={[styles.passwordHint, styles.hintInvalid]}>
+              Passwords do not match
+            </Text>
+          ) : null}
 
           <View style={styles.checkboxRow}>
             <TouchableOpacity
