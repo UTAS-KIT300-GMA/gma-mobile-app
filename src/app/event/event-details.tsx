@@ -7,6 +7,7 @@ import { doc, getDoc } from "@react-native-firebase/firestore";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { Alert } from "react-native";
+import {useUser} from "@/hooks/useUser.ts";
 
 /**
  * @summary Loads event details and bookmark state, then binds detail actions for the event UI.
@@ -18,6 +19,7 @@ export default function EventDetailScreen() {
   const router = useRouter();
   // Catches the unique event ID from the navigation parameters and stores it in the eventId var.
   const { id } = useLocalSearchParams();
+  const { userDoc } = useUser();
   const eventId = id as string;
 
   // Bookmark UI uses the same global bookmark map + toggle as EventCard / discovery (users/{uid}/bookmarks).
@@ -117,7 +119,7 @@ export default function EventDetailScreen() {
       return;
     }
 
-    if (event.type !== "free") {
+    if (event.type !== "free" && userDoc?.membershipStatus !== "active") {
       Alert.alert(
         "Subscribers Only",
         "This event is available to subscribed members only.",
