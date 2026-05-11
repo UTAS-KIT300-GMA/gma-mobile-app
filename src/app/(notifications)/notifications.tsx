@@ -151,6 +151,7 @@ function NotificationCard({
   onLongPress,
 }: NotificationCardProps) {
   const isRecommendation = item.type === "recommendation";
+  const isUnreadDefault = !item.read && !isRecommendation;
 
   const iconName = useMemo(() => {
     switch (item.type) {
@@ -165,6 +166,18 @@ function NotificationCard({
     }
   }, [item.type]);
 
+  const iconColor = isRecommendation
+    ? colors.textOnSecondary
+    : isUnreadDefault
+      ? colors.saveBtnTextColor
+      : colors.primary;
+
+  const textStyle = isRecommendation
+    ? styles.recommendationText
+    : isUnreadDefault
+      ? styles.unreadText
+      : styles.defaultText;
+
   return (
     <Pressable
       onPress={onPress}
@@ -172,7 +185,7 @@ function NotificationCard({
       style={[
         styles.card,
         isRecommendation ? styles.recommendationCard : styles.defaultCard,
-        !item.read && styles.unreadCard,
+        isUnreadDefault && styles.unreadCard,
         selected && styles.selectedCard,
       ]}
     >
@@ -182,16 +195,12 @@ function NotificationCard({
             <Ionicons
               name={selected ? "checkbox" : "square-outline"}
               size={24}
-              color={colors.primary}
+              color={isUnreadDefault ? colors.saveBtnTextColor : colors.primary}
             />
           </View>
         ) : (
           <View style={styles.cardIconWrap}>
-            <Ionicons
-              name={iconName}
-              size={26}
-              color={isRecommendation ? colors.textOnSecondary : colors.primary}
-            />
+            <Ionicons name={iconName} size={26} color={iconColor} />
           </View>
         )}
       </View>
@@ -203,32 +212,27 @@ function NotificationCard({
               styles.cardTitle,
               isRecommendation
                 ? styles.recommendationTitle
-                : styles.defaultTitle,
+                : isUnreadDefault
+                  ? styles.unreadTitle
+                  : styles.defaultTitle,
             ]}
           >
             {item.title}
           </Text>
 
-          {!item.read && <View style={styles.unreadDot} />}
+          {!item.read && (
+            <View
+              style={[
+                styles.unreadDot,
+                isUnreadDefault && styles.unreadDotOnHighlight,
+              ]}
+            />
+          )}
         </View>
 
-        <Text
-          style={[
-            styles.cardMessage,
-            isRecommendation ? styles.recommendationText : styles.defaultText,
-          ]}
-        >
-          {item.message}
-        </Text>
+        <Text style={[styles.cardMessage, textStyle]}>{item.message}</Text>
 
-        <Text
-          style={[
-            styles.cardTime,
-            isRecommendation ? styles.recommendationText : styles.defaultText,
-          ]}
-        >
-          {item.time}
-        </Text>
+        <Text style={[styles.cardTime, textStyle]}>{item.time}</Text>
       </View>
     </Pressable>
   );
@@ -390,6 +394,43 @@ export default function NotificationsScreen() {
     setSelectionMode(false);
   };
 
+  const deleteNotificationsOnServer = useCallback(
+    async (ids: string[]) => {
+      if (!uid || ids.length === 0) return;
+      try {
+        const batch = writeBatch(db);
+        for (const id of ids) {
+          batch.delete(doc(db, "users", uid, "notifications", id));
+        }
+        await batch.commit();
+      } catch (e) {
+        console.warn("[notifications] delete failed:", e);
+        Alert.alert("Error", "Could not delete notifications. Try again.");
+      }
+    },
+    [uid],
+  );
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    Alert.alert(
+      "Delete notifications",
+      `Delete ${selectedIds.length} notification${selectedIds.length === 1 ? "" : "s"}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await deleteNotificationsOnServer(selectedIds);
+            setSelectedIds([]);
+            setSelectionMode(false);
+          },
+        },
+      ],
+    );
+  };
+
   const headerTitle = selectionMode
     ? `${selectedIds.length} selected`
     : "Notifications";
@@ -424,11 +465,31 @@ export default function NotificationsScreen() {
         <Text style={styles.summaryText}>
           {unreadCount} unread notification{unreadCount === 1 ? "" : "s"}
         </Text>
-        {selectionMode ? (
-          <Pressable onPress={() => setSelectionMode(false)}>
-            <Text style={styles.summaryAction}>Cancel</Text>
-          </Pressable>
-        ) : null}
+        <View style={styles.summaryActions}>
+          {selectionMode ? (
+            <>
+              {selectedIds.length > 0 && (
+                <>
+                  <Pressable onPress={handleMarkSelectedAsRead}>
+                    <Text style={styles.summaryAction}>Mark read</Text>
+                  </Pressable>
+                  <Pressable onPress={handleDeleteSelected} style={styles.summaryActionGap}>
+                    <Text style={[styles.summaryAction, styles.deleteAction]}>Delete</Text>
+                  </Pressable>
+                </>
+              )}
+              <Pressable onPress={() => setSelectionMode(false)} style={styles.summaryActionGap}>
+                <Text style={styles.summaryAction}>Cancel</Text>
+              </Pressable>
+            </>
+          ) : (
+            unreadCount > 0 && (
+              <Pressable onPress={handleMarkAllAsRead}>
+                <Text style={styles.summaryAction}>Mark all read</Text>
+              </Pressable>
+            )
+          )}
+        </View>
       </View>
 
       {listLoading && notifications.length === 0 ? (
@@ -543,7 +604,34 @@ const styles = StyleSheet.create({
   },
 
   unreadCard: {
-    borderColor: "#F1CB5F",
+    backgroundColor: colors.saveBtnColor,
+    borderColor: "transparent",
+  },
+
+  unreadTitle: {
+    color: colors.saveBtnTextColor,
+  },
+
+  unreadText: {
+    color: colors.saveBtnTextColor,
+  },
+
+  unreadDotOnHighlight: {
+    backgroundColor: colors.saveBtnTextColor,
+  },
+
+  summaryActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  summaryActionGap: {
+    marginLeft: 4,
+  },
+
+  deleteAction: {
+    color: "#C0392B",
   },
 
   selectedCard: {
