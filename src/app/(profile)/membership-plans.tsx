@@ -3,7 +3,7 @@ import { auth, db, doc, serverTimestamp, updateDoc } from "@/services/authServic
 import { colors } from "@/theme/ThemeProvider";
 import { useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
-import { ErrorCode, useIAP } from "react-native-iap";
+import {ErrorCode, getAvailablePurchases, useIAP} from "react-native-iap";
 import {
   ActivityIndicator,
   Alert,
@@ -40,7 +40,7 @@ export default function MembershipPlansScreen() {
   const [loading, setLoading] = useState(true);
   const [selectedOptionKey, setSelectedOptionKey] = useState<string>("");
 
-  const { connected, subscriptions, fetchProducts, requestPurchase, finishTransaction } =
+  const { connected, subscriptions, fetchProducts, requestPurchase, finishTransaction, availablePurchases } =
     useIAP({
       onPurchaseSuccess: async (purchase) => {
         try {
@@ -202,6 +202,35 @@ export default function MembershipPlansScreen() {
 
     setBuying(true);
     try {
+      // Check if the user already owns this SKU on Google Play
+      const purchases = await getAvailablePurchases();
+      const existingPurchase = purchases.find(
+          (p) => p.productId === selectedOption.productId
+      );
+
+      if (existingPurchase) {
+        console.log("Found existing active purchase, restoring access...");
+
+        const uid = auth.currentUser?.uid;
+        if (uid) {
+          await updateDoc(doc(db, "users", uid), {
+            role: "member",
+            membershipStatus: "active",
+            membershipProvider: "google_play",
+            membershipSku: existingPurchase.productId,
+            membershipPurchaseToken: existingPurchase.purchaseToken,
+            membershipUpdatedAt: serverTimestamp(),
+          });
+        }
+
+        await finishTransaction({ purchase: existingPurchase, isConsumable: false } as any);
+
+        Alert.alert("Access Restored", "We found an active subscription. Your premium access is restored.");
+        router.replace("/(profile)/membership" as any);
+        setBuying(false);
+        return; // Exit here, do not call requestPurchase
+      }
+
       await requestPurchase({
         request: {
           apple: { sku: selectedOption.productId },
