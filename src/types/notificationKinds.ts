@@ -5,25 +5,21 @@
  */
 export type NotificationKind =
   | "event_cancelled"
-  | "event_date_changed"
-  | "event_recommended"
+  | "event_edited"
   | "event_booking_confirmed"
   | "subscription_confirmed"
   | "subscription_cancelled"
   | "event_reminder_2days"
   | "event_reminder_1day"
-  | "event_details_changed";
 
 const ALLOWED: readonly NotificationKind[] = [
   "event_cancelled",
-  "event_date_changed",
-  "event_recommended",
+  "event_edited",
   "event_booking_confirmed",
   "subscription_confirmed",
   "subscription_cancelled",
   "event_reminder_2days",
   "event_reminder_1day",
-  "event_details_changed",
 ] as const;
 
 /**
