@@ -18,6 +18,7 @@ import { StripeProvider } from "@stripe/stripe-react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
 import { GlobalProvider } from "@/context/GlobalContext";
+import { FcmBootstrap } from "@/components/FcmBootstrap";
 import { buildScreenTrackingNames, logScreenView } from "@/components/utils";
 
 /**
@@ -242,6 +243,7 @@ export default function RootLayout() {
       merchantIdentifier={STRIPE_MERCHANT_IDENTIFIER}
     >
       <GlobalProvider>
+        <FcmBootstrap />
         <Stack screenOptions={{ headerShown: false }} />
       </GlobalProvider>
     </StripeProvider>

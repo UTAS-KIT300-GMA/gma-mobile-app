@@ -1,8 +1,24 @@
 import { AppHeader } from "@/components/AppHeader";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserNotificationSettings } from "@/hooks/useUserNotificationSettings";
+import { db } from "@/services/authService";
 import { colors } from "@/theme/ThemeProvider";
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
+import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import {
+  collection,
+  doc,
+  limit,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  writeBatch,
+} from "@react-native-firebase/firestore";
+import { useRouter } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  ActivityIndicator,
   Alert,
   FlatList,
   Pressable,
@@ -16,111 +32,108 @@ type NotificationType = "recommendation" | "reminder" | "booking";
 
 type NotificationItem = {
   id: string;
+  kind: string;
   type: NotificationType;
   title: string;
   message: string;
   time: string;
   read: boolean;
+  data?: Record<string, string>;
 };
 
-const MOCK_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: "1",
-    type: "recommendation",
-    title: "Event recommendation",
-    message: "New networking event recommended for you",
-    time: "2 min ago",
-    read: false,
-  },
-  {
-    id: "2",
-    type: "reminder",
-    title: "Event reminder",
-    message: "Your booked event is tomorrow",
-    time: "1 hour ago",
-    read: false,
-  },
-  {
-    id: "3",
-    type: "booking",
-    title: "Booking confirmation",
-    message: "Your booking for Career Workshop is confirmed",
-    time: "3 hours ago",
-    read: true,
-  },
-  {
-    id: "4",
-    type: "booking",
-    title: "Booking update",
-    message: "Your seat has been upgraded for Startup Meetup",
-    time: "5 hours ago",
-    read: true,
-  },
-  {
-    id: "5",
-    type: "recommendation",
-    title: "Event recommendation",
-    message: "A volunteering event near you may interest you",
-    time: "Yesterday",
-    read: false,
-  },
-  {
-    id: "6",
-    type: "reminder",
-    title: "Event reminder",
-    message: "Your language exchange session starts in 2 hours",
-    time: "Yesterday",
-    read: true,
-  },
-  {
-    id: "7",
-    type: "booking",
-    title: "Booking confirmation",
-    message: "You have successfully booked Women in Tech Panel",
-    time: "2 days ago",
-    read: true,
-  },
-  {
-    id: "8",
-    type: "recommendation",
-    title: "Event recommendation",
-    message: "New business analytics workshop recommended for you",
-    time: "2 days ago",
-    read: false,
-  },
-  {
-    id: "9",
-    type: "reminder",
-    title: "Event reminder",
-    message: "Your mentoring session is tomorrow at 3:00 PM",
-    time: "3 days ago",
-    read: false,
-  },
-  {
-    id: "10",
-    type: "booking",
-    title: "Booking confirmation",
-    message: "Your registration for Community BBQ is confirmed",
-    time: "4 days ago",
-    read: true,
-  },
-  {
-    id: "11",
-    type: "recommendation",
-    title: "Event recommendation",
-    message: "You may like this migrant networking breakfast",
-    time: "5 days ago",
-    read: false,
-  },
-  {
-    id: "12",
-    type: "reminder",
-    title: "Event reminder",
-    message: "Your booked workshop starts in 30 minutes",
-    time: "6 days ago",
-    read: true,
-  },
-];
+function isVisibleInMemberInbox(
+  kind: string,
+  specialOffersEnabled: boolean,
+  upcomingRemindersEnabled: boolean,
+): boolean {
+  if (kind === "event_recommended" && !specialOffersEnabled) return false;
+  if (
+    (kind === "event_reminder_2days" || kind === "event_reminder_1day") &&
+    !upcomingRemindersEnabled
+  )
+    return false;
+  return true;
+}
+
+/**
+ * Maps Firestore notification document fields to display properties, including:
+ * - `type`: Categorised for display styling.
+ * - `time`: Formatted relative time string.
+ * - `data`: Safely parsed custom data object.
+ * Handles missing or malformed fields with defaults to ensure UI stability.
+ * @param id - Firestore document ID.
+ * @param data - Firestore document data.
+ * @returns Mapped notification item for UI rendering.
+ */
+function kindToDisplayType(kind: string | undefined): NotificationType {
+  switch (kind) {
+    case "event_recommended":
+      return "recommendation";
+    case "event_booking_confirmed":
+    case "subscription_confirmed":
+    case "subscription_cancelled":
+    case "event_cancelled":
+      return "booking";
+    case "event_date_changed":
+    case "event_details_changed":
+    case "event_reminder_2days":
+    case "event_reminder_1day":
+      return "reminder";
+    default:
+      return "reminder";
+  }
+}
+
+function toDate(value: unknown): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  if (typeof (value as { toDate?: () => Date }).toDate === "function") {
+    return (value as { toDate: () => Date }).toDate();
+  }
+  return null;
+}
+
+function formatNotificationTime(createdAt: unknown): string {
+  const date = toDate(createdAt);
+  if (!date) return "";
+
+  const now = Date.now();
+  const diffMs = now - date.getTime();
+  const diffM = Math.floor(diffMs / 60000);
+  if (diffM < 1) return "Just now";
+  if (diffM < 60) return `${diffM} min ago`;
+  const diffH = Math.floor(diffM / 60);
+  if (diffH < 24) return `${diffH} hour${diffH === 1 ? "" : "s"} ago`;
+  const diffD = Math.floor(diffH / 24);
+  if (diffD < 7) return `${diffD} day${diffD === 1 ? "" : "s"} ago`;
+  return date.toLocaleDateString();
+}
+
+function mapDocToItem(
+  id: string,
+  data: Record<string, unknown>,
+): NotificationItem {
+  const kind = typeof data.kind === "string" ? data.kind : "";
+  const title = typeof data.title === "string" ? data.title : "";
+  const body = typeof data.body === "string" ? data.body : "";
+  const read = Boolean(data.read);
+  const rawData = data.data;
+  const dataObj =
+    rawData && typeof rawData === "object" && !Array.isArray(rawData)
+      ? (rawData as Record<string, string>)
+      : undefined;
+
+  return {
+    id,
+    kind,
+    type: kindToDisplayType(kind),
+    title,
+    message: body,
+    time: formatNotificationTime(data.createdAt),
+    read,
+    data: dataObj,
+  };
+}
 
 type NotificationCardProps = {
   item: NotificationItem;
@@ -138,6 +151,7 @@ function NotificationCard({
   onLongPress,
 }: NotificationCardProps) {
   const isRecommendation = item.type === "recommendation";
+  const isUnreadDefault = !item.read && !isRecommendation;
 
   const iconName = useMemo(() => {
     switch (item.type) {
@@ -152,6 +166,18 @@ function NotificationCard({
     }
   }, [item.type]);
 
+  const iconColor = isRecommendation
+    ? colors.textOnSecondary
+    : isUnreadDefault
+      ? colors.saveBtnTextColor
+      : colors.primary;
+
+  const textStyle = isRecommendation
+    ? styles.recommendationText
+    : isUnreadDefault
+      ? styles.unreadText
+      : styles.defaultText;
+
   return (
     <Pressable
       onPress={onPress}
@@ -159,7 +185,7 @@ function NotificationCard({
       style={[
         styles.card,
         isRecommendation ? styles.recommendationCard : styles.defaultCard,
-        !item.read && styles.unreadCard,
+        isUnreadDefault && styles.unreadCard,
         selected && styles.selectedCard,
       ]}
     >
@@ -169,16 +195,12 @@ function NotificationCard({
             <Ionicons
               name={selected ? "checkbox" : "square-outline"}
               size={24}
-              color={colors.primary}
+              color={isUnreadDefault ? colors.saveBtnTextColor : colors.primary}
             />
           </View>
         ) : (
           <View style={styles.cardIconWrap}>
-            <Ionicons
-              name={iconName}
-              size={26}
-              color={isRecommendation ? colors.textOnSecondary : colors.primary}
-            />
+            <Ionicons name={iconName} size={26} color={iconColor} />
           </View>
         )}
       </View>
@@ -190,42 +212,85 @@ function NotificationCard({
               styles.cardTitle,
               isRecommendation
                 ? styles.recommendationTitle
-                : styles.defaultTitle,
+                : isUnreadDefault
+                  ? styles.unreadTitle
+                  : styles.defaultTitle,
             ]}
           >
             {item.title}
           </Text>
 
-          {!item.read && <View style={styles.unreadDot} />}
+          {!item.read && (
+            <View
+              style={[
+                styles.unreadDot,
+                isUnreadDefault && styles.unreadDotOnHighlight,
+              ]}
+            />
+          )}
         </View>
 
-        <Text
-          style={[
-            styles.cardMessage,
-            isRecommendation ? styles.recommendationText : styles.defaultText,
-          ]}
-        >
-          {item.message}
-        </Text>
+        <Text style={[styles.cardMessage, textStyle]}>{item.message}</Text>
 
-        <Text
-          style={[
-            styles.cardTime,
-            isRecommendation ? styles.recommendationText : styles.defaultText,
-          ]}
-        >
-          {item.time}
-        </Text>
+        <Text style={[styles.cardTime, textStyle]}>{item.time}</Text>
       </View>
     </Pressable>
   );
 }
 
+const NOTIFICATIONS_PAGE_SIZE = 50;
+
 export default function NotificationsScreen() {
-  const [notifications, setNotifications] =
-    useState<NotificationItem[]>(MOCK_NOTIFICATIONS);
+  const { user } = useAuth();
+  const { settings: notifSettings } = useUserNotificationSettings();
+  const router = useRouter();
+  const uid = user?.uid;
+
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [listLoading, setListLoading] = useState(true);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!uid) {
+      setNotifications([]);
+      setListLoading(false);
+      return;
+    }
+
+    setListLoading(true);
+    const notifQuery = query(
+      collection(db, "users", uid, "notifications"),
+      orderBy("createdAt", "desc"),
+      limit(NOTIFICATIONS_PAGE_SIZE),
+    );
+
+    const unsubscribe = onSnapshot(
+      notifQuery,
+      (snap) => {
+        const specialOn = notifSettings.specialOffers === true;
+        const remindersOn = notifSettings.upcomingEventReminders === true;
+        const rows: NotificationItem[] = snap.docs
+          .map((d: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
+            const raw = d.data() as Record<string, unknown>;
+            const kind = typeof raw.kind === "string" ? raw.kind : "";
+            if (!isVisibleInMemberInbox(kind, specialOn, remindersOn)) return null;
+            return mapDocToItem(d.id, raw);
+          })
+          .filter(
+            (row: NotificationItem | null): row is NotificationItem =>
+              row !== null,
+          );
+        setNotifications(rows);
+        setListLoading(false);
+      },
+      () => {
+        setListLoading(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [uid, notifSettings.specialOffers, notifSettings.upcomingEventReminders]);
 
   const unreadCount = notifications.filter((item) => !item.read).length;
 
@@ -237,23 +302,51 @@ export default function NotificationsScreen() {
     );
   };
 
-  const handleCardPress = (item: NotificationItem) => {
+  const markReadOnServer = useCallback(
+    async (ids: string[]) => {
+      if (!uid || ids.length === 0) return;
+      try {
+        const batch = writeBatch(db);
+        for (const id of ids) {
+          batch.update(doc(db, "users", uid, "notifications", id), {
+            read: true,
+            readAt: serverTimestamp(),
+          });
+        }
+        await batch.commit();
+      } catch (e) {
+        console.warn("[notifications] mark read failed:", e);
+        Alert.alert("Error", "Could not update notifications. Try again.");
+      }
+    },
+    [uid],
+  );
+
+  const handleCardPress = async (item: NotificationItem) => {
     if (selectionMode) {
       toggleSelected(item.id);
       return;
     }
 
+    if (!uid) return;
+
     if (!item.read) {
-      setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.id === item.id
-            ? { ...notification, read: true }
-            : notification,
-        ),
-      );
+      await markReadOnServer([item.id]);
     }
 
-    Alert.alert(item.title, item.message);
+    const eventId =
+      item.data && typeof item.data.eventId === "string"
+        ? item.data.eventId
+        : undefined;
+    if (eventId) {
+      router.push({
+        pathname: "/event/event-details",
+        params: { id: eventId },
+      } as any);
+      return;
+    }
+
+    Alert.alert(item.title, item.message || "No details.");
   };
 
   const handleCardLongPress = (item: NotificationItem) => {
@@ -275,7 +368,7 @@ export default function NotificationsScreen() {
     }
   };
 
-  const handleMarkSelectedAsRead = () => {
+  const handleMarkSelectedAsRead = async () => {
     if (selectedIds.length === 0) {
       Alert.alert(
         "No notifications selected",
@@ -284,31 +377,77 @@ export default function NotificationsScreen() {
       return;
     }
 
-    setNotifications((prev) =>
-      prev.map((item) =>
-        selectedIds.includes(item.id) ? { ...item, read: true } : item,
-      ),
-    );
-
+    await markReadOnServer(selectedIds);
     setSelectedIds([]);
     setSelectionMode(false);
   };
 
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((item) => ({
-        ...item,
-        read: true,
-      })),
-    );
-
+  const handleMarkAllAsRead = async () => {
+    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
+    if (unreadIds.length === 0) {
+      setSelectionMode(false);
+      setSelectedIds([]);
+      return;
+    }
+    await markReadOnServer(unreadIds);
     setSelectedIds([]);
     setSelectionMode(false);
+  };
+
+  const deleteNotificationsOnServer = useCallback(
+    async (ids: string[]) => {
+      if (!uid || ids.length === 0) return;
+      try {
+        const batch = writeBatch(db);
+        for (const id of ids) {
+          batch.delete(doc(db, "users", uid, "notifications", id));
+        }
+        await batch.commit();
+      } catch (e) {
+        console.warn("[notifications] delete failed:", e);
+        Alert.alert("Error", "Could not delete notifications. Try again.");
+      }
+    },
+    [uid],
+  );
+
+  const handleDeleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    Alert.alert(
+      "Delete notifications",
+      `Delete ${selectedIds.length} notification${selectedIds.length === 1 ? "" : "s"}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            await deleteNotificationsOnServer(selectedIds);
+            setSelectedIds([]);
+            setSelectionMode(false);
+          },
+        },
+      ],
+    );
   };
 
   const headerTitle = selectionMode
     ? `${selectedIds.length} selected`
     : "Notifications";
+
+  if (!uid) {
+    return (
+      <SafeAreaView style={styles.safe} edges={["top"]}>
+        <AppHeader title="Notifications" showBack />
+        <View style={styles.centered}>
+          <Text style={styles.emptyTitle}>Sign in required</Text>
+          <Text style={styles.emptyText}>
+            Sign in to see notifications from your account.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe} edges={["top"]}>
@@ -326,41 +465,67 @@ export default function NotificationsScreen() {
         <Text style={styles.summaryText}>
           {unreadCount} unread notification{unreadCount === 1 ? "" : "s"}
         </Text>
-        {selectionMode ? (
-          <Pressable onPress={() => setSelectionMode(false)}>
-            <Text style={styles.summaryAction}>Cancel</Text>
-          </Pressable>
-        ) : null}
+        <View style={styles.summaryActions}>
+          {selectionMode ? (
+            <>
+              {selectedIds.length > 0 && (
+                <>
+                  <Pressable onPress={handleMarkSelectedAsRead}>
+                    <Text style={styles.summaryAction}>Mark read</Text>
+                  </Pressable>
+                  <Pressable onPress={handleDeleteSelected} style={styles.summaryActionGap}>
+                    <Text style={[styles.summaryAction, styles.deleteAction]}>Delete</Text>
+                  </Pressable>
+                </>
+              )}
+              <Pressable onPress={() => setSelectionMode(false)} style={styles.summaryActionGap}>
+                <Text style={styles.summaryAction}>Cancel</Text>
+              </Pressable>
+            </>
+          ) : (
+            unreadCount > 0 && (
+              <Pressable onPress={handleMarkAllAsRead}>
+                <Text style={styles.summaryAction}>Mark all read</Text>
+              </Pressable>
+            )
+          )}
+        </View>
       </View>
 
-      <FlatList
-        data={notifications}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <NotificationCard
-            item={item}
-            selectionMode={selectionMode}
-            selected={selectedIds.includes(item.id)}
-            onPress={() => handleCardPress(item)}
-            onLongPress={() => handleCardLongPress(item)}
-          />
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyWrap}>
-            <Ionicons
-              name="notifications-off-outline"
-              size={42}
-              color={colors.darkGrey}
+      {listLoading && notifications.length === 0 ? (
+        <View style={styles.loadingWrap}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          renderItem={({ item }) => (
+            <NotificationCard
+              item={item}
+              selectionMode={selectionMode}
+              selected={selectedIds.includes(item.id)}
+              onPress={() => void handleCardPress(item)}
+              onLongPress={() => handleCardLongPress(item)}
             />
-            <Text style={styles.emptyTitle}>No notifications yet</Text>
-            <Text style={styles.emptyText}>
-              When new updates arrive, they will appear here.
-            </Text>
-          </View>
-        }
-      />
+          )}
+          ListEmptyComponent={
+            <View style={styles.emptyWrap}>
+              <Ionicons
+                name="notifications-off-outline"
+                size={42}
+                color={colors.darkGrey}
+              />
+              <Text style={styles.emptyTitle}>No notifications yet</Text>
+              <Text style={styles.emptyText}>
+                When new updates arrive, they will appear here.
+              </Text>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -369,6 +534,19 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.textOnPrimary,
+  },
+
+  loadingWrap: {
+    flex: 1,
+    paddingTop: 48,
+    alignItems: "center",
+  },
+
+  centered: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   summaryBar: {
@@ -398,6 +576,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingTop: 16,
     paddingBottom: 32,
+    flexGrow: 1,
   },
 
   card: {
@@ -425,7 +604,34 @@ const styles = StyleSheet.create({
   },
 
   unreadCard: {
-    borderColor: "#F1CB5F",
+    backgroundColor: colors.saveBtnColor,
+    borderColor: "transparent",
+  },
+
+  unreadTitle: {
+    color: colors.saveBtnTextColor,
+  },
+
+  unreadText: {
+    color: colors.saveBtnTextColor,
+  },
+
+  unreadDotOnHighlight: {
+    backgroundColor: colors.saveBtnTextColor,
+  },
+
+  summaryActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  summaryActionGap: {
+    marginLeft: 4,
+  },
+
+  deleteAction: {
+    color: "#C0392B",
   },
 
   selectedCard: {

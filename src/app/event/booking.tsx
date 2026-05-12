@@ -170,6 +170,15 @@ export default function BookingRoute() {
         },
       });
 
+      await addDoc(collection(db, "users", user.uid, "notifications"), {
+        kind: "event_booking_confirmed",
+        title: "Booking Confirmed",
+        body: `Your booking for ${event.title} is confirmed.`,
+        read: false,
+        createdAt: serverTimestamp(),
+        data: { eventId: event.id },
+      });
+
       // Uses the router tool to replace the screen with the confirmation screen.
       // Passes the booking details as params to the next screen.
       router.replace({
