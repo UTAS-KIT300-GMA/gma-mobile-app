@@ -26,6 +26,7 @@ import {
   Text,
   View,
 } from "react-native";
+import Swipeable from "react-native-gesture-handler/Swipeable";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type NotificationType = "recommendation" | "reminder" | "booking";
@@ -350,13 +351,9 @@ export default function NotificationsScreen() {
   };
 
   const handleCardLongPress = (item: NotificationItem) => {
-    if (!selectionMode) {
-      setSelectionMode(true);
-      setSelectedIds([item.id]);
-      return;
-    }
-
-    toggleSelected(item.id);
+    // Selection is no longer entered via long-press.
+    // Keep handler as a no-op to preserve existing card API.
+    void item;
   };
 
   const handleSelectModeToggle = () => {
@@ -431,6 +428,38 @@ export default function NotificationsScreen() {
     );
   };
 
+  const handleDeleteOne = (id: string) => {
+    Alert.alert("Delete notification", "Delete this notification?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          await deleteNotificationsOnServer([id]);
+        },
+      },
+    ]);
+  };
+
+  const renderSwipeActions = (item: NotificationItem) => (
+    <View style={styles.swipeActions}>
+      {!item.read && (
+        <Pressable
+          style={[styles.swipeActionBtn, styles.swipeMarkReadBtn]}
+          onPress={() => void markReadOnServer([item.id])}
+        >
+          <Text style={styles.swipeActionText}>Mark read</Text>
+        </Pressable>
+      )}
+      <Pressable
+        style={[styles.swipeActionBtn, styles.swipeDeleteBtn]}
+        onPress={() => handleDeleteOne(item.id)}
+      >
+        <Text style={styles.swipeActionText}>Delete</Text>
+      </Pressable>
+    </View>
+  );
+
   const headerTitle = selectionMode
     ? `${selectedIds.length} selected`
     : "Notifications";
@@ -503,13 +532,19 @@ export default function NotificationsScreen() {
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
-            <NotificationCard
-              item={item}
-              selectionMode={selectionMode}
-              selected={selectedIds.includes(item.id)}
-              onPress={() => void handleCardPress(item)}
-              onLongPress={() => handleCardLongPress(item)}
-            />
+            <Swipeable
+              enabled={!selectionMode}
+              overshootRight={false}
+              renderRightActions={() => renderSwipeActions(item)}
+            >
+              <NotificationCard
+                item={item}
+                selectionMode={selectionMode}
+                selected={selectedIds.includes(item.id)}
+                onPress={() => void handleCardPress(item)}
+                onLongPress={() => handleCardLongPress(item)}
+              />
+            </Swipeable>
           )}
           ListEmptyComponent={
             <View style={styles.emptyWrap}>
@@ -632,6 +667,35 @@ const styles = StyleSheet.create({
 
   deleteAction: {
     color: "#C0392B",
+  },
+
+  swipeActions: {
+    marginBottom: 14,
+    flexDirection: "row",
+    alignItems: "stretch",
+    borderRadius: 14,
+    overflow: "hidden",
+  },
+
+  swipeActionBtn: {
+    minWidth: 96,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 12,
+  },
+
+  swipeMarkReadBtn: {
+    backgroundColor: colors.primary,
+  },
+
+  swipeDeleteBtn: {
+    backgroundColor: "#C0392B",
+  },
+
+  swipeActionText: {
+    color: "#ffffff",
+    fontSize: 13,
+    fontWeight: "700",
   },
 
   selectedCard: {

@@ -21,9 +21,13 @@ import {
   getInitialNotification,
   onMessage,
 } from "@react-native-firebase/messaging";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Alert } from "react-native";
+
+/** Once set, we never show the custom pre-prompt again (OS prompt only if user taps Allow). */
+const NOTIF_PREPROMPT_SHOWN_KEY = "notif_preprompt_shown_v1";
 
 function alertText(value: unknown, fallback: string): string {
   if (typeof value === "string") return value;
@@ -111,15 +115,13 @@ export function FcmBootstrap() {
   const pushOnRef = useRef(pushOn);
   pushOnRef.current = pushOn;
 
-  const permissionAskedRef = useRef(false);
-
   // ── Effect 1: Permission ──────────────────────────────────────────────────
   // Uses messaging().hasPermission / requestPermission — works on Android
   // (all API levels) and iOS without any version gate.
   useEffect(() => {
     const uid = user?.uid;
     const ready = !!uid && !!user.emailVerified && isProfileValidated === true;
-    if (!ready || permissionAskedRef.current) return;
+    if (!ready) return;
 
     void (async () => {
       try {
@@ -128,20 +130,43 @@ export function FcmBootstrap() {
         const status = await hasPermission(messaging);
         if (status > 0) return;
 
-        permissionAskedRef.current = true;
+        const prepromptShown = await AsyncStorage.getItem(
+          NOTIF_PREPROMPT_SHOWN_KEY,
+        );
+        if (prepromptShown === "1") return;
+
         await new Promise<void>((resolve) => {
           Alert.alert(
             "Stay in the loop",
             "Allow GMA Connect to send you notifications about event bookings, upcoming events, and important updates.",
             [
-              { text: "Not Now", style: "cancel", onPress: () => resolve() },
-              { text: "Allow", onPress: () => resolve() },
+              {
+                text: "Not Now",
+                style: "cancel",
+                onPress: () => {
+                  void AsyncStorage.setItem(NOTIF_PREPROMPT_SHOWN_KEY, "1").finally(
+                    () => resolve(),
+                  );
+                },
+              },
+              {
+                text: "Allow",
+                onPress: () => {
+                  void (async () => {
+                    await AsyncStorage.setItem(NOTIF_PREPROMPT_SHOWN_KEY, "1");
+                    await requestPermission(messaging);
+                  })()
+                    .catch((e) => {
+                      console.warn("[FCM] permission request failed:", e);
+                    })
+                    .finally(() => resolve());
+                },
+              },
             ],
           );
         });
-        await requestPermission(messaging);
       } catch (e) {
-        console.warn("[FCM] permission request failed:", e);
+        console.warn("[FCM] permission preprompt failed:", e);
       }
     })();
   }, [user?.uid, user?.emailVerified, isProfileValidated]);
