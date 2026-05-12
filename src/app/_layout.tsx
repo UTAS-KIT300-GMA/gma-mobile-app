@@ -14,6 +14,7 @@ import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import * as Linking from "expo-linking";
 import React, { useEffect, useState, useMemo } from "react";
 import { ActivityIndicator, View, Alert } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StripeProvider } from "@stripe/stripe-react-native";
 import { colors } from "@/theme/ThemeProvider";
 import { useAuth } from "@/hooks/useAuth";
@@ -237,15 +238,17 @@ export default function RootLayout() {
 
   // Once loading is complete and routing is confirmed, render the actual navigation stack.
   return (
-    <StripeProvider
-      publishableKey={STRIPE_PUBLISHABLE_KEY}
-      urlScheme="gmamobile"
-      merchantIdentifier={STRIPE_MERCHANT_IDENTIFIER}
-    >
-      <GlobalProvider>
-        <FcmBootstrap />
-        <Stack screenOptions={{ headerShown: false }} />
-      </GlobalProvider>
-    </StripeProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <StripeProvider
+        publishableKey={STRIPE_PUBLISHABLE_KEY}
+        urlScheme="gmamobile"
+        merchantIdentifier={STRIPE_MERCHANT_IDENTIFIER}
+      >
+        <GlobalProvider>
+          <FcmBootstrap />
+          <Stack screenOptions={{ headerShown: false }} />
+        </GlobalProvider>
+      </StripeProvider>
+    </GestureHandlerRootView>
   );
 }
