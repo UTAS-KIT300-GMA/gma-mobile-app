@@ -64,6 +64,10 @@ interface DiscoveryProps {
   isLocationLoading: boolean;
   isApplyingLocationSort: boolean;
   onOpenLocationSettings: () => void;
+
+  /** Total events from context (before filters); used to show list + pull-refresh while reloading. */
+  eventsCount: number;
+  onRefresh: () => void;
 }
 
 /**
@@ -85,6 +89,8 @@ interface DiscoveryProps {
  * @param isLocationOn - Whether device location is enabled.
  * @param isLocationLoading - Location resolution loading state.
  * @param onOpenLocationSettings - Callback to open system location settings.
+ * @param eventsCount - Raw event count from data source before filters.
+ * @param onRefresh - Pull-to-refresh handler (reloads events from context).
  * @throws {never} UI handles state updates via callbacks.
  * @Returns {React.JSX.Element} Discovery screen UI.
  */
@@ -107,6 +113,8 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
   isLocationLoading,
   isApplyingLocationSort,
   onOpenLocationSettings,
+  eventsCount,
+  onRefresh,
 }) => {
   // Stores local visibility state for the sort/filter modal.
   const [sortModalVisible, setSortModalVisible] = useState(false);
@@ -189,19 +197,18 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
           </View>
         )}
 
-        {/*Show loading indicator while events are being fetched*/}
-        {loading ? (
+        {/* Full-screen load only before any events exist; then list + pull-to-refresh */}
+        {loading && eventsCount === 0 ? (
           <View style={styles.center}>
             <ActivityIndicator color={colors.saveBtnTextColor} size="large" />
           </View>
         ) : (
-          // If there are no events after filtering, show an empty state:
-          // The `ListEmptyComponent` prop of `FlatList` is used to render a custom
-          // component when the list is empty.
           <FlatList
             data={filteredEvents}
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
+            refreshing={loading && eventsCount > 0}
+            onRefresh={onRefresh}
             ListEmptyComponent={
               <View style={styles.center}>
                 <Ionicons

@@ -57,7 +57,7 @@ export default function DiscoveryScreen() {
   const [accessFilter, setAccessFilter] = useState("all");
   const [isApplyingLocationSort, setIsApplyingLocationSort] = useState(false);
 
-  const { events, isLoading: isEventsLoading } = useEvents();
+  const { events, isLoading: isEventsLoading, refresh } = useEvents();
   const { bookmarkedIds, isLoading: isBookmarksLoading, toggleBookmark } = useBookmarks();
   const { coords, isLocationOn, isLocationLoading, refreshLocation } = useAppLocation();
 
@@ -278,6 +278,10 @@ export default function DiscoveryScreen() {
           isApplyingLocationSort={isApplyingLocationSort}
           onOpenLocationSettings={() => {
             router.push("/(profile)/location-settings-logic" as any);
+          }}
+          eventsCount={events.length}
+          onRefresh={() => {
+            void refresh();
           }}
       />
   );
