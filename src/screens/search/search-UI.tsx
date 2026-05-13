@@ -24,7 +24,7 @@ interface SearchScreenUIProps {
   location: string;
   setLocation: (text: string) => void;
   date: Date | null;
-  setDate: (date: Date) => void;
+  setDate: (date: Date | null) => void;
   showPicker: boolean;
   setShowPicker: (show: boolean) => void;
   handleApply: () => void;
@@ -42,7 +42,7 @@ interface SearchScreenUIProps {
  * @param location - Location filter text.
  * @param setLocation - Location update callback.
  * @param date - Selected date filter.
- * @param setDate - Date update callback.
+ * @param setDate - Date update callback; pass null to clear.
  * @param showPicker - Date picker visibility state.
  * @param setShowPicker - Date picker visibility setter.
  * @param handleApply - Standard search apply callback.
@@ -162,11 +162,34 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
 
         {/* Date Picker */}
         <Text style={styles.h1}>Date</Text>
-        <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-          <Text style={styles.dateText}>
-            {date ? date.toLocaleDateString("en-CA") : "Select date"}
-          </Text>
-        </Pressable>
+        <View style={styles.dateRow}>
+          <Pressable
+            style={[styles.input, styles.dateField]}
+            onPress={() => setShowPicker(true)}
+          >
+            <Text style={styles.dateText}>
+              {date ? date.toLocaleDateString("en-CA") : "Select date"}
+            </Text>
+          </Pressable>
+          {date != null && (
+            <Pressable
+              onPress={() => {
+                setDate(null);
+                setShowPicker(false);
+              }}
+              style={styles.clearDateButton}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Clear date filter"
+            >
+              <Ionicons
+                name="close-circle"
+                size={26}
+                color={colors.darkGrey}
+              />
+            </Pressable>
+          )}
+        </View>
         {showPicker && (
           <DateTimePicker
             value={date ?? new Date()}
@@ -308,6 +331,23 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 15,
     fontWeight: "600",
+  },
+
+  dateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  dateField: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  clearDateButton: {
+    padding: 4,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   helper: {
