@@ -1,7 +1,8 @@
 import { SearchScreenUI } from "@/screens/search/search-UI";
 import {EventDoc, INTEREST_TAGS, InterestKey} from "@/types/type";
+import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useEvents } from "@/context/GlobalContext";
 import analytics from "@react-native-firebase/analytics";
@@ -16,6 +17,8 @@ export default function SearchScreenLogic() {
   // Stores the navigation tool in the router var.
   const router = useRouter();
   const { events: allEvents } = useEvents();
+  /** When true, the next time this tab gains focus we clear filters (after returning from Search Results). */
+  const clearFiltersAfterResultsRef = useRef(false);
 
   // Stores the user's typed inputs and date selections in vars.
   const [query, setQuery] = useState("");
@@ -60,6 +63,27 @@ export default function SearchScreenLogic() {
     setSelected((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
+  /**
+   * @summary Clears all query inputs and resets selected tags.
+   * @throws {never} Pure state update does not throw.
+   * @Returns {void} Resets search form state.
+   */
+  const handleReset = useCallback(() => {
+    setQuery("");
+    setLocation("");
+    setDate(null);
+    setShowPicker(false);
+    setSelected(initialTags);
+  }, [initialTags]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!clearFiltersAfterResultsRef.current) return;
+      clearFiltersAfterResultsRef.current = false;
+      handleReset();
+    }, [handleReset]),
+  );
+
   // Stores the function instructions in the handleApply var.
   /**
    * @summary Applies current filters and navigates to search results.
@@ -78,6 +102,7 @@ export default function SearchScreenLogic() {
 
     // Uses the router tool to navigate to the results screen,
     // passing the current stores as URL parameters.
+    clearFiltersAfterResultsRef.current = true;
     router.push({
       pathname: "/search-results",
       params: {
@@ -92,20 +117,6 @@ export default function SearchScreenLogic() {
         search_term: query.trim(),
       });
     }
-  };
-
-  // Stores the instruction for clearing all inputs in the handleReset var.
-  /**
-   * @summary Clears all query inputs and resets selected tags.
-   * @throws {never} Pure state update does not throw.
-   * @Returns {void} Resets search form state.
-   */
-  const handleReset = () => {
-    setQuery("");
-    setLocation("");
-    setDate(null);
-    // Logic: Instantly resets all 25 tags back to false using our generated dictionary.
-    setSelected(initialTags);
   };
 
   /**
@@ -187,6 +198,7 @@ export default function SearchScreenLogic() {
       const top = await onAiSearch(userQuery, allEvents);
       const ids = top.map((e) => e.id);
 
+      clearFiltersAfterResultsRef.current = true;
       router.push({
         pathname: "/search-results",
         params: {

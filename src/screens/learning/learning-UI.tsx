@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Modal,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -35,6 +36,8 @@ function parseDurationToSeconds(duration: string): number {
 interface Props {
   events: LearningDoc[];
   loading: boolean;
+  refreshing?: boolean;
+  onRefresh?: () => void;
   expandedId: string | null;
   onBookmarkPress?: (id: string) => void;
   onCardPress?: (item: LearningDoc) => void;
@@ -44,7 +47,9 @@ interface Props {
 /**
  * @summary Renders learning cards with sort/filter controls, expansion, and media actions.
  * @param events - Learning content records to display.
- * @param loading - Loading state for content fetch.
+ * @param loading - Initial / blocking load while no items to show.
+ * @param refreshing - Pull-to-refresh in progress (list stays visible).
+ * @param onRefresh - Pull-to-refresh callback.
  * @param expandedId - Currently expanded card ID.
  * @param onBookmarkPress - Optional bookmark toggle callback.
  * @param onCardPress - Optional card expand/collapse callback.
@@ -55,6 +60,8 @@ interface Props {
 export const LearningScreenUI: React.FC<Props> = ({
   events,
   loading,
+  refreshing = false,
+  onRefresh,
   expandedId,
   onBookmarkPress,
   onCardPress,
@@ -124,7 +131,7 @@ export const LearningScreenUI: React.FC<Props> = ({
     return sortOption === key;
   };
 
-  if (loading) {
+  if (loading && events.length === 0) {
     return (
       <View style={styles.center}>
         <ActivityIndicator size="large" color={colors.primary} />
@@ -136,7 +143,20 @@ export const LearningScreenUI: React.FC<Props> = ({
     <SafeAreaView style={styles.safe} edges={["top"]}>
       <AppHeader title="GMA Learning" />
 
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.container}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          onRefresh ? (
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          ) : undefined
+        }
+      >
         <View style={styles.sortRow}>
           <Text style={styles.sectionTitle}>Recommended Learning</Text>
           <Pressable

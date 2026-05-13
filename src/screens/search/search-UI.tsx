@@ -24,7 +24,7 @@ interface SearchScreenUIProps {
   location: string;
   setLocation: (text: string) => void;
   date: Date | null;
-  setDate: (date: Date) => void;
+  setDate: (date: Date | null) => void;
   showPicker: boolean;
   setShowPicker: (show: boolean) => void;
   handleApply: () => void;
@@ -42,7 +42,7 @@ interface SearchScreenUIProps {
  * @param location - Location filter text.
  * @param setLocation - Location update callback.
  * @param date - Selected date filter.
- * @param setDate - Date update callback.
+ * @param setDate - Date update callback; pass null to clear.
  * @param showPicker - Date picker visibility state.
  * @param setShowPicker - Date picker visibility setter.
  * @param handleApply - Standard search apply callback.
@@ -68,8 +68,8 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
   isAiLoading,
   onAiSearch,
 }) => {
-  // Stores local toggle for collapsing/expanding interest pills.
-  const [showInterests, setShowInterests] = React.useState(false);
+  /** When false, tag cloud is clipped to ~3 rows; tap "Show all" to reveal the rest. */
+  const [showAllInterestTags, setShowAllInterestTags] = React.useState(false);
 
   // Determine if the query looks like a natural sentence
   const isLongQuery = query.trim().split(/\s+/).length > 4;
@@ -113,38 +113,51 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
             <Text style={styles.aiHint}>✨ Natural language detected. Tap sparkles to use AI search.</Text>
         )}
 
-        {/* Interest Tags */}
-        <Pressable
-          style={styles.sectionHeader}
-          onPress={() => setShowInterests(!showInterests)}
+        {/* Interest tags: ~3 rows visible by default; show all / show less for the rest */}
+        <Text style={styles.h1}>Interest Tags</Text>
+        <View
+          style={[
+            styles.tagsWrap,
+            !showAllInterestTags && styles.tagsWrapClipped,
+          ]}
         >
-          <Text style={styles.h1}>Interest Tags</Text>
+          {INTEREST_TAGS.map((t) => {
+            const active = selected[t.key];
+            return (
+              <Pressable
+                key={t.key}
+                onPress={() => toggleTag(t.key)}
+                style={[styles.tag, active && styles.tagActive]}
+              >
+                <Text
+                  style={[styles.tagText, active && styles.tagTextActive]}
+                >
+                  {t.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Pressable
+          style={styles.showAllInterestsRow}
+          onPress={() => setShowAllInterestTags(!showAllInterestTags)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: showAllInterestTags }}
+          accessibilityLabel={
+            showAllInterestTags
+              ? "Show fewer interest tags"
+              : "Show all interest tags"
+          }
+        >
+          <Text style={styles.showAllInterestsText}>
+            {showAllInterestTags ? "Show less" : "Show all interests"}
+          </Text>
           <Ionicons
-            name={showInterests ? "chevron-up" : "chevron-down"}
-            size={20}
-            color={colors.saveBtnTextColor}
+            name={showAllInterestTags ? "chevron-up" : "chevron-down"}
+            size={18}
+            color={colors.primary}
           />
         </Pressable>
-        {showInterests && (
-          <View style={styles.tagsWrap}>
-            {INTEREST_TAGS.map((t) => {
-              const active = selected[t.key];
-              return (
-                <Pressable
-                  key={t.key}
-                  onPress={() => toggleTag(t.key)}
-                  style={[styles.tag, active && styles.tagActive]}
-                >
-                  <Text
-                    style={[styles.tagText, active && styles.tagTextActive]}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
 
         {/* Location Input */}
         <Text style={styles.h1}>Location</Text>
@@ -162,11 +175,34 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
 
         {/* Date Picker */}
         <Text style={styles.h1}>Date</Text>
-        <Pressable style={styles.input} onPress={() => setShowPicker(true)}>
-          <Text style={styles.dateText}>
-            {date ? date.toLocaleDateString("en-CA") : "Select date"}
-          </Text>
-        </Pressable>
+        <View style={styles.dateRow}>
+          <Pressable
+            style={[styles.input, styles.dateField]}
+            onPress={() => setShowPicker(true)}
+          >
+            <Text style={styles.dateText}>
+              {date ? date.toLocaleDateString("en-CA") : "Select date"}
+            </Text>
+          </Pressable>
+          {date != null && (
+            <Pressable
+              onPress={() => {
+                setDate(null);
+                setShowPicker(false);
+              }}
+              style={styles.clearDateButton}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel="Clear date filter"
+            >
+              <Ionicons
+                name="close-circle"
+                size={26}
+                color={colors.darkGrey}
+              />
+            </Pressable>
+          )}
+        </View>
         {showPicker && (
           <DateTimePicker
             value={date ?? new Date()}
@@ -247,14 +283,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
-  sectionHeader: {
-    marginTop: 18,
-    marginBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
   h1: {
     marginTop: 18,
     marginBottom: 10,
@@ -267,6 +295,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
+  },
+
+  /** ~3 chip rows at current padding + gap; remainder hidden until "Show all". */
+  tagsWrapClipped: {
+    maxHeight: 144,
+    overflow: "hidden",
+  },
+
+  showAllInterestsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 4,
+    marginTop: 6,
+    marginBottom: 4,
+    paddingVertical: 6,
+    paddingRight: 8,
+  },
+
+  showAllInterestsText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.primary,
   },
 
   tag: {
@@ -308,6 +359,23 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 15,
     fontWeight: "600",
+  },
+
+  dateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+
+  dateField: {
+    flex: 1,
+    minWidth: 0,
+  },
+
+  clearDateButton: {
+    padding: 4,
+    justifyContent: "center",
+    alignItems: "center",
   },
 
   helper: {
