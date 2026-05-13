@@ -2,8 +2,10 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Alert } from "react-native";
 import {
   collection,
+  doc,
   getDocs,
   query,
+  updateDoc,
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
 import { useRouter } from "expo-router";
@@ -22,6 +24,14 @@ export default function BookedEventsRoute() {
   const [allEvents, setAllEvents] = useState<EventDoc[]>([]);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [cancellingBookingId, setCancellingBookingId] = useState<string | null>(
+    null,
+  );
+
+  function isBookingCancelled(status: string | undefined): boolean {
+    const s = (status ?? "").toLowerCase();
+    return s === "cancelled" || s === "canceled";
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -80,9 +90,36 @@ export default function BookedEventsRoute() {
     };
   }, []);
 
-  //  match bookings to events 
+  /**
+   * @summary Marks a booking as cancelled in Firestore and updates local state.
+   */
+  const handleCancelBooking = async (booking: Booking) => {
+    const uid = auth.currentUser?.uid;
+    if (!uid) {
+      Alert.alert("Error", "You must be logged in.");
+      return;
+    }
+    setCancellingBookingId(booking.id);
+    try {
+      await updateDoc(doc(db, "users", uid, "bookings", booking.id), {
+        status: "cancelled",
+      });
+      setBookings((prev) =>
+        prev.map((b) =>
+          b.id === booking.id ? { ...b, status: "cancelled" } : b,
+        ),
+      );
+    } catch {
+      Alert.alert("Error", "Could not cancel this booking. Please try again.");
+    } finally {
+      setCancellingBookingId(null);
+    }
+  };
+
+  //  match bookings to events
   const bookedEvents = useMemo(() => {
     return bookings
+      .filter((b) => !isBookingCancelled(b.status))
       .map((b) => {
         const event = allEvents.find((e) => e.id === b.eventId);
 
@@ -100,6 +137,8 @@ export default function BookedEventsRoute() {
     <BookedEventsUI
       events={bookedEvents as any}
       loading={loading}
+      cancellingBookingId={cancellingBookingId}
+      onCancelBooking={handleCancelBooking}
       onBack={() => router.back()}
       onPressCard={(item: any) =>
         router.push({
