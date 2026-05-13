@@ -1,15 +1,17 @@
+import { showPillarCategoryInfo } from "@/components/pillarInfo";
 import { colors } from "@/theme/ThemeProvider";
+import { InterestKey } from "@/types/type";
+import { Ionicons } from "@expo/vector-icons";
 import { useMemo, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-
-import { InterestKey } from "@/types/type";
 
 // We keep your "HEAD" Props because they support the Editing state for Hobart users
 interface Props {
@@ -84,7 +86,22 @@ export function ProfileSetupScreen({
         <Text style={styles.heading1}>Select Your Interests</Text>
 
         {/* --- PILLAR 1: CONNECT --- */}
-        <Text style={styles.pillarHeader}>Connect (Social & Community)</Text>
+        <View style={styles.pillarHeaderRow}>
+          <Text style={styles.pillarHeader}>Connect (Social & Community)</Text>
+          <Pressable
+            onPress={() => showPillarCategoryInfo("connect")}
+            style={styles.pillarInfoButton}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="What Connect means"
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={22}
+              color={colors.primary}
+            />
+          </Pressable>
+        </View>
         <View style={styles.tagWrapper}>
           {[
             "Social Networking",
@@ -99,7 +116,22 @@ export function ProfileSetupScreen({
         </View>
 
         {/* --- PILLAR 2: GROW --- */}
-        <Text style={styles.pillarHeader}>Grow (Professional & Skills)</Text>
+        <View style={styles.pillarHeaderRow}>
+          <Text style={styles.pillarHeader}>Grow (Professional & Skills)</Text>
+          <Pressable
+            onPress={() => showPillarCategoryInfo("grow")}
+            style={styles.pillarInfoButton}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="What Grow means"
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={22}
+              color={colors.primary}
+            />
+          </Pressable>
+        </View>
         <View style={styles.tagWrapper}>
           {[
             "Professional Networking",
@@ -114,7 +146,24 @@ export function ProfileSetupScreen({
         </View>
 
         {/* --- PILLAR 3: THRIVE --- */}
-        <Text style={styles.pillarHeader}>Thrive (Health & Wellness)</Text>
+        <View style={styles.pillarHeaderRow}>
+          <Text style={styles.pillarHeader}>
+            Thrive (Health & Wellness)
+          </Text>
+          <Pressable
+            onPress={() => showPillarCategoryInfo("thrive")}
+            style={styles.pillarInfoButton}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="What Thrive means"
+          >
+            <Ionicons
+              name="information-circle-outline"
+              size={22}
+              color={colors.primary}
+            />
+          </Pressable>
+        </View>
         <View style={styles.tagWrapper}>
           {[
             "Running & Walking",
@@ -171,14 +220,26 @@ const styles = StyleSheet.create({
     textAlign: "left",
   },
 
+  pillarHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    marginTop: 20,
+    marginBottom: 10,
+    paddingLeft: 4,
+  },
+
   pillarHeader: {
+    flex: 1,
     color: colors.saveBtnTextColor,
     fontSize: 16,
     fontWeight: "800",
     textAlign: "left",
-    marginTop: 20,
-    marginBottom: 10,
-    paddingLeft: 4,
+  },
+
+  pillarInfoButton: {
+    padding: 4,
   },
   tagWrapper: {
     flexDirection: "row",

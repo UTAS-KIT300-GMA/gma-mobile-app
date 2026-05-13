@@ -6,7 +6,6 @@ import { Ionicons } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Modal,
   Pressable,
@@ -15,29 +14,6 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
-const PILLAR_KEYS = new Set(["connect", "grow", "thrive"]);
-
-/** Connect = community, Grow = career/pro skills, Thrive = wellbeing & lifestyle fit. */
-const PILLAR_INFO_MESSAGE: Record<"connect" | "grow" | "thrive", string> = {
-  grow:
-    "Career-oriented pillar: networking, workshops and learning so migrants can use their skills, grow professionally and improve employment prospects.",
-
-  connect:
-    "Community pillar: cultural, social and lifestyle events in one discoverable place to reduce isolation and help you take part locally.",
-
-  thrive:
-    "Lifestyle pillar: activities and communities that match your interests and wellbeing, supporting a stronger sense of belonging in Tasmania.",
-};
-
-function showPillarCategoryInfo(pillarKey: string) {
-  const key = pillarKey.toLowerCase();
-  if (key !== "connect" && key !== "grow" && key !== "thrive") return;
-  const message = PILLAR_INFO_MESSAGE[key];
-  const title =
-    key === "connect" ? "Connect" : key === "grow" ? "Grow" : "Thrive";
-  Alert.alert(title, message);
-}
 
 interface DiscoveryProps {
   filteredEvents: EventDoc[];
@@ -127,52 +103,25 @@ export const DiscoveryScreenUI: React.FC<DiscoveryProps> = ({
         {options.length > 0 && (
           <View>
             <View style={styles.categoryRow}>
-              {options.map((opt) => {
-                const active = opt.key === category;
-                const showInfo = PILLAR_KEYS.has(opt.key);
-                return (
-                  <View
-                    key={opt.key}
+              {options.map((opt) => (
+                <Pressable
+                  key={opt.key}
+                  onPress={() => setCategory(opt.key)}
+                  style={[
+                    styles.categoryPill,
+                    opt.key === category && styles.categoryPillActive,
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.categoryPillGroup,
-                      active && styles.categoryPillGroupActive,
+                      styles.categoryText,
+                      opt.key === category && styles.categoryTextActive,
                     ]}
                   >
-                    <Pressable
-                      onPress={() => setCategory(opt.key)}
-                      style={styles.categoryPillGroupMain}
-                    >
-                      <Text
-                        style={[
-                          styles.categoryText,
-                          active && styles.categoryTextActive,
-                        ]}
-                      >
-                        {opt.label}
-                      </Text>
-                    </Pressable>
-                    {showInfo ? (
-                      <Pressable
-                        onPress={() => showPillarCategoryInfo(opt.key)}
-                        style={styles.categoryInfoButton}
-                        hitSlop={8}
-                        accessibilityRole="button"
-                        accessibilityLabel={`What ${opt.label} means`}
-                      >
-                        <Ionicons
-                          name="information-circle-outline"
-                          size={20}
-                          color={
-                            active
-                              ? colors.saveBtnTextColor
-                              : colors.textOnPrimary
-                          }
-                        />
-                      </Pressable>
-                    ) : null}
-                  </View>
-                );
-              })}
+                    {opt.label}
+                  </Text>
+                </Pressable>
+              ))}
 
               <Pressable
                 onPress={() => setSortModalVisible(true)}
@@ -362,41 +311,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     padding: 10,
     gap: 8,
-    alignItems: "stretch",
   },
 
-  categoryPillGroup: {
+  categoryPill: {
     flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    minWidth: 0,
+    paddingVertical: 8,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.darkGrey,
     backgroundColor: colors.darkGrey,
-    overflow: "hidden",
+    alignItems: "center",
   },
 
-  categoryPillGroupActive: {
+  categoryPillActive: {
     backgroundColor: colors.saveBtnColor,
     borderColor: colors.saveBtnColor,
-  },
-
-  categoryPillGroupMain: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: 8,
-    paddingLeft: 6,
-    paddingRight: 4,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  categoryInfoButton: {
-    paddingRight: 6,
-    paddingVertical: 4,
-    justifyContent: "center",
-    alignItems: "center",
   },
 
   categoryText: {
