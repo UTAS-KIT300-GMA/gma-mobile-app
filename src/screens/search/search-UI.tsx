@@ -68,8 +68,8 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
   isAiLoading,
   onAiSearch,
 }) => {
-  // Stores local toggle for collapsing/expanding interest pills.
-  const [showInterests, setShowInterests] = React.useState(false);
+  /** When false, tag cloud is clipped to ~3 rows; tap "Show all" to reveal the rest. */
+  const [showAllInterestTags, setShowAllInterestTags] = React.useState(false);
 
   // Determine if the query looks like a natural sentence
   const isLongQuery = query.trim().split(/\s+/).length > 4;
@@ -113,38 +113,51 @@ export const SearchScreenUI: React.FC<SearchScreenUIProps> = ({
             <Text style={styles.aiHint}>✨ Natural language detected. Tap sparkles to use AI search.</Text>
         )}
 
-        {/* Interest Tags */}
-        <Pressable
-          style={styles.sectionHeader}
-          onPress={() => setShowInterests(!showInterests)}
+        {/* Interest tags: ~3 rows visible by default; show all / show less for the rest */}
+        <Text style={styles.h1}>Interest Tags</Text>
+        <View
+          style={[
+            styles.tagsWrap,
+            !showAllInterestTags && styles.tagsWrapClipped,
+          ]}
         >
-          <Text style={styles.h1}>Interest Tags</Text>
+          {INTEREST_TAGS.map((t) => {
+            const active = selected[t.key];
+            return (
+              <Pressable
+                key={t.key}
+                onPress={() => toggleTag(t.key)}
+                style={[styles.tag, active && styles.tagActive]}
+              >
+                <Text
+                  style={[styles.tagText, active && styles.tagTextActive]}
+                >
+                  {t.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Pressable
+          style={styles.showAllInterestsRow}
+          onPress={() => setShowAllInterestTags(!showAllInterestTags)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: showAllInterestTags }}
+          accessibilityLabel={
+            showAllInterestTags
+              ? "Show fewer interest tags"
+              : "Show all interest tags"
+          }
+        >
+          <Text style={styles.showAllInterestsText}>
+            {showAllInterestTags ? "Show less" : "Show all interests"}
+          </Text>
           <Ionicons
-            name={showInterests ? "chevron-up" : "chevron-down"}
-            size={20}
-            color={colors.saveBtnTextColor}
+            name={showAllInterestTags ? "chevron-up" : "chevron-down"}
+            size={18}
+            color={colors.primary}
           />
         </Pressable>
-        {showInterests && (
-          <View style={styles.tagsWrap}>
-            {INTEREST_TAGS.map((t) => {
-              const active = selected[t.key];
-              return (
-                <Pressable
-                  key={t.key}
-                  onPress={() => toggleTag(t.key)}
-                  style={[styles.tag, active && styles.tagActive]}
-                >
-                  <Text
-                    style={[styles.tagText, active && styles.tagTextActive]}
-                  >
-                    {t.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-        )}
 
         {/* Location Input */}
         <Text style={styles.h1}>Location</Text>
@@ -270,14 +283,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
-  sectionHeader: {
-    marginTop: 18,
-    marginBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-
   h1: {
     marginTop: 18,
     marginBottom: 10,
@@ -290,6 +295,29 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
+  },
+
+  /** ~3 chip rows at current padding + gap; remainder hidden until "Show all". */
+  tagsWrapClipped: {
+    maxHeight: 144,
+    overflow: "hidden",
+  },
+
+  showAllInterestsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: 4,
+    marginTop: 6,
+    marginBottom: 4,
+    paddingVertical: 6,
+    paddingRight: 8,
+  },
+
+  showAllInterestsText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.primary,
   },
 
   tag: {
