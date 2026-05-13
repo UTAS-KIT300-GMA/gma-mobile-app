@@ -6,7 +6,9 @@ import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
+  Pressable,
   StyleSheet,
   Text,
   View,
@@ -28,27 +30,48 @@ function dietaryDisplayText(item: Booking): string | undefined {
 interface BookedEventsUIProps {
   events: Booking[];
   loading: boolean;
+  cancellingBookingId?: string | null;
   onBack: () => void;
   onPressCard: (event: Booking) => void;
+  onCancelBooking?: (booking: Booking) => void | Promise<void>;
 }
 
 /**
  * @summary Renders the user's booked events list with ticket/payment metadata.
  * @param events - Booking records to display.
  * @param loading - Loading state for bookings fetch.
+ * @param cancellingBookingId - When set, shows a spinner on that row's cancel action.
  * @param onBack - Back navigation callback.
  * @param onPressCard - Event-card press callback.
+ * @param onCancelBooking - When set, shows cancel booking control and invokes after confirmation.
  * @throws {never} UI delegates side effects to callback props.
  * @Returns {React.JSX.Element} Booked-events screen UI.
  */
 export const BookedEventsUI = ({
   events,
   loading,
+  cancellingBookingId,
   onBack,
   onPressCard,
- 
-  
+  onCancelBooking,
 }: BookedEventsUIProps) => {
+  const confirmCancel = (item: Booking) => {
+    if (!onCancelBooking) return;
+    Alert.alert(
+      "Cancel booking",
+      "Cancel this booking? It will be removed from your list.",
+      [
+        { text: "Keep booking", style: "cancel" },
+        {
+          text: "Cancel booking",
+          style: "destructive",
+          onPress: () => {
+            void onCancelBooking(item);
+          },
+        },
+      ],
+    );
+  };
   /**
    * @summary Renders a booking row with event card and booking metadata.
    * @param item - Booking record for one rendered row.
@@ -57,6 +80,7 @@ export const BookedEventsUI = ({
    */
   const renderItem = ({ item }: { item: Booking }) => {
     const dietaryLine = dietaryDisplayText(item);
+    const isCancelling = cancellingBookingId === item.id;
     return (
     <View>
       <EventCard
@@ -108,6 +132,25 @@ export const BookedEventsUI = ({
           </View>
         }
       />
+      {onCancelBooking ? (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Cancel booking"
+          onPress={() => confirmCancel(item)}
+          disabled={isCancelling}
+          style={({ pressed }) => [
+            styles.cancelBtn,
+            pressed && styles.cancelBtnPressed,
+            isCancelling && styles.cancelBtnDisabled,
+          ]}
+        >
+          {isCancelling ? (
+            <ActivityIndicator size="small" color={colors.textOnSecondary} />
+          ) : (
+            <Text style={styles.cancelBtnText}>Cancel booking</Text>
+          )}
+        </Pressable>
+      ) : null}
     </View>
   );
   };
@@ -184,4 +227,23 @@ const styles = StyleSheet.create({
   },
   rsvpText: { fontWeight: "bold", fontSize: 12 },
   emptyText: { marginTop: 10, color: colors.darkGrey, fontSize: 16 },
+  cancelBtn: {
+    marginTop: 10,
+    marginBottom: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 40,
+  },
+  cancelBtnPressed: { opacity: 0.85 },
+  cancelBtnDisabled: { opacity: 0.6 },
+  cancelBtnText: {
+    color: colors.primary,
+    fontWeight: "600",
+    fontSize: 14,
+  },
 });

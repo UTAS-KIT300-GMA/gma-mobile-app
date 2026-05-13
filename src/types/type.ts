@@ -227,12 +227,15 @@ export type EventCategoryGroup = {
 // Represents the available payment methods in the application.
 export type PaymentMethod = "card" | "apple" | "google" | "afterpay";
 
+/** Stored on booking documents; cancelled rows are hidden in the app. */
+export type BookingStatus = "confirmed" | "cancelled";
+
 export type Booking = {
   id: string;
   eventId: string;
   ticketCount: number;
   totalPaid: number;
-  status: string;
+  status: BookingStatus | string;
   createdAt: FirebaseFirestoreTypes.Timestamp;
   /** Human-readable summary for display (and legacy rows). */
   dietaryRequirements?: string;
