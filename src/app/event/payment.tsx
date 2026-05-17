@@ -90,7 +90,7 @@ export default function PaymentScreen() {
       );
 
       if ("error" in intentResult) {
-        Alert.alert("Payment setup failed", intentResult.error);
+        Alert.alert("Payment setup on App failed", intentResult.error);
         return;
       }
 
