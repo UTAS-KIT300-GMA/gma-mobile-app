@@ -25,7 +25,7 @@ export default function MembershipScreen() {
   const router = useRouter();
   const { userDoc, loading } = useUser();
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const isMember = userDoc?.role === "member";
+  const isMember = userDoc?.membershipStatus === "active";
   const membershipStatus = userDoc?.membershipStatus ?? (isMember ? "active" : "inactive");
   const membershipSku = userDoc?.membershipSku ?? "Not set";
   const membershipUpdatedAt = userDoc?.membershipUpdatedAt;
