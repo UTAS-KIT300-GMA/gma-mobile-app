@@ -14,7 +14,7 @@ export const membershipPriceAud = defineString("MEMBERSHIP_PRICE_AUD", {
 
 const DEFAULT_CURRENCY = "aud";
 
-type CheckoutType = "event" | "membership";
+type CheckoutType = "event" | "content";
 
 type CreatePaymentIntentBody = {
   amount?: number;
@@ -66,32 +66,32 @@ function sanitizeMetadata(value: unknown): Record<string, string> {
  * @param {number} dollars - Price in major currency units.
  * @return {number} Amount in minor units (cents).
  */
-function dollarsToMinorUnits(dollars: number): number {
-  return Math.round(dollars * 100);
-}
+// function dollarsToMinorUnits(dollars: number): number {
+//   return Math.round(dollars * 100);
+// }
 
 /**
  * @param {EventTicketData} event - Firestore event document.
  * @param {number} ticketCount - Tickets requested.
  * @return {number} Charge amount in minor units.
  */
-function computeEventAmountMinor(
-  event: EventTicketData,
-  ticketCount: number,
-): number {
-  const memberPrice = event.ticketPrices?.member ?? 0;
-  const nonMemberPrice = event.ticketPrices?.nonMember ?? 0;
-  if (memberPrice === 0 && nonMemberPrice === 0) {
-    throw new Error("This event does not require payment.");
-  }
-  const unitPrice = memberPrice > 0 ? memberPrice : nonMemberPrice;
-  const totalDollars = unitPrice * ticketCount;
-  const minor = dollarsToMinorUnits(totalDollars);
-  if (minor < 1) {
-    throw new Error("Invalid ticket total.");
-  }
-  return minor;
-}
+// function computeEventAmountMinor(
+//   event: EventTicketData,
+//   ticketCount: number,
+// ): number {
+//   const memberPrice = event.ticketPrices?.member ?? 0;
+//   const nonMemberPrice = event.ticketPrices?.nonMember ?? 0;
+//   if (memberPrice === 0 && nonMemberPrice === 0) {
+//     throw new Error("This event does not require payment.");
+//   }
+//   const unitPrice = memberPrice > 0 ? memberPrice : nonMemberPrice;
+//   const totalDollars = unitPrice * ticketCount;
+//   const minor = dollarsToMinorUnits(totalDollars);
+//   if (minor < 1) {
+//     throw new Error("Invalid ticket total.");
+//   }
+//   return minor;
+// }
 
 /**
  * @param {EventTicketData} event - Firestore event document.
@@ -113,13 +113,13 @@ function assertTicketAvailability(
  * @param {string} membershipAud - Membership price in AUD dollars.
  * @return {number} Amount in minor units.
  */
-function computeMembershipAmountMinor(membershipAud: string): number {
-  const dollars = Number.parseFloat(membershipAud);
-  if (!Number.isFinite(dollars) || dollars <= 0) {
-    throw new Error("Membership price is not configured.");
-  }
-  return dollarsToMinorUnits(dollars);
-}
+// function computeMembershipAmountMinor(membershipAud: string): number {
+//   const dollars = Number.parseFloat(membershipAud);
+//   if (!Number.isFinite(dollars) || dollars <= 0) {
+//     throw new Error("Membership price is not configured.");
+//   }
+//   return dollarsToMinorUnits(dollars);
+// }
 
 /**
  * Creates a Stripe PaymentIntent for ticket or membership checkout.
@@ -158,7 +158,7 @@ export const createPaymentIntent = onRequest(
     const checkoutType = (metadata.checkoutType ?? "event") as CheckoutType;
     const currency = (body.currency ?? DEFAULT_CURRENCY).toLowerCase();
 
-    let amountMinor: number;
+    // let amountMinor: number = 0;
 
     try {
       if (checkoutType === "event") {
@@ -187,13 +187,15 @@ export const createPaymentIntent = onRequest(
 
         const event = snap.data() as EventTicketData;
         assertTicketAvailability(event, ticketCount);
-        amountMinor = computeEventAmountMinor(event, ticketCount);
+
+        // TODO: might need to check user membership status again in backend to calculate the amount
+        // amountMinor = computeEventAmountMinor(event, ticketCount);
 
         metadata.eventId = eventId;
         metadata.ticketCount = String(ticketCount);
         if (event.title) metadata.eventTitle = event.title;
-      } else if (checkoutType === "membership") {
-        amountMinor = computeMembershipAmountMinor(membershipPriceAud.value());
+      } else if (checkoutType === "content") {
+        // TODO: for checkout with content
       } else {
         res.status(400).json({error: "Unsupported checkout type."});
         return;
@@ -205,19 +207,20 @@ export const createPaymentIntent = onRequest(
       return;
     }
 
-    const clientAmount = body.amount;
-    if (
-      typeof clientAmount === "number" &&
-      Number.isFinite(clientAmount) &&
-      clientAmount !== amountMinor
-    ) {
-      logger.warn("Client amount mismatch", {
-        uid,
-        checkoutType,
-        clientAmount,
-        serverAmount: amountMinor,
-      });
-    }
+    const clientAmount = body?.amount ?? 999;
+
+    // if (
+    //   typeof clientAmount === "number" &&
+    //   Number.isFinite(clientAmount) &&
+    //   clientAmount !== amountMinor
+    // ) {
+    //   logger.warn("Client amount mismatch", {
+    //     uid,
+    //     checkoutType,
+    //     clientAmount,
+    //     serverAmount: clientAmount,
+    //   });
+    // }
 
     const secret = stripeSecretKey.value();
     if (!secret) {
@@ -230,9 +233,9 @@ export const createPaymentIntent = onRequest(
 
     try {
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: amountMinor,
+        amount: clientAmount,
         currency,
-        automatic_payment_methods: {enabled: true},
+        // automatic_payment_methods: {enabled: true},
         metadata: {
           ...metadata,
           checkoutType,

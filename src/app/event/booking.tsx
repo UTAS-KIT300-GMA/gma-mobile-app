@@ -7,6 +7,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, View } from "react-native";
 import {useUser} from "@/hooks/useUser.ts";
+import {EventDoc} from "@/types/type.ts";
 
 /**
  * @summary Loads an event, computes booking totals, and creates booking records for free events.
@@ -20,7 +21,7 @@ export default function BookingRoute() {
   const { userDoc } = useUser();
 
   // Stores the event data, loading status, and ticket count to the following vars.
-  const [event, setEvent] = useState<any>(null);
+  const [event, setEvent] = useState<EventDoc | null>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
   const [tickets, setTickets] = useState(1);
@@ -54,7 +55,7 @@ export default function BookingRoute() {
         const snap = await getDoc(doc(db, "events", eventId as string));
 
         if (snap.exists()) {
-          const data = snap.data();
+          const data = snap.data() as EventDoc;
 
           // Derives the access type from ticket prices rather than trusting a stored type.
           const memberPrice = data?.ticketPrices?.member ?? 0;
@@ -129,6 +130,7 @@ export default function BookingRoute() {
           time: event.dateTime ? formatDateTime(event.dateTime) : "Time TBD",
           location: event.address || "Location TBD",
           ticketCount: String(tickets),
+          maxTicketsPerUser: Number(event.maxTicketsPerUser),
           image: event.image || "",
           eventId: event.id,
           benefits: "",
