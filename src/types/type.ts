@@ -31,11 +31,15 @@ export type UserDoc = {
   membershipUpdatedAt?: FirebaseFirestoreTypes.Timestamp | null;
 };
 
+export interface TicketPrices {
+  member: number;
+  nonMember: number;
+}
+
 export type EventDoc = {
-  id: string;
+  id?: string;
   title: string;
   description: string;
-  category: Category;
   address: string;
   location: FirebaseFirestoreTypes.GeoPoint;
   image: string; // URL string
@@ -44,26 +48,27 @@ export type EventDoc = {
   // --- Date & Time ---
   dateTime: FirebaseFirestoreTypes.Timestamp;
 
-  // --- Ticketing ---
-  totalTickets: number;
-  ticketsSold?: number;
-  attendees?: string[]; // Array of user UIDs
+  // Statuses & Settings
+  status: "available" | "sold_out" | "cancelled" | string; // Adjust strings as needed
+  eventApprovalStatus: "approved" | "pending" | "rejected" | string;
+  ticketAccess: "members_only" | "all" | string;
+  isAd: boolean;
 
+  // Capacities & Metrics
+  eventCapacity: number;
+  totalTickets: number;
+  ticketsSold: number;
+  maxTicketsPerUser: number;
+  eventDuration: string; // e.g., "30 minutes"
+
+  // Pricing
   memberPrice: number;
   nonMemberPrice: number;
-
-  ticketPrices?: {
-    member: number;
-    nonMember: number;
-  };
-  ticketAccess?: "free_for_all" | "members_only";
-  isAd?: boolean;
+  ticketPrices: TicketPrices;
 
   // --- Admin & Partner Portal Workflow ---
-  eventApprovalStatus?: "draft" | "pending" | "approved" | "rejected";
   submittedBy?: string; // partnerId
   rejectionReason?: string;
-  interestTags?: string[];
 
   // --- Metadata ---
   createdAt?: FirebaseFirestoreTypes.Timestamp;

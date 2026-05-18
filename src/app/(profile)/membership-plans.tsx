@@ -47,7 +47,6 @@ export default function MembershipPlansScreen() {
           const uid = auth.currentUser?.uid;
           if (uid) {
             await updateDoc(doc(db, "users", uid), {
-              role: "member",
               membershipStatus: "active",
               membershipProvider: "google_play",
               membershipSku: String(purchase?.productId ?? ""),
@@ -177,7 +176,6 @@ export default function MembershipPlansScreen() {
         const uid = auth.currentUser?.uid;
         if (uid) {
           await updateDoc(doc(db, "users", uid), {
-            role: "general",
             membershipStatus: "inactive",
             membershipUpdatedAt: serverTimestamp(),
           });
@@ -218,7 +216,6 @@ export default function MembershipPlansScreen() {
         const uid = auth.currentUser?.uid;
         if (uid) {
           await updateDoc(doc(db, "users", uid), {
-            role: "member",
             membershipStatus: "active",
             membershipProvider: "google_play",
             membershipSku: existingPurchase.productId,

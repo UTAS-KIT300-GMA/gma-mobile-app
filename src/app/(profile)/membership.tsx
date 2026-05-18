@@ -25,9 +25,8 @@ export default function MembershipScreen() {
   const router = useRouter();
   const { userDoc, loading } = useUser();
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const isMember = userDoc?.role === "member";
+  const isMember = userDoc?.membershipStatus === "active";
   const membershipStatus = userDoc?.membershipStatus ?? (isMember ? "active" : "inactive");
-  const membershipSku = userDoc?.membershipSku ?? "Not set";
   const membershipUpdatedAt = userDoc?.membershipUpdatedAt;
 
   /**
@@ -73,8 +72,7 @@ export default function MembershipScreen() {
             <ActivityIndicator color={colors.primary} />
           ) : (
             <>
-              <Text style={styles.planMeta}>Status: {membershipStatus}</Text>
-              <Text style={styles.planMeta}>SKU: {membershipSku}</Text>
+              <Text style={styles.planMeta}>Membership Status: {membershipStatus}</Text>
               <Text style={styles.planMeta}>
                 Last Updated:{" "}
                 {membershipUpdatedAt?.toDate
