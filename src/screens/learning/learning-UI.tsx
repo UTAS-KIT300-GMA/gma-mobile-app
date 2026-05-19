@@ -41,7 +41,7 @@ interface Props {
   expandedId: string | null;
   onBookmarkPress?: (id: string) => void;
   onCardPress?: (item: LearningDoc) => void;
-  onFilePress?: (url: string) => void;
+  onFilePress?: (item: LearningDoc) => void;
 }
 
 /**
@@ -211,8 +211,10 @@ export const LearningScreenUI: React.FC<Props> = ({
                   />
                 </TouchableOpacity>
 
-                {/* CLOUDINARY VIDEO PLAYER */}
-                <VideoPlayer publicId={item.cloudinaryPublicId || ""} />
+                <VideoPlayer
+                  videoUrl={item.videoDownloadUrl || ""}
+                  videoStoragePath={item.videoStoragePath}
+                />
               </View>
 
               <View style={styles.infoSection}>
@@ -244,7 +246,7 @@ export const LearningScreenUI: React.FC<Props> = ({
                 {item.fileId ? (
                   <TouchableOpacity
                     style={styles.fileButton}
-                    onPress={() => onFilePress?.(item.fileId!)}
+                    onPress={() => onFilePress?.(item)}
                   >
                     <Ionicons
                       name="document-text"

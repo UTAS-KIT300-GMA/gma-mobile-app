@@ -1,6 +1,7 @@
 import { useBookmarks } from "@/context/GlobalContext";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { db } from "@/services/authService";
+import { resolveLearningAttachmentUrl } from "@/services/learningStorageUrls";
 import { LearningDoc } from "@/types/type";
 import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { collection, getDocs } from "@react-native-firebase/firestore";
@@ -16,25 +17,18 @@ function mapLearningSnapshot(
     (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
       const data = doc.data();
 
-      const publicId = String(data.cloudinaryPublicId || "");
-
-      let finalThumbnail = "";
-
-      if (data.thumbnailUrl?.trim()) {
-        finalThumbnail = data.thumbnailUrl.trim();
-      } else if (publicId) {
-        finalThumbnail = `https://res.cloudinary.com/${process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME}/video/upload/${publicId}.jpg`;
-      }
-
       return {
         id: doc.id,
         title: String(data.title || "Untitled Content"),
         duration: String(data.duration || "0:00"),
-        thumbnailUrl: finalThumbnail,
+        thumbnailUrl: String(data.thumbnailUrl || "").trim(),
+        thumbnailStoragePath: String(data.thumbnailStoragePath || "").trim(),
         description: String(data.description || "No description available."),
-        videoId: String(data.videoId || ""),
-        cloudinaryPublicId: publicId,
-        fileId: String(data.fileId || ""),
+        videoDownloadUrl: String(data.videoDownloadUrl || "").trim(),
+        videoStoragePath: String(data.videoStoragePath || "").trim(),
+        attachmentDownloadUrl: String(data.attachmentDownloadUrl || "").trim(),
+        attachmentStoragePath: String(data.attachmentStoragePath || "").trim(),
+        fileId: String(data.fileId || "").trim(),
         accessType: data.accessType ?? "free",
         isBookmarked: !!bookmarkedIds[doc.id],
       } as LearningDoc;
@@ -106,38 +100,31 @@ export default function LearningRoute() {
     setExpandedId((prev) => (prev === item.id ? null : item.id));
   };
 
-  const resolveLearningPdfUrl = (fileId: string) => {
-    const value = fileId.trim();
-    if (!value) return "";
+  const handleFilePress = async (item: LearningDoc) => {
+    const hasAttachmentFields =
+      item.attachmentDownloadUrl?.trim() ||
+      item.attachmentStoragePath?.trim() ||
+      item.fileId?.trim();
 
-    if (/^https?:\/\//i.test(value)) {
-      return value;
-    }
-
-    if (/^res\.cloudinary\.com\//i.test(value)) {
-      return `https://${value}`;
-    }
-
-    const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
-    if (!cloudName) return "";
-
-    const normalizedId = value.replace(/^\/+/, "").replace(/\.pdf$/i, "");
-    return `https://res.cloudinary.com/${cloudName}/raw/upload/${normalizedId}.pdf`;
-  };
-
-  const handleFilePress = async (fileId: string) => {
-    if (!fileId) {
+    if (!hasAttachmentFields) {
       Alert.alert("Error", "No file available.");
       return;
     }
 
-    const fileUrl = resolveLearningPdfUrl(fileId);
-    if (!fileUrl) {
-      Alert.alert("Error", "Could not generate a valid file link.");
-      return;
-    }
-
     try {
+      const fileUrl = await resolveLearningAttachmentUrl({
+        attachmentDownloadUrl: item.attachmentDownloadUrl,
+        attachmentStoragePath: item.attachmentStoragePath,
+        fileId: item.fileId,
+      });
+      if (!fileUrl) {
+        Alert.alert(
+          "Error",
+          "Could not resolve a file link. Ensure the document has attachment URLs or Firebase Storage paths.",
+        );
+        return;
+      }
+
       const canOpen = await Linking.canOpenURL(fileUrl);
       if (!canOpen) {
         Alert.alert("Error", "This file link cannot be opened on this device.");

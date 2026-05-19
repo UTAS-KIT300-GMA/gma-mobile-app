@@ -1,17 +1,11 @@
 import { LearningDoc } from "@/types/type";
-import { Cloudinary } from "@cloudinary/url-gen";
 import { Ionicons } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { colors } from "@/theme/ThemeProvider";
-import { thumbnail } from "@cloudinary/url-gen/actions/resize";
-import { autoGravity } from "@cloudinary/url-gen/qualifiers/gravity";
 
-const cld = new Cloudinary({
-  cloud: {
-    cloudName: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  },
-});
+const PLACEHOLDER_THUMB =
+  "https://via.placeholder.com/800x450.png?text=No+Thumbnail";
 
 // Explicitly export props to satisfy IntrinsicAttributes in other files
 export interface LearningCardProps {
@@ -24,44 +18,28 @@ export interface LearningCardProps {
 }
 
 /**
- * @summary A presentational card component that displays video metadata, handles thumbnail optimization via Cloudinary, and provides interaction hooks for playback and bookmarking.
+ * @summary Presentational card for learning content (thumbnail from `thumbnailUrl`, Firebase or any HTTPS).
  * @param item - The LearningDoc object containing title, description, duration, and metadata.
- * @param onPressCard - Callback function triggered when the user taps the card body to view content.
- * @param onBookmarkPress - Callback function triggered when the user taps the bookmark icon.
+ * @param onPressCard - Callback when the user taps the card body to view content.
+ * @param onBookmarkPress - Callback when the user taps the bookmark icon.
  */
-export default function LearningCard({ 
-  item, 
-  onPressCard, 
-  onBookmarkPress 
+export default function LearningCard({
+  item,
+  onPressCard,
+  onBookmarkPress,
 }: LearningCardProps) {
-
-  /**
- * @summary Generates an optimized image URL using Cloudinary transformations (AI-based gravity, auto-quality, and resizing) or returns a fallback placeholder.
- * @param item.cloudinaryPublicId - Dependency: Recalculates if the Cloudinary ID changes to fetch the correct asset.
- * @param item.thumbnailUrl - Dependency: Recalculates if the static fallback URL is updated.
- */
-  const optimizedThumbnail = useMemo(() => {
-    if (item.cloudinaryPublicId) {
-      return cld.image(item.cloudinaryPublicId)
-        .setAssetType("video")
-        .resize(
-          thumbnail()
-            .width(800)
-            .gravity(autoGravity()) // Uses AI to find the best frame
-        )
-        .format("jpg")
-        .quality("auto")
-        .toURL();
-    }
-    return item.thumbnailUrl || "https://via.placeholder.com/800x450.png?text=No+Thumbnail";
-  }, [item.cloudinaryPublicId, item.thumbnailUrl]);
+  const thumbnailUri = useMemo(() => {
+    const u = item.thumbnailUrl?.trim();
+    if (u) return u;
+    return PLACEHOLDER_THUMB;
+  }, [item.thumbnailUrl]);
 
   return (
     <Pressable style={styles.card} onPress={onPressCard}>
       {/* Visual Header */}
       <View style={styles.imageContainer}>
         <Image
-          source={{ uri: optimizedThumbnail }}
+          source={{ uri: thumbnailUri }}
           style={styles.thumbnail}
           resizeMode="cover"
         />

@@ -1,91 +1,102 @@
-import { Cloudinary } from "@cloudinary/url-gen";
-import { scale } from "@cloudinary/url-gen/actions/resize";
+import {
+  downloadUrlForStoragePath,
+  looksLikeFirebaseStorageObjectPath,
+} from "@/services/learningStorageUrls";
 import { useVideoPlayer, VideoView } from "expo-video";
-import React, { useEffect, useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
-
-const cld = new Cloudinary({
-  cloud: {
-    cloudName: process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME,
-  },
-});
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 
 interface Props {
-  publicId: string; 
+  videoUrl: string;
+  videoStoragePath?: string;
 }
 
 /**
- * @summary A specialized video playback component that leverages Cloudinary for on-the-fly optimization and `expo-video` for native performance.
- * @param publicId - The Cloudinary public identifier for the video asset to be streamed.
- * @throws {never} Internal effects/logging handle non-fatal states.
- * @Returns {React.JSX.Element} Video player surface with optional fallback.
+ * @summary Plays a learning video from an HTTPS URL (Firebase Storage download URL) or resolves a Storage object path.
+ * @param videoUrl - Direct HTTPS stream URL when available.
+ * @param videoStoragePath - Optional Storage path under `learning/…` when `videoUrl` is empty.
  */
-const VideoPlayer: React.FC<Props> = ({ publicId }) => {
-
-    const [isPlaying, setIsPlaying] = useState(false); // Stores whether the video is currently playing for overlay state.
+const VideoPlayer: React.FC<Props> = ({ videoUrl, videoStoragePath }) => {
+  const [playUrl, setPlayUrl] = useState("");
+  const [resolving, setResolving] = useState(false);
+  const [resolveError, setResolveError] = useState(false);
 
   useEffect(() => {
-    /**
- * @summary Logs initialization metadata to the console for debugging deployment environments and asset loading.
- */
-    
-  }, [publicId]);
+    let cancelled = false;
+    const direct = videoUrl.trim();
 
-  /**
- * @summary Generates a performance-optimized streaming URL by enforcing low resolution (480p), high compression (eco-mode), and automatic format selection.
- * @param publicId - Dependency: Triggers a new URL generation if the video source ID is updated.
- * @throws {never} URL builder returns empty string on invalid input.
- * @Returns {string} Optimized streaming URL.
- */
-  const optimizedUrl = useMemo(() => {
-    if (!publicId?.trim()) return "";
-    
-    return cld.video(publicId)
-      .resize(scale().width(480))    // Force Low Quality.
-      .quality("auto:eco")      // Force high compression.
-      .format("auto")          // Cloudinary pick efficient format.
-      .toURL();
-  }, [publicId]);
+    if (direct) {
+      setPlayUrl(direct);
+      setResolving(false);
+      setResolveError(false);
+      return () => {
+        cancelled = true;
+      };
+    }
 
-  const player = useVideoPlayer(optimizedUrl ?? "", (playerInstance) => {
+    const path = videoStoragePath?.trim() ?? "";
+    if (path && looksLikeFirebaseStorageObjectPath(path)) {
+      setResolving(true);
+      setResolveError(false);
+      setPlayUrl("");
+      void downloadUrlForStoragePath(path)
+        .then((url) => {
+          if (!cancelled) {
+            setPlayUrl(url);
+            setResolving(false);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setPlayUrl("");
+            setResolving(false);
+            setResolveError(true);
+          }
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    setPlayUrl("");
+    setResolving(false);
+    setResolveError(false);
+    return () => {
+      cancelled = true;
+    };
+  }, [videoUrl, videoStoragePath]);
+
+  const player = useVideoPlayer(playUrl, (playerInstance) => {
     playerInstance.loop = false;
     playerInstance.pause();
   });
 
-  useEffect(() => {
- /**
-* @summary Syncs the component's internal state with the native video player's playback events to manage the UI overlay.
-*/
-    if (!player) return;
-    
-    // LOG: Verification of optimization
-    const isOptimized = optimizedUrl.includes('w_480') && optimizedUrl.includes('q_auto:eco');
-    console.log("--- VideoPlayer Performance Check ---");
-    console.log("Public ID:", publicId);
-    console.log("Is 480p Eco active?:", isOptimized ? "✅ YES" : "❌ NO");
-    const sub = player.addListener("playingChange", ({ isPlaying }) => {
-    setIsPlaying(isPlaying);
-    console.log(`Video Status: ${isPlaying ? "▶️ Playing" : "⏸️ Paused"}`);
-  });
-
-  return () => sub.remove();
-  }, [player, optimizedUrl, publicId]);
-
-  if (!optimizedUrl) {
+  if (resolving) {
     return (
       <View style={[styles.wrapper, styles.center]}>
-        <Text style={{color: '#fff'}}>ID Missing or Invalid</Text>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
+  if (resolveError || !playUrl) {
+    return (
+      <View style={[styles.wrapper, styles.center]}>
+        <Text style={styles.fallbackText}>
+          {resolveError ? "Could not load video." : "Video not available."}
+        </Text>
       </View>
     );
   }
 
   return (
     <View style={styles.wrapper}>
-      <VideoView 
-        player={player} 
-        style={styles.surface} 
-        nativeControls={true}
-        contentFit="cover" 
+      <VideoView
+        key={playUrl}
+        player={player}
+        style={styles.surface}
+        nativeControls
+        contentFit="cover"
       />
     </View>
   );
@@ -96,6 +107,6 @@ export default VideoPlayer;
 const styles = StyleSheet.create({
   wrapper: { height: 230, backgroundColor: "#000" },
   surface: { width: "100%", height: "100%" },
-  center: { justifyContent: 'center', alignItems: 'center' },
-  overlay: { ...StyleSheet.absoluteFillObject, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.3)' }
+  center: { justifyContent: "center", alignItems: "center" },
+  fallbackText: { color: "#fff", textAlign: "center", paddingHorizontal: 16 },
 });

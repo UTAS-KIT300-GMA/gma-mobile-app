@@ -80,11 +80,21 @@ export type LearningDoc = {
   title: string;
   duration: string;
   description?: string;
+  /** HTTPS thumbnail for list/cards (e.g. from Firebase `getDownloadURL`). */
   thumbnailUrl?: string;
-  videoId?: string;
-  cloudinaryPublicId?: string;
+  /** Optional Storage object path when `thumbnailUrl` is not set. */
+  thumbnailStoragePath?: string;
+  /** HTTPS URL for the main video (e.g. from Firebase `getDownloadURL`). */
+  videoDownloadUrl?: string;
+  /** Optional Storage object path (e.g. `learning/videos/{id}/main.mp4`) when URL not stored. */
+  videoStoragePath?: string;
+  /** HTTPS URL for PDFs or other attachments. */
+  attachmentDownloadUrl?: string;
+  /** Optional Storage object path under `learning/videos/{id}/attachments/`. */
+  attachmentStoragePath?: string;
   accessType: "free" | "paid";
   isBookmarked: boolean;
+  /** Legacy: only honored when it is an `https` URL; prefer `attachmentDownloadUrl`. */
   fileId?: string;
   interestTags?: string[];
 

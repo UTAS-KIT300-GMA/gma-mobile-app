@@ -1,0 +1,11 @@
+rules_version = '2';
+
+// Learning media is read by signed-in app users; uploads use the Admin SDK or console.
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /learning/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+  }
+}
