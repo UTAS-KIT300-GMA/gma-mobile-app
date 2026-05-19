@@ -1,13 +1,28 @@
+import { learningVideoObjectPath } from "@/config/learningStoragePaths";
 import { useBookmarks } from "@/context/GlobalContext";
 import { LearningScreenUI } from "@/screens/learning/learning-UI";
 import { db } from "@/services/authService";
-import { resolveLearningAttachmentUrl } from "@/services/learningStorageUrls";
+import {
+  looksLikeFirebaseStorageObjectPath,
+  resolveLearningAttachmentUrl,
+} from "@/services/learningStorageUrls";
 import { LearningDoc } from "@/types/type";
 import type { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 import { collection, getDocs } from "@react-native-firebase/firestore";
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Linking } from "react-native";
 import { useUser } from "@/hooks/useUser.ts";
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value.trim());
+}
+
+function buildCloudinaryVideoUrl(publicId: string): string {
+  const cloudName = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const id = publicId.trim();
+  if (!cloudName || !id) return "";
+  return `https://res.cloudinary.com/${cloudName}/video/upload/q_auto:eco,w_480/${id}`;
+}
 
 function mapLearningSnapshot(
   querySnapshot: FirebaseFirestoreTypes.QuerySnapshot,
@@ -17,6 +32,27 @@ function mapLearningSnapshot(
     (doc: FirebaseFirestoreTypes.QueryDocumentSnapshot) => {
       const data = doc.data();
 
+      let videoDownloadUrl = String(data.videoDownloadUrl || "").trim();
+      let videoStoragePath = String(data.videoStoragePath || "").trim();
+      const cloudinaryPublicId = String(data.cloudinaryPublicId || "").trim();
+
+      if (
+        videoDownloadUrl &&
+        !isHttpUrl(videoDownloadUrl) &&
+        looksLikeFirebaseStorageObjectPath(videoDownloadUrl)
+      ) {
+        if (!videoStoragePath) videoStoragePath = videoDownloadUrl;
+        videoDownloadUrl = "";
+      }
+
+      if (!videoDownloadUrl && !videoStoragePath && cloudinaryPublicId) {
+        videoDownloadUrl = buildCloudinaryVideoUrl(cloudinaryPublicId);
+      }
+
+      if (!videoDownloadUrl && !videoStoragePath) {
+        videoStoragePath = learningVideoObjectPath(doc.id);
+      }
+
       return {
         id: doc.id,
         title: String(data.title || "Untitled Content"),
@@ -24,8 +60,8 @@ function mapLearningSnapshot(
         thumbnailUrl: String(data.thumbnailUrl || "").trim(),
         thumbnailStoragePath: String(data.thumbnailStoragePath || "").trim(),
         description: String(data.description || "No description available."),
-        videoDownloadUrl: String(data.videoDownloadUrl || "").trim(),
-        videoStoragePath: String(data.videoStoragePath || "").trim(),
+        videoDownloadUrl,
+        videoStoragePath,
         attachmentDownloadUrl: String(data.attachmentDownloadUrl || "").trim(),
         attachmentStoragePath: String(data.attachmentStoragePath || "").trim(),
         fileId: String(data.fileId || "").trim(),

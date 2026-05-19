@@ -38,6 +38,27 @@ export async function downloadUrlForStoragePath(raw: string): Promise<string> {
 }
 
 /**
+ * Resolves a learning video to an HTTPS stream URL for `expo-video`.
+ * Accepts `https` download URLs, Storage paths, or `gs://` URIs in either field.
+ */
+export async function resolveLearningVideoUrl(opts: {
+  videoDownloadUrl?: string;
+  videoStoragePath?: string;
+}): Promise<string> {
+  const direct = opts.videoDownloadUrl?.trim() ?? "";
+  if (direct && isHttpUrl(direct)) return direct;
+
+  const pathRaw =
+    opts.videoStoragePath?.trim() ||
+    (direct && !isHttpUrl(direct) ? direct : "");
+  if (pathRaw && looksLikeFirebaseStorageObjectPath(pathRaw)) {
+    return downloadUrlForStoragePath(pathRaw);
+  }
+
+  return "";
+}
+
+/**
  * Resolves a learning attachment to an HTTPS URL: prefers explicit download URLs,
  * then resolves Storage object paths under `learning/…` (or `gs://…`) via `getDownloadURL`.
  */

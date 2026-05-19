@@ -1,7 +1,4 @@
-import {
-  downloadUrlForStoragePath,
-  looksLikeFirebaseStorageObjectPath,
-} from "@/services/learningStorageUrls";
+import { resolveLearningVideoUrl } from "@/services/learningStorageUrls";
 import { useVideoPlayer, VideoView } from "expo-video";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
@@ -12,61 +9,43 @@ interface Props {
 }
 
 /**
- * @summary Plays a learning video from an HTTPS URL (Firebase Storage download URL) or resolves a Storage object path.
- * @param videoUrl - Direct HTTPS stream URL when available.
- * @param videoStoragePath - Optional Storage path under `learning/…` when `videoUrl` is empty.
+ * @summary Plays a learning video from Firebase Storage (HTTPS URL or resolved object path).
  */
 const VideoPlayer: React.FC<Props> = ({ videoUrl, videoStoragePath }) => {
   const [playUrl, setPlayUrl] = useState("");
-  const [resolving, setResolving] = useState(false);
+  const [resolving, setResolving] = useState(true);
   const [resolveError, setResolveError] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    const direct = videoUrl.trim();
-
-    if (direct) {
-      setPlayUrl(direct);
-      setResolving(false);
-      setResolveError(false);
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    const path = videoStoragePath?.trim() ?? "";
-    if (path && looksLikeFirebaseStorageObjectPath(path)) {
-      setResolving(true);
-      setResolveError(false);
-      setPlayUrl("");
-      void downloadUrlForStoragePath(path)
-        .then((url) => {
-          if (!cancelled) {
-            setPlayUrl(url);
-            setResolving(false);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) {
-            setPlayUrl("");
-            setResolving(false);
-            setResolveError(true);
-          }
-        });
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    setPlayUrl("");
-    setResolving(false);
+    setResolving(true);
     setResolveError(false);
+    setPlayUrl("");
+
+    void resolveLearningVideoUrl({
+      videoDownloadUrl: videoUrl,
+      videoStoragePath,
+    })
+      .then((url) => {
+        if (cancelled) return;
+        setPlayUrl(url);
+        setResolving(false);
+        setResolveError(!url);
+      })
+      .catch((err) => {
+        console.error("resolveLearningVideoUrl failed:", err);
+        if (cancelled) return;
+        setPlayUrl("");
+        setResolving(false);
+        setResolveError(true);
+      });
+
     return () => {
       cancelled = true;
     };
   }, [videoUrl, videoStoragePath]);
 
-  const player = useVideoPlayer(playUrl, (playerInstance) => {
+  const player = useVideoPlayer(playUrl || null, (playerInstance) => {
     playerInstance.loop = false;
     playerInstance.pause();
   });
@@ -92,7 +71,6 @@ const VideoPlayer: React.FC<Props> = ({ videoUrl, videoStoragePath }) => {
   return (
     <View style={styles.wrapper}>
       <VideoView
-        key={playUrl}
         player={player}
         style={styles.surface}
         nativeControls
